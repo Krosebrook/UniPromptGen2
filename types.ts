@@ -1,10 +1,12 @@
+// types.ts
+
 export type RiskLevel = 'Low' | 'Medium' | 'High';
 
 export interface PromptTemplateMetrics {
   totalRuns: number;
   successfulRuns: number;
-  avgUserRating: number;
   totalUserRating: number;
+  avgUserRating: number;
   taskSuccessRate: number;
   efficiencyScore: number;
 }
@@ -13,51 +15,25 @@ export interface PromptTemplate {
   id: string;
   name: string;
   description: string;
-  author: string;
-  version: string;
-  domain: string;
-  riskLevel: RiskLevel;
+  domain: string; // e.g., 'Marketing', 'Code Gen'
   qualityScore: number;
-  abstractPrompt: string;
+  riskLevel: RiskLevel;
+  version: string;
   metrics: PromptTemplateMetrics;
-}
-
-export interface ModelProfile {
-  id: string;
-  name: string;
-  vendor: string;
-  description: string;
-  formatting_rules: {
-    system_prompt: (content: string) => string;
-    user_prompt: (content: string) => string;
-    critical_context: (content: string) => string;
-  };
+  content: string; // The actual prompt content
+  variables: { name: string, type: 'string' | 'number', defaultValue?: any }[];
 }
 
 export interface ExecutionEvent {
-  userRating: number; // 1-5
   success: boolean;
-  latencyMs: number;
-  cost: number;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl: string;
-  title: string;
-  xp: number;
-  level: number;
-  achievements: Achievement[];
-  certifications: Certification[];
+  userRating: number; // 1-5 scale
+  // ... other event data like latency, cost, output, etc.
 }
 
 export interface Achievement {
   id: string;
   name: string;
   description: string;
-  date: string;
 }
 
 export interface Certification {
@@ -67,31 +43,26 @@ export interface Certification {
   date: string;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  title: string;
+  avatarUrl: string;
+  xp: number;
+  level: number;
+  achievements: Achievement[];
+  certifications: Certification[];
+}
+
 export interface Evaluation {
   id: string;
-  evaluator: {
-    name: string;
-    avatarUrl: string;
-  };
+  templateId: string;
+  evaluator: Pick<User, 'name' | 'avatarUrl'>;
   date: string;
-  scores: {
-    codeQuality: number;
-    design: number;
-    functionality: number;
-  };
-  feedback: string;
+  score: number;
+  comment: string;
 }
-
-export interface Comment {
-    id: string;
-    author: {
-        name: string;
-        avatarUrl: string;
-    };
-    date: string;
-    text: string;
-}
-
 
 export interface ChatMessage {
   id: string;
@@ -103,5 +74,15 @@ export interface GroundingSource {
     web?: {
         uri: string;
         title: string;
+    };
+    maps?: {
+        uri: string;
+        title: string;
+        placeAnswerSources?: {
+            reviewSnippets: {
+                uri: string,
+                title: string
+            }[];
+        }
     };
 }

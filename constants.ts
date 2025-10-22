@@ -1,155 +1,102 @@
-import { PromptTemplate, ModelProfile, User, Evaluation, Comment, Achievement, Certification } from './types.ts';
+// constants.ts
 
-export const QUALITY_SCORE_WEIGHTS = {
-  USER_RATING: 0.4,
-  TASK_SUCCESS_RATE: 0.3,
-  EFFICIENCY_SCORE: 0.2,
-  AUTO_GATE_SCORE: 0.1,
+import type { User, PromptTemplate, Evaluation } from './types.ts';
+
+export const MOCK_USER: User = {
+  id: 'user-001',
+  name: 'Alex Chen',
+  email: 'alex.chen@example.com',
+  title: 'Senior AI Engineer',
+  avatarUrl: 'https://i.pravatar.cc/150?u=alexchen',
+  xp: 12580,
+  level: 14,
+  achievements: [
+    { id: 'ach-1', name: 'Prompt Pioneer', description: 'Create 10 successful prompt templates.' },
+    { id: 'ach-2', name: 'Quality Champion', description: 'Achieve a 95+ quality score on a template.' },
+    { id: 'ach-3', name: 'Collaborator', description: 'Contribute to 5 team templates.' },
+  ],
+  certifications: [
+    { id: 'cert-1', name: 'Advanced Prompt Engineering', issuer: 'AI University', date: '2023-10-15' },
+    { id: 'cert-2', name: 'Generative AI for Developers', issuer: 'Cloud Academy', date: '2023-05-20' },
+  ]
 };
 
 export const MOCK_TEMPLATES: PromptTemplate[] = [
   {
-    id: 'api-builder-v1',
-    name: 'Go REST API Builder',
-    description: 'Generates a boilerplate for a new RESTful API endpoint in Go, including handler, model, and basic tests.',
-    author: 'Dev Infra Team',
-    version: '1.4.2',
-    domain: 'CodeGen',
+    id: 'template-001',
+    name: 'Marketing Copy Generator',
+    description: 'Generates compelling marketing copy for social media campaigns based on product features and target audience.',
+    domain: 'Marketing',
+    qualityScore: 94.5,
     riskLevel: 'Low',
-    qualityScore: 92,
-    abstractPrompt: `
-{{instruction.role}}
-You are an expert Go developer specializing in creating robust, production-ready microservices. Your generated code must be clean, idiomatic, and follow modern best practices.
-
-{{instruction.task}}
-Write a new API endpoint based on the following specification. The endpoint should handle POST requests to '/api/v1/users'. It must accept a JSON payload with 'username' (string) and 'email' (string), validate the input, and return a JSON response with a success message and the created user ID.
-
-{{context.critical}}
-The API must be RESTful and completely stateless. Do not use any session management. Include basic input validation to ensure username and email are not empty.
-
-{{user_input.content}}
-`,
-    metrics: { totalRuns: 1258, successfulRuns: 1240, avgUserRating: 4.8, totalUserRating: 6038.4, taskSuccessRate: 0.98, efficiencyScore: 0.95 },
+    version: '2.1',
+    metrics: { totalRuns: 1204, successfulRuns: 1180, totalUserRating: 5719, avgUserRating: 4.75, taskSuccessRate: 0.98, efficiencyScore: 0.92 },
+    content: 'Generate 3 variations of marketing copy for a new product.\n\nProduct Name: {{productName}}\nTarget Audience: {{targetAudience}}\nKey Features: {{keyFeatures}}\nTone: {{tone}}',
+    variables: [
+      { name: 'productName', type: 'string' },
+      { name: 'targetAudience', type: 'string' },
+      { name: 'keyFeatures', type: 'string' },
+      { name: 'tone', type: 'string', defaultValue: 'Excited' },
+    ]
   },
   {
-    id: 'data-analyzer-v2',
-    name: 'SQL Query Generator',
-    description: 'Analyzes a natural language query and generates an optimized SQL query for a PostgreSQL database.',
-    author: 'Data Platform Team',
-    version: '2.1.0',
-    domain: 'Analysis',
+    id: 'template-002',
+    name: 'Python Code Refactoring',
+    description: 'Analyzes a Python code snippet and suggests improvements for readability, performance, and adherence to PEP 8 standards.',
+    domain: 'Code Gen',
+    qualityScore: 88.2,
     riskLevel: 'Medium',
-    qualityScore: 85,
-    abstractPrompt: `
-{{instruction.role}}
-You are a senior data analyst with deep expertise in SQL and database optimization. Your primary function is to translate natural language questions into accurate and performant PostgreSQL queries.
-
-{{instruction.task}}
-Given the following database schema and natural language question, generate the appropriate SQL query. Schema: users(id, name, email, signup_date), orders(id, user_id, amount, created_at). Question: "How many users who signed up last month made a purchase?"
-
-{{context.critical}}
-The query must be compatible with PostgreSQL 14. Ensure date comparisons are handled correctly for the "last month" requirement. The final output should be ONLY the SQL query, with no additional explanation.
-
-{{user_input.content}}
-`,
-    metrics: { totalRuns: 432, successfulRuns: 390, avgUserRating: 4.5, totalUserRating: 1944, taskSuccessRate: 0.90, efficiencyScore: 0.88 },
+    version: '1.5',
+    metrics: { totalRuns: 850, successfulRuns: 790, totalUserRating: 3825, avgUserRating: 4.5, taskSuccessRate: 0.93, efficiencyScore: 0.85 },
+    content: 'Refactor the following Python code to improve its quality.\n\n```python\n{{codeSnippet}}\n```\n\nFocus on: {{focusAreas}}',
+    variables: [
+      { name: 'codeSnippet', type: 'string' },
+      { name: 'focusAreas', type: 'string', defaultValue: 'Readability, Performance, PEP 8' }
+    ]
   },
   {
-    id: 'security-scanner-v1',
-    name: 'Threat Model Generator',
-    description: 'Generates a STRIDE threat model based on a system architecture description.',
-    author: 'Security Engineering',
-    version: '1.0.3',
-    domain: 'Security',
-    riskLevel: 'High',
-    qualityScore: 78,
-    abstractPrompt: `
-{{instruction.role}}
-You are a principal security engineer specializing in threat modeling and risk analysis. You use the STRIDE methodology to identify potential security threats.
-
-{{instruction.task}}
-Analyze the following system description and generate a threat model in Markdown format. The system is a web application with a React frontend, a Node.js backend API, and a PostgreSQL database. Users authenticate via a third-party OAuth provider.
-
-{{context.critical}}
-For each component (frontend, backend, database), identify potential threats for each category of STRIDE (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege).
-
-{{user_input.content}}
-`,
-    metrics: { totalRuns: 88, successfulRuns: 75, avgUserRating: 4.2, totalUserRating: 369.6, taskSuccessRate: 0.85, efficiencyScore: 0.81 },
+    id: 'template-003',
+    name: 'Customer Support Email Responder',
+    description: 'Drafts a professional and empathetic email response to a customer support query.',
+    domain: 'Support',
+    qualityScore: 91.8,
+    riskLevel: 'Low',
+    version: '3.0',
+    metrics: { totalRuns: 2500, successfulRuns: 2450, totalUserRating: 11875, avgUserRating: 4.75, taskSuccessRate: 0.98, efficiencyScore: 0.95 },
+    content: 'Draft a support email response.\n\nCustomer Query: {{customerQuery}}\nSentiment: {{sentiment}}\nCompany Policy Notes: {{policyNotes}}',
+    variables: [
+        { name: 'customerQuery', type: 'string' },
+        { name: 'sentiment', type: 'string', defaultValue: 'Neutral' },
+        { name: 'policyNotes', type: 'string' },
+    ]
   },
+   {
+    id: 'template-004',
+    name: 'Technical Blog Post Outline',
+    description: 'Generates a structured outline for a technical blog post, including introduction, key sections, and conclusion.',
+    domain: 'Content',
+    qualityScore: 85.0,
+    riskLevel: 'Low',
+    version: '1.0',
+    metrics: { totalRuns: 450, successfulRuns: 405, totalUserRating: 1980, avgUserRating: 4.4, taskSuccessRate: 0.90, efficiencyScore: 0.88 },
+    content: 'Create a blog post outline for the topic: "{{topic}}".\n\nThe target audience is {{audience}}.',
+    variables: [
+        { name: 'topic', type: 'string' },
+        { name: 'audience', type: 'string', defaultValue: 'intermediate developers' },
+    ]
+  }
 ];
-
-export const MOCK_MODEL_PROFILES: ModelProfile[] = [
-    {
-        id: 'gemini-pro',
-        name: 'Gemini 2.5 Pro',
-        vendor: 'Google',
-        description: 'The most capable model for complex reasoning, coding, and creative tasks.',
-        formatting_rules: {
-            system_prompt: (content) => `<system_prompt>\n${content}\n</system_prompt>`,
-            user_prompt: (content) => `<user_prompt>\n${content}\n</user_prompt>`,
-            critical_context: (content) => `<critical_instruction>\n${content}\n</critical_instruction>`,
-        },
-    },
-    {
-        id: 'gemini-flash',
-        name: 'Gemini 2.5 Flash',
-        vendor: 'Google',
-        description: 'A fast and efficient model for general-purpose tasks and quick responses.',
-        formatting_rules: {
-            system_prompt: (content) => `SYSTEM: ${content}`,
-            user_prompt: (content) => `USER: ${content}`,
-            critical_context: (content) => `CRITICAL: ${content}`,
-        },
-    },
-];
-
-export const MOCK_USER: User = {
-  id: 'usr-123',
-  name: 'Alex Rivera',
-  email: 'alex.rivera@example.com',
-  avatarUrl: 'https://i.pravatar.cc/150?u=alexrivera',
-  title: 'Lead Context Engineer',
-  xp: 1250,
-  level: 14,
-  achievements: [
-      { id: 'ach-1', name: 'Master Evaluator', description: 'Completed 100 evaluations', date: '2024-05-10' },
-      { id: 'ach-2', name: 'Prolific Publisher', description: 'Submitted 10 templates', date: '2024-04-22' },
-      { id: 'ach-3', name: 'Community Pillar', description: 'Received 50 helpful comment reactions', date: '2024-05-15' },
-  ],
-  certifications: [
-      { id: 'cert-1', name: 'Gold Certified Evaluator', issuer: 'Template Evaluation Academy', date: '2024-05-20' }
-  ],
-};
 
 export const MOCK_EVALUATIONS: Evaluation[] = [
-    {
-        id: 'eval-1',
-        evaluator: { name: 'Casey Lee', avatarUrl: 'https://i.pravatar.cc/150?u=caseylee' },
-        date: '2024-05-21',
-        scores: { codeQuality: 9, design: 8, functionality: 10 },
-        feedback: 'Excellent implementation. The code is clean, well-documented, and follows best practices. The functionality is flawless. The design is good, but could be slightly more responsive on ultra-wide screens.'
-    },
-    {
-        id: 'eval-2',
-        evaluator: { name: 'Jordan Patel', avatarUrl: 'https://i.pravatar.cc/150?u=jordanpatel' },
-        date: '2024-05-20',
-        scores: { codeQuality: 8, design: 9, functionality: 9 },
-        feedback: 'Solid template overall. The design is very modern and intuitive. Functionality works as expected, though I found one minor edge case with input validation. Code quality is high, but some functions could benefit from more detailed comments.'
-    }
+  { id: 'eval-1', templateId: 'template-001', evaluator: { name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=janedoe' }, date: '2024-07-20', score: 95, comment: 'Excellent performance on recent campaigns.'},
+  { id: 'eval-2', templateId: 'template-002', evaluator: { name: 'John Smith', avatarUrl: 'https://i.pravatar.cc/150?u=johnsmith' }, date: '2024-07-19', score: 88, comment: 'Good refactoring, but struggles with highly complex algorithms.'},
+  { id: 'eval-3', templateId: 'template-003', evaluator: { name: 'Emily White', avatarUrl: 'https://i.pravatar.cc/150?u=emilywhite' }, date: '2024-07-18', score: 92, comment: 'Very consistent and reliable for standard queries.'},
 ];
 
-export const MOCK_COMMENTS: Comment[] = [
-    {
-        id: 'com-1',
-        author: { name: 'Morgan Taylor', avatarUrl: 'https://i.pravatar.cc/150?u=morgantaylor' },
-        date: '3 days ago',
-        text: 'This is a fantastic starting point! Saved me at least a day of setup. Has anyone tried extending this to support gRPC as well?'
-    },
-    {
-        id: 'com-2',
-        author: { name: 'Alex Rivera', avatarUrl: 'https://i.pravatar.cc/150?u=alexrivera' },
-        date: '2 days ago',
-        text: 'Glad you found it useful, Morgan! I haven\'t added gRPC support yet, but it\'s a great idea for a v2. If you do it, feel free to submit it as a new version!'
-    }
-]
+
+export const QUALITY_SCORE_WEIGHTS = {
+  USER_RATING: 0.4,       // 40%
+  TASK_SUCCESS_RATE: 0.3, // 30%
+  EFFICIENCY_SCORE: 0.2,  // 20% (latency, cost, etc.)
+  AUTO_GATE_SCORE: 0.1,   // 10% (compliance, safety checks)
+};
