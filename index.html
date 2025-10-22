@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Prompt Generator Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://aistudiocdn.com/react@^19.2.0",
+            "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+            "react/": "https://aistudiocdn.com/react@^19.2.0/",
+            "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
+            "recharts": "https://aistudiocdn.com/recharts@^2.12.7"
+        }
+    }
+    </script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: 'hsl(220 13% 10%)',
+              card: 'hsl(220 13% 14%)',
+              popover: 'hsl(220 13% 14%)',
+              muted: 'hsl(220 13% 18%)',
+              
+              foreground: 'hsl(210 20% 98%)',
+              'muted-foreground': 'hsl(215 15% 65%)',
+              'card-foreground': 'hsl(210 20% 98%)',
+              'popover-foreground': 'hsl(210 20% 98%)',
+              
+              primary: 'hsl(217 91% 60%)',
+              'primary-foreground': 'hsl(210 20% 98%)',
+              
+              secondary: 'hsl(215 28% 17%)',
+              'secondary-foreground': 'hsl(210 20% 98%)',
+              
+              accent: 'hsl(215 28% 17%)',
+              'accent-foreground': 'hsl(210 20% 98%)',
+
+              destructive: 'hsl(0 72% 51%)',
+              'destructive-foreground': 'hsl(210 20% 98%)',
+              
+              success: 'hsl(142 71% 45%)',
+              'success-foreground': 'hsl(145 100% 98%)',
+
+              warning: 'hsl(48 96% 50%)',
+              'warning-foreground': 'hsl(50 100% 10%)',
+              
+              info: 'hsl(204 90% 53%)',
+              'info-foreground': 'hsl(205 100% 98%)',
+              
+              border: 'hsl(215 28% 17%)',
+              input: 'hsl(215 28% 17%)',
+              ring: 'hsl(217 91% 60%)',
+            },
+            boxShadow: {
+              'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1), 0 0 0 1px hsl(215 28% 17%)',
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      @import url('https://rsms.me/inter/inter.css');
+    </style>
+</head>
+<body class="bg-background text-foreground">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
