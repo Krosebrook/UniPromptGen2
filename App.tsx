@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+
+import React, 'react';
+import { useState, useEffect } from 'react';
 import Layout from './components/Layout.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import TemplateLibrary from './pages/TemplateLibrary.tsx';
 import TemplateEditor from './pages/TemplateEditor.tsx';
+// FIX: Added file extension to fix module resolution error.
 import Playground from './pages/Playground.tsx';
 import Profile from './pages/Profile.tsx';
 import Marketplace from './pages/Marketplace.tsx';
