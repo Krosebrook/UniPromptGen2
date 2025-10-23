@@ -11,17 +11,24 @@ export interface PromptTemplateMetrics {
   efficiencyScore: number;
 }
 
-export interface PromptTemplate {
-  id: string;
+export interface PromptTemplateVersion {
+  version: string;
   name: string;
   description: string;
-  domain: string; // e.g., 'Marketing', 'Code Gen'
-  qualityScore: number;
-  riskLevel: RiskLevel;
-  version: string;
-  metrics: PromptTemplateMetrics;
-  content: string; // The actual prompt content
+  date: string;
+  comment: string;
+  content: string;
   variables: { name: string, type: 'string' | 'number', defaultValue?: any }[];
+  riskLevel: RiskLevel;
+}
+
+export interface PromptTemplate {
+  id: string;
+  domain: string;
+  qualityScore: number;
+  metrics: PromptTemplateMetrics;
+  versions: PromptTemplateVersion[];
+  activeVersion: string;
 }
 
 export interface ExecutionEvent {

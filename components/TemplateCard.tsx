@@ -14,12 +14,23 @@ const riskLevelStyles: Record<RiskLevel, string> = {
 };
 
 const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
+  const activeVersion = template.versions.find(v => v.version === template.activeVersion);
+
+  if (!activeVersion) {
+    return (
+      <div className="block bg-card rounded-lg shadow-card p-6 border border-destructive">
+        <h3 className="text-lg font-bold text-destructive-foreground">Invalid Template</h3>
+        <p className="text-sm text-muted-foreground mt-1">This template has no active version.</p>
+      </div>
+    );
+  }
+
   return (
-    <a href={`#/templates/${template.id}`} className="block bg-card rounded-lg shadow-card p-6 transition-transform hover:-translate-y-1">
+    <a href={`#/templates/${template.id}`} className="block bg-card rounded-lg shadow-card p-6 transition-transform hover:-translate-y-1 h-full">
       <div className="flex justify-between items-start">
         <div className="flex-1 pr-4">
-          <h3 className="text-lg font-bold text-foreground truncate">{template.name}</h3>
-          <p className="text-sm text-muted-foreground mt-1 h-10 overflow-hidden">{template.description}</p>
+          <h3 className="text-lg font-bold text-foreground truncate">{activeVersion.name}</h3>
+          <p className="text-sm text-muted-foreground mt-1 h-10 overflow-hidden">{activeVersion.description}</p>
         </div>
         <QualityScoreDisplay score={template.qualityScore} />
       </div>
@@ -29,11 +40,11 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
                 <CodeBracketIcon className="h-4 w-4 mr-1.5" />
                 <span>{template.domain}</span>
             </div>
-            <span className={`px-2 py-0.5 rounded-full font-medium ${riskLevelStyles[template.riskLevel]}`}>
-                {template.riskLevel} Risk
+            <span className={`px-2 py-0.5 rounded-full font-medium ${riskLevelStyles[activeVersion.riskLevel]}`}>
+                {activeVersion.riskLevel} Risk
             </span>
         </div>
-        <span>v{template.version}</span>
+        <span>v{template.activeVersion}</span>
       </div>
     </a>
   );

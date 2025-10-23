@@ -36,6 +36,10 @@ export const VideoCameraIcon = createIcon(<path strokeLinecap="round" strokeLine
 export const KeyIcon = createIcon(<path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />);
 export const MicrophoneIcon = createIcon(<path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m12 0v-1.5a6 6 0 0 0-12 0v1.5m12 0v-1.5a6 6 0 0 0-12 0v1.5m6 3.75a3 3 0 0 0 3-3v-1.5a3 3 0 0 0-6 0v1.5a3 3 0 0 0 3 3Z" />);
 export const SpeakerWaveIcon = createIcon(<path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75Z" />);
+// FIX: Add and export StopCircleIcon.
+export const StopCircleIcon = createIcon(<><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 9.563C9 9.253 9.253 9 9.563 9h4.874c.31 0 .563.253.563.563v4.874c0 .31-.253.563-.563.563H9.563C9.253 15 9 14.747 9 14.437V9.563Z" /></>);
 export const GlobeAltIcon = createIcon(<path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c.34 0 .672-.015.993-.045M12 21v-2.25M12 5.25c.34 0 .672.015.993.045m-1.986 0L10.5 3M12 5.25v-2.25m0 0A9.004 9.004 0 0 0 3.284 5.25M12 5.25A9.004 9.004 0 0 1 20.716 5.25m-17.432 0A9.004 9.004 0 0 1 12 3m0 18c-1.278 0-2.517-.145-3.682-.418m15.364 0c-1.165.273-2.404.418-3.682.418M3.284 5.25A9.004 9.004 0 0 0 2.25 12m18 0a9.004 9.004 0 0 0-1.034-3.75M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 0 1 15 0" />);
+export const ClockIcon = createIcon(<path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />);
+
 
 export default createIcon;
