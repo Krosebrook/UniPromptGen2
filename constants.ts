@@ -28,16 +28,22 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
     qualityScore: 94.5,
     metrics: { totalRuns: 1204, successfulRuns: 1180, totalUserRating: 5719, avgUserRating: 4.75, taskSuccessRate: 0.98, efficiencyScore: 0.92 },
     activeVersion: '2.1',
+    // FIX: Manually sorted versions to be most recent first and removed .sort() to fix TS contextual typing issue.
     versions: [
       {
-        version: '1.0',
-        name: 'Marketing Copy Generator v1',
-        description: 'Generates basic marketing copy.',
-        date: '2024-06-15T10:00:00Z',
-        comment: 'Initial version.',
+        version: '2.1',
+        name: 'Marketing Copy Generator',
+        description: 'Generates compelling marketing copy for social media campaigns based on product features and target audience.',
+        date: '2024-07-22T09:00:00Z',
+        comment: 'Added Tone variable for better control.',
         riskLevel: 'Low',
-        content: 'Generate marketing copy for: {{productName}}.',
-        variables: [{ name: 'productName', type: 'string' }],
+        content: 'Generate 3 variations of marketing copy for a new product.\n\nProduct Name: {{productName}}\nTarget Audience: {{targetAudience}}\nKey Features: {{keyFeatures}}\nTone: {{tone}}',
+        variables: [
+          { name: 'productName', type: 'string' },
+          { name: 'targetAudience', type: 'string' },
+          { name: 'keyFeatures', type: 'string' },
+          { name: 'tone', type: 'string', defaultValue: 'Excited' },
+        ],
       },
       {
         version: '2.0',
@@ -54,21 +60,16 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
         ],
       },
       {
-        version: '2.1',
-        name: 'Marketing Copy Generator',
-        description: 'Generates compelling marketing copy for social media campaigns based on product features and target audience.',
-        date: '2024-07-22T09:00:00Z',
-        comment: 'Added Tone variable for better control.',
+        version: '1.0',
+        name: 'Marketing Copy Generator v1',
+        description: 'Generates basic marketing copy.',
+        date: '2024-06-15T10:00:00Z',
+        comment: 'Initial version.',
         riskLevel: 'Low',
-        content: 'Generate 3 variations of marketing copy for a new product.\n\nProduct Name: {{productName}}\nTarget Audience: {{targetAudience}}\nKey Features: {{keyFeatures}}\nTone: {{tone}}',
-        variables: [
-          { name: 'productName', type: 'string' },
-          { name: 'targetAudience', type: 'string' },
-          { name: 'keyFeatures', type: 'string' },
-          { name: 'tone', type: 'string', defaultValue: 'Excited' },
-        ],
+        content: 'Generate marketing copy for: {{productName}}.',
+        variables: [{ name: 'productName', type: 'string' }],
       }
-    ].sort((a, b) => b.date.localeCompare(a.date)) // Most recent first
+    ]
   },
   {
     id: 'template-002',

@@ -75,12 +75,16 @@ const Dashboard: React.FC = () => {
          <div className="bg-card shadow-card rounded-lg p-6">
            <h2 className="text-xl font-semibold mb-4">Recent Templates</h2>
            <ul className="space-y-3">
-             {MOCK_TEMPLATES.slice(0, 3).map(t => (
-               <li key={t.id} className="flex justify-between items-center text-sm">
-                 <a href={`#/templates/${t.id}`} className="font-medium text-foreground hover:text-primary">{t.name}</a>
-                 <span className="text-muted-foreground">{t.domain}</span>
-               </li>
-             ))}
+             {/* FIX: Use the active version's name for display as PromptTemplate itself doesn't have a name. */}
+             {MOCK_TEMPLATES.slice(0, 3).map(t => {
+               const activeVersion = t.versions.find(v => v.version === t.activeVersion);
+               return (
+                 <li key={t.id} className="flex justify-between items-center text-sm">
+                   <a href={`#/templates/${t.id}`} className="font-medium text-foreground hover:text-primary">{activeVersion?.name || 'Untitled Template'}</a>
+                   <span className="text-muted-foreground">{t.domain}</span>
+                 </li>
+               );
+             })}
            </ul>
          </div>
          <div className="bg-card shadow-card rounded-lg p-6">

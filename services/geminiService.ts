@@ -75,7 +75,7 @@ export const editImage = async (prompt: string, imageBase64: string, mimeType: s
     throw new Error("No image was generated.");
 };
 
-export const generateVideoFromImage = async (prompt: string, imageBase64: string, mimeType: string, aspectRatio: '16:9' | '9:16'): Promise<string> => {
+export const generateVideoFromImage = async (prompt: string, imageBase64: string, mimeType: string, aspectRatio: '16:9' | '9:16' | '1:1' | '4:5'): Promise<string> => {
     // Per Veo guidelines, create a new instance right before the call.
     const videoAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
     let operation = await videoAI.models.generateVideos({

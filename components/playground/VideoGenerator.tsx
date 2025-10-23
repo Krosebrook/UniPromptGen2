@@ -6,7 +6,7 @@ import { VideoCameraIcon, UploadIcon, KeyIcon } from '../icons/Icons.tsx';
 const VideoGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState('A neon hologram of this cat driving a car at top speed.');
   const [image, setImage] = useState<{ file: File; url: string } | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');
+  const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1' | '4:5'>('16:9');
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,9 +89,11 @@ const VideoGenerator: React.FC = () => {
             </button>
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
             
-            <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as '16:9' | '9:16')} className="col-span-1 w-full p-2 bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none">
+            <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as '16:9' | '9:16' | '1:1' | '4:5')} className="col-span-1 w-full p-2 bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none">
                 <option value="16:9">16:9 (Landscape)</option>
                 <option value="9:16">9:16 (Portrait)</option>
+                <option value="1:1">1:1 (Square)</option>
+                <option value="4:5">4:5 (Vertical)</option>
             </select>
 
             <button onClick={handleGenerate} disabled={isLoading || !prompt || !image} className="col-span-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50">
