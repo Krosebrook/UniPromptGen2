@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToolNodeData, AuthMethod } from '../../types.ts';
 
 interface ToolNodeConfigProps {
@@ -46,16 +46,42 @@ const ConfigTextArea: React.FC<{
     label: string;
     value: string;
     onChange: (value: string) => void;
-}> = ({ label, value, onChange }) => (
-    <div>
-        <label className="block text-sm font-medium text-foreground mb-1">{label}</label>
-        <textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full h-24 p-2 text-xs font-mono bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none resize-y"
-        />
-    </div>
-);
+}> = ({ label, value, onChange }) => {
+    const [isValidJson, setIsValidJson] = useState(true);
+
+    useEffect(() => {
+        if (value.trim() === '') {
+            setIsValidJson(true);
+            return;
+        }
+        try {
+            JSON.parse(value);
+            setIsValidJson(true);
+        } catch (e) {
+            setIsValidJson(false);
+        }
+    }, [value]);
+
+    const ringClass = value.trim() === '' 
+        ? 'focus:ring-ring' 
+        : isValidJson 
+            ? 'ring-2 ring-success' 
+            : 'ring-2 ring-destructive';
+
+    return (
+        <div>
+            <label className="block text-sm font-medium text-foreground mb-1">{label}</label>
+            <textarea
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className={`w-full h-24 p-2 text-xs font-mono bg-input rounded-md text-foreground focus:outline-none resize-y transition-shadow ${ringClass}`}
+            />
+            {value.trim() !== '' && !isValidJson && (
+                <p className="text-xs text-destructive mt-1">Invalid JSON format.</p>
+            )}
+        </div>
+    );
+};
 
 
 const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {

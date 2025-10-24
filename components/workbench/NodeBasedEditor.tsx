@@ -8,15 +8,13 @@ import ReactFlow, {
   OnNodesChange,
   OnEdgesChange,
   OnConnect,
-  Node,
   Edge,
   NodeTypes,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-// FIX: Added file extension to fix module resolution error.
 import CustomNode from './nodes/CustomNode.tsx';
-// FIX: Added file extension to fix module resolution error.
 import { CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon } from '../icons/Icons.tsx';
+import { NodeRunStatus, Node } from '../../types.ts';
 
 interface NodeBasedEditorProps {
   nodes: Node[];
@@ -24,9 +22,11 @@ interface NodeBasedEditorProps {
   edges: Edge[];
   setEdges: (edges: Edge[] | ((edges: Edge[]) => Edge[])) => void;
   setSelectedNode: (node: Node | null) => void;
+  runStatus: Record<string, NodeRunStatus>;
+  selectedNodeId: string | null;
 }
 
-const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edges, setEdges, setSelectedNode }) => {
+const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edges, setEdges, setSelectedNode, runStatus, selectedNodeId }) => {
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes]
@@ -38,7 +38,7 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
   );
 
   const onConnect: OnConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
+    (params) => setEdges((eds) => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds)),
     [setEdges]
   );
   
@@ -51,11 +51,11 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
   }, [setSelectedNode]);
 
   const nodeTypes: NodeTypes = useMemo(() => ({
-    input: (props) => <CustomNode {...props} icon={ArrowRightStartOnRectangleIcon} />,
-    output: (props) => <CustomNode {...props} icon={ArrowLeftEndOnRectangleIcon} />,
-    model: (props) => <CustomNode {...props} icon={CpuChipIcon} />,
-    tool: (props) => <CustomNode {...props} icon={WrenchScrewdriverIcon} />,
-  }), []);
+    input: (props) => <CustomNode {...props} icon={ArrowRightStartOnRectangleIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
+    output: (props) => <CustomNode {...props} icon={ArrowLeftEndOnRectangleIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
+    model: (props) => <CustomNode {...props} icon={CpuChipIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
+    tool: (props) => <CustomNode {...props} icon={WrenchScrewdriverIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
+  }), [runStatus, selectedNodeId]);
 
 
   return (

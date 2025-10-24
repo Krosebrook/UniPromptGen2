@@ -1,7 +1,9 @@
 // types.ts
+import { Node as ReactFlowNode } from 'reactflow';
 
 export type RiskLevel = 'Low' | 'Medium' | 'High';
 export type ABTestStatus = 'running' | 'completed';
+export type NodeRunStatus = 'idle' | 'running' | 'success' | 'error';
 
 export interface User {
   id: string;
@@ -16,7 +18,7 @@ export interface User {
 }
 
 export interface Achievement {
-  id: string;
+  id:string;
   name: string;
   description: string;
 }
@@ -139,13 +141,10 @@ export interface ToolNodeData extends BaseNodeData {
     responseSchema: string;
 }
 
-// This is a generic type for React Flow nodes.
-// In a real app, you might use a discriminated union.
-export type NodeData = BaseNodeData | ModelNodeData | ToolNodeData;
+export interface DefaultNodeData extends BaseNodeData {}
 
-export interface Node {
-    id: string;
-    type: NodeType;
-    position: { x: number; y: number };
-    data: NodeData;
-}
+// A discriminated union for the node data based on the node type.
+export type NodeData = ModelNodeData | ToolNodeData | DefaultNodeData;
+
+// The application's definition of a node, extending React Flow's Node type.
+export type Node = ReactFlowNode<NodeData, NodeType>;
