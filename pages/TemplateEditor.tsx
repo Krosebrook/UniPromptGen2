@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { MOCK_TEMPLATES, MOCK_EVALUATIONS } from '../constants.ts';
-import { PromptTemplateVersion, Evaluation } from '../types.ts';
+import { PromptTemplate, PromptTemplateVersion, Evaluation } from '../types.ts';
 import QualityScoreDisplay from '../components/QualityScoreDisplay.tsx';
 import { PlayIcon, StarIcon, ChevronDownIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon } from '../components/icons/Icons.tsx';
+import ABTestManager from '../components/ab-testing/ABTestManager.tsx';
 
 interface TemplateEditorProps {
   templateId: string;
@@ -153,6 +154,9 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                      ))}
                  </ul>
              </div>
+             
+             <ABTestManager template={template} />
+
         </div>
 
         {/* Right Column */}

@@ -1,40 +1,18 @@
 // types.ts
 
 export type RiskLevel = 'Low' | 'Medium' | 'High';
+export type ABTestStatus = 'running' | 'completed';
 
-export interface PromptTemplateMetrics {
-  totalRuns: number;
-  successfulRuns: number;
-  totalUserRating: number;
-  avgUserRating: number;
-  taskSuccessRate: number;
-  efficiencyScore: number;
-}
-
-export interface PromptTemplateVersion {
-  version: string;
-  name: string;
-  description: string;
-  date: string;
-  comment: string;
-  content: string;
-  variables: { name: string, type: 'string' | 'number', defaultValue?: any }[];
-  riskLevel: RiskLevel;
-}
-
-export interface PromptTemplate {
+export interface User {
   id: string;
-  domain: string;
-  qualityScore: number;
-  metrics: PromptTemplateMetrics;
-  versions: PromptTemplateVersion[];
-  activeVersion: string;
-}
-
-export interface ExecutionEvent {
-  success: boolean;
-  userRating: number; // 1-5 scale
-  // ... other event data like latency, cost, output, etc.
+  name: string;
+  email: string;
+  title: string;
+  avatarUrl: string;
+  xp: number;
+  level: number;
+  achievements: Achievement[];
+  certifications: Certification[];
 }
 
 export interface Achievement {
@@ -50,32 +28,86 @@ export interface Certification {
   date: string;
 }
 
-export interface User {
+export interface PromptTemplateVariable {
+  name: string;
+  type: 'string' | 'number' | 'boolean';
+  defaultValue?: string;
+}
+
+export interface PromptTemplateVersion {
+  version: string;
+  name: string;
+  description: string;
+  date: string;
+  comment: string;
+  riskLevel: RiskLevel;
+  content: string;
+  variables: PromptTemplateVariable[];
+}
+
+export interface PromptTemplateMetrics {
+  totalRuns: number;
+  successfulRuns: number;
+  totalUserRating: number;
+  avgUserRating: number;
+  taskSuccessRate: number;
+  efficiencyScore: number;
+}
+
+export interface ABTestMetrics {
+    totalRuns: number;
+    taskSuccessRate: number;
+    avgUserRating: number;
+}
+
+export interface ABTest {
   id: string;
   name: string;
-  email: string;
-  title: string;
-  avatarUrl: string;
-  xp: number;
-  level: number;
-  achievements: Achievement[];
-  certifications: Certification[];
+  status: ABTestStatus;
+  winner?: 'A' | 'B';
+  trafficSplit: number; // Percentage for version A
+  versionA: string;
+  versionB: string;
+  metricsA: ABTestMetrics;
+  metricsB: ABTestMetrics;
+}
+
+export interface PromptTemplate {
+  id: string;
+  domain: string;
+  qualityScore: number;
+  metrics: PromptTemplateMetrics;
+  activeVersion: string;
+  versions: PromptTemplateVersion[];
+  abTests?: ABTest[];
 }
 
 export interface Evaluation {
   id: string;
   templateId: string;
-  evaluator: Pick<User, 'name' | 'avatarUrl'>;
+  evaluator: {
+    name: string;
+    avatarUrl: string;
+  };
   date: string;
   score: number;
   comment: string;
 }
 
+export interface ExecutionEvent {
+  templateId: string;
+  version: string;
+  success: boolean;
+  userRating: number; // e.g., 1-5
+  latencyMs: number;
+  cost: number;
+}
+
 export interface ChatMessage {
-  id: string;
-  role: 'user' | 'model';
-  text: string;
-  timestamp: Date;
+    id: string;
+    role: 'user' | 'model';
+    text: string;
+    timestamp: Date;
 }
 
 export interface GroundingSource {
@@ -83,14 +115,37 @@ export interface GroundingSource {
         uri: string;
         title: string;
     };
-    maps?: {
-        uri: string;
-        title: string;
-        placeAnswerSources?: {
-            reviewSnippets: {
-                uri: string,
-                title: string
-            }[];
-        }
-    };
+}
+
+// Workbench Types
+export type NodeType = 'input' | 'output' | 'model' | 'tool';
+
+export interface BaseNodeData {
+    label: string;
+}
+
+export interface ModelNodeData extends BaseNodeData {
+    temperature: number;
+    topP: number;
+    topK: number;
+}
+
+export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
+
+export interface ToolNodeData extends BaseNodeData {
+    apiEndpoint: string;
+    authMethod: AuthMethod;
+    requestSchema: string;
+    responseSchema: string;
+}
+
+// This is a generic type for React Flow nodes.
+// In a real app, you might use a discriminated union.
+export type NodeData = BaseNodeData | ModelNodeData | ToolNodeData;
+
+export interface Node {
+    id: string;
+    type: NodeType;
+    position: { x: number; y: number };
+    data: NodeData;
 }

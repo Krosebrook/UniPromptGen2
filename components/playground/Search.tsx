@@ -61,11 +61,24 @@ const Search: React.FC = () => {
             {result.sources.length > 0 && (
                 <div>
                     <h3 className="font-semibold text-foreground mb-2">Sources</h3>
-                    <ul className="space-y-1 list-disc list-inside">
+                    <ul className="space-y-3">
                         {result.sources.map((source, index) => source.web && (
                             <li key={index}>
-                                <a href={source.web.uri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-                                    {source.web.title}
+                                <a 
+                                    href={source.web.uri} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50 border border-border transition-all hover:border-primary/50 hover:bg-secondary"
+                                >
+                                    <div className="flex-shrink-0 pt-0.5">
+                                        <GlobeAltIcon className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <p className="text-sm font-medium text-primary leading-tight truncate">
+                                            {source.web.title}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground truncate">{source.web.uri}</p>
+                                    </div>
                                 </a>
                             </li>
                         ))}

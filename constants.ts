@@ -69,6 +69,29 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
         content: 'Generate marketing copy for: {{productName}}.',
         variables: [{ name: 'productName', type: 'string' }],
       }
+    ],
+    abTests: [
+      {
+        id: 'ab-test-001',
+        name: 'Tone Variable Efficacy Test',
+        status: 'running',
+        trafficSplit: 50,
+        versionA: '2.1',
+        versionB: '2.0',
+        metricsA: { totalRuns: 350, taskSuccessRate: 0.99, avgUserRating: 4.8 },
+        metricsB: { totalRuns: 345, taskSuccessRate: 0.97, avgUserRating: 4.6 },
+      },
+      {
+        id: 'ab-test-002',
+        name: 'Old vs New Comparison',
+        status: 'completed',
+        winner: 'B',
+        trafficSplit: 50,
+        versionA: '1.0',
+        versionB: '2.0',
+        metricsA: { totalRuns: 500, taskSuccessRate: 0.85, avgUserRating: 4.2 },
+        metricsB: { totalRuns: 500, taskSuccessRate: 0.96, avgUserRating: 4.6 },
+      }
     ]
   },
   {
