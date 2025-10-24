@@ -1,6 +1,6 @@
 
-import React, 'react';
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import TemplateLibrary from './pages/TemplateLibrary.tsx';
@@ -12,9 +12,13 @@ import Marketplace from './pages/Marketplace.tsx';
 import AgenticWorkbench from './pages/AgenticWorkbench.tsx';
 import ToolLibrary from './pages/ToolLibrary.tsx';
 import KnowledgeLibrary from './pages/KnowledgeLibrary.tsx';
+import LandingPage from './pages/LandingPage.tsx';
 import { MOCK_USER } from './constants.ts';
 
 const App: React.FC = () => {
+  // Simulate authentication state. In a real app, this would be managed
+  // by a context, library like Redux, or by checking a token.
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [route, setRoute] = useState(window.location.hash);
 
   useEffect(() => {
@@ -27,6 +31,12 @@ const App: React.FC = () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
+
+  const handleSignIn = () => {
+    setIsAuthenticated(true);
+    // After signing in, redirect to the dashboard
+    window.location.hash = '#/dashboard';
+  };
 
   const renderPage = () => {
     if (route.startsWith('#/templates/')) {
@@ -56,6 +66,12 @@ const App: React.FC = () => {
     }
   };
 
+  // If the user is not authenticated, show the landing page.
+  if (!isAuthenticated) {
+    return <LandingPage onSignIn={handleSignIn} />;
+  }
+
+  // Otherwise, show the main application layout.
   return <Layout user={MOCK_USER}>{renderPage()}</Layout>;
 };
 
