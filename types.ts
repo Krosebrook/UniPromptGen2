@@ -1,5 +1,5 @@
 // types.ts
-import { Node as ReactFlowNode } from 'reactflow';
+import { Node as ReactFlowNode, Edge as ReactFlowEdge } from 'reactflow';
 
 export type RiskLevel = 'Low' | 'Medium' | 'High';
 export type ABTestStatus = 'running' | 'completed';
@@ -127,6 +127,7 @@ export interface BaseNodeData {
 }
 
 export interface ModelNodeData extends BaseNodeData {
+    systemInstruction: string;
     temperature: number;
     topP: number;
     topK: number;
@@ -148,3 +149,5 @@ export type NodeData = ModelNodeData | ToolNodeData | DefaultNodeData;
 
 // The application's definition of a node, extending React Flow's Node type.
 export type Node = ReactFlowNode<NodeData, NodeType>;
+// Re-export the Edge type for consistency.
+export type Edge = ReactFlowEdge;

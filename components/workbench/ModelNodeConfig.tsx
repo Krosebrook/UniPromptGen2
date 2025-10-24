@@ -36,6 +36,18 @@ const ConfigSlider: React.FC<{
 const ModelNodeConfig: React.FC<ModelNodeConfigProps> = ({ data, onUpdate }) => {
   return (
     <div className="space-y-4">
+      <div>
+        <label htmlFor="system-instruction" className="block text-sm font-medium text-foreground">System Instruction</label>
+        <textarea
+          id="system-instruction"
+          value={data.systemInstruction}
+          onChange={(e) => onUpdate({ systemInstruction: e.target.value })}
+          rows={4}
+          className="w-full mt-1 p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none resize-y"
+          placeholder="e.g., You are a helpful AI assistant."
+        />
+        <p className="text-xs text-muted-foreground mt-1">Sets the context and personality for the model.</p>
+      </div>
       <ConfigSlider
         label="Temperature"
         description="Controls randomness. Lower is more deterministic."

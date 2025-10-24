@@ -1,6 +1,5 @@
 // services/agentExecutorService.ts
-import { Edge } from 'reactflow';
-import { Node, NodeRunStatus, ToolNodeData } from '../types.ts';
+import { Node, Edge, NodeRunStatus, ToolNodeData } from '../types.ts';
 
 type StatusUpdateCallback = (nodeId: string, status: NodeRunStatus) => void;
 

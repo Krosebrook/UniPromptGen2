@@ -8,13 +8,13 @@ import ReactFlow, {
   OnNodesChange,
   OnEdgesChange,
   OnConnect,
-  Edge,
   NodeTypes,
+  Connection,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomNode from './nodes/CustomNode.tsx';
 import { CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon } from '../icons/Icons.tsx';
-import { NodeRunStatus, Node } from '../../types.ts';
+import { NodeRunStatus, Node, Edge } from '../../types.ts';
 
 interface NodeBasedEditorProps {
   nodes: Node[];
@@ -40,6 +40,43 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
   const onConnect: OnConnect = useCallback(
     (params) => setEdges((eds) => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds)),
     [setEdges]
+  );
+  
+  const isValidConnection = useCallback(
+    (connection: Connection) => {
+      // Prevent connecting a node to itself
+      if (connection.source === connection.target) {
+        return false;
+      }
+      
+      const sourceNode = nodes.find((node) => node.id === connection.source);
+      const targetNode = nodes.find((node) => node.id === connection.target);
+
+      if (!sourceNode || !targetNode) {
+        return false;
+      }
+
+      // Prevent connections FROM an 'output' node
+      if (sourceNode.type === 'output') {
+        return false;
+      }
+
+      // Prevent connections TO an 'input' node
+      if (targetNode.type === 'input') {
+        return false;
+      }
+      
+      // Enforce a single incoming connection per node.
+      const isTargetAlreadyConnected = edges.some(
+        (edge) => edge.target === connection.target
+      );
+      if (isTargetAlreadyConnected) {
+        return false;
+      }
+
+      return true;
+    },
+    [nodes, edges]
   );
   
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -69,6 +106,7 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
+        isValidConnection={isValidConnection}
         fitView
       >
         <Controls />

@@ -15,7 +15,7 @@ interface WorkbenchSidebarProps {
 const nodeTypes = [
     { type: 'input' as NodeType, label: 'Input Node', icon: ArrowRightStartOnRectangleIcon, description: 'Starting point for the agent.' },
     { type: 'model' as NodeType, label: 'Model Node', icon: CpuChipIcon, description: 'Calls a language model.' },
-    { type: 'tool' as NodeType, label: 'Tool Node', icon: WrenchScrewdriverIcon, description: 'Uses an external tool or API.' },
+    { type: 'tool' as NodeType, label: 'Tool Node', icon: WrenchScrewdriverIcon, description: 'Connects to external tools or APIs.' },
     { type: 'output' as NodeType, label: 'Output Node', icon: ArrowLeftEndOnRectangleIcon, description: 'Final output from the agent.' },
 ];
 

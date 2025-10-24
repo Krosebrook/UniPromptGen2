@@ -1,9 +1,8 @@
 import React, { useState, useCallback, SetStateAction } from 'react';
-import { Edge } from 'reactflow';
 import NodeBasedEditor from '../components/workbench/NodeBasedEditor.tsx';
 import WorkbenchSidebar from '../components/workbench/WorkbenchSidebar.tsx';
 import WorkbenchConfigPanel from '../components/workbench/WorkbenchConfigPanel.tsx';
-import { NodeType, Node, NodeData, ModelNodeData, ToolNodeData, NodeRunStatus, DefaultNodeData } from '../types.ts';
+import { NodeType, Node, Edge, NodeData, ModelNodeData, ToolNodeData, NodeRunStatus, DefaultNodeData } from '../types.ts';
 import { executeAgent } from '../services/agentExecutorService.ts';
 import { PlayIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
 
@@ -15,6 +14,7 @@ const initialNodes: Node[] = [
     position: { x: 300, y: 100 }, 
     data: { 
       label: 'Reasoning Model',
+      systemInstruction: 'You are an expert logician. Reason step-by-step to arrive at the correct conclusion.',
       temperature: 0.7,
       topP: 1.0,
       topK: 40
@@ -57,7 +57,7 @@ const AgenticWorkbench: React.FC = () => {
 
     switch (type) {
       case 'model':
-        data = { label: 'New Model Node', temperature: 0.7, topP: 1, topK: 40 } as ModelNodeData;
+        data = { label: 'New Model Node', systemInstruction: 'You are a helpful AI assistant.', temperature: 0.7, topP: 1, topK: 40 } as ModelNodeData;
         break;
       case 'tool':
         data = { label: 'New Tool Node', apiEndpoint: '', authMethod: 'None', requestSchema: '{}', responseSchema: '{}' } as ToolNodeData;
