@@ -26,6 +26,7 @@ export const sendMessage = async (message: string): Promise<ChatMessage> => {
         id: `model-${Date.now()}`,
         role: 'model',
         text: response.text,
+        timestamp: new Date(),
     };
 };
 

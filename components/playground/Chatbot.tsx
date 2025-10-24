@@ -11,7 +11,7 @@ const Chatbot: React.FC = () => {
 
   useEffect(() => {
     // Initialize with a welcome message
-    setMessages([{ id: 'init', role: 'model', text: 'Hello! How can I help you today?' }]);
+    setMessages([{ id: 'init', role: 'model', text: 'Hello! How can I help you today?', timestamp: new Date() }]);
     startChat(); // Initialize the chat session
   }, []);
 
@@ -22,7 +22,7 @@ const Chatbot: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage: ChatMessage = { id: `user-${Date.now()}`, role: 'user', text: input };
+    const userMessage: ChatMessage = { id: `user-${Date.now()}`, role: 'user', text: input, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -35,7 +35,8 @@ const Chatbot: React.FC = () => {
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'model',
-        text: 'Sorry, I encountered an error. Please try again.'
+        text: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -55,6 +56,9 @@ const Chatbot: React.FC = () => {
             )}
             <div className={`max-w-lg px-4 py-2 rounded-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
               <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-primary-foreground/70 text-right' : 'text-muted-foreground'}`}>
+                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
              {msg.role === 'user' && (
               <div className="p-2 bg-secondary rounded-full">

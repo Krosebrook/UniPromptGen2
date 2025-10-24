@@ -1,209 +1,202 @@
-import React, { useState, useEffect } from 'react';
-import { MOCK_TEMPLATES } from '../constants.ts';
-import { PromptTemplate, PromptTemplateVersion } from '../types.ts';
-import { SaveIcon, ArrowLeftIcon, ClockIcon } from '../components/icons/Icons.tsx';
+import React, { useState } from 'react';
+import { MOCK_TEMPLATES, MOCK_EVALUATIONS } from '../constants.ts';
+import { PromptTemplateVersion, Evaluation } from '../types.ts';
+import QualityScoreDisplay from '../components/QualityScoreDisplay.tsx';
+import { PlayIcon, StarIcon, ChevronDownIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon } from '../components/icons/Icons.tsx';
 
 interface TemplateEditorProps {
   templateId: string;
 }
 
+interface History<T> {
+  past: T[];
+  present: T;
+  future: T[];
+}
+
 const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
-  const [template, setTemplate] = useState<PromptTemplate | null>(null);
-  const [editorState, setEditorState] = useState<Omit<PromptTemplateVersion, 'date' | 'comment' | 'version'> | null>(null);
-  const [isNew, setIsNew] = useState(false);
-  const [currentVersion, setCurrentVersion] = useState('');
+  const template = MOCK_TEMPLATES.find(t => t.id === templateId);
+  const evaluations = MOCK_EVALUATIONS.filter(e => e.templateId === templateId);
 
-  useEffect(() => {
-    if (templateId === 'new') {
-      setIsNew(true);
-      const newTemplate: PromptTemplate = {
-          id: `template-${Date.now()}`,
-          domain: 'General',
-          qualityScore: 0,
-          metrics: { totalRuns: 0, successfulRuns: 0, totalUserRating: 0, avgUserRating: 0, taskSuccessRate: 0, efficiencyScore: 0 },
-          versions: [],
-          activeVersion: '1.0'
-      };
-      setTemplate(newTemplate);
-      const newVersion: Omit<PromptTemplateVersion, 'date' | 'comment' | 'version'> = {
-        name: 'New Template',
-        description: '',
-        riskLevel: 'Low',
-        content: '',
-        variables: [],
-      };
-      setEditorState(newVersion);
-      setCurrentVersion('1.0');
-    } else {
-      setIsNew(false);
-      const existingTemplate = MOCK_TEMPLATES.find(t => t.id === templateId);
-      if (existingTemplate) {
-        setTemplate(existingTemplate);
-        const activeVersion = existingTemplate.versions.find(v => v.version === existingTemplate.activeVersion);
-        if (activeVersion) {
-            setEditorState(activeVersion);
-            setCurrentVersion(activeVersion.version);
-        }
-      }
-    }
-  }, [templateId]);
+  const initialVersion = template?.versions.find(v => v.version === template.activeVersion);
 
-  const handleInputChange = (field: keyof typeof editorState, value: any) => {
-    if (editorState) {
-        setEditorState({ ...editorState, [field]: value });
-    }
+  const [history, setHistory] = useState<History<PromptTemplateVersion> | null>(initialVersion ? {
+    past: [],
+    present: initialVersion,
+    future: []
+  } : null);
+
+  const [isVersionDropdownOpen, setIsVersionDropdownOpen] = useState(false);
+
+  const handleUndo = () => {
+    setHistory(currentHistory => {
+      if (!currentHistory || currentHistory.past.length === 0) return currentHistory;
+      const previous = currentHistory.past[currentHistory.past.length - 1];
+      const newPast = currentHistory.past.slice(0, currentHistory.past.length - 1);
+      return {
+        past: newPast,
+        present: previous,
+        future: [currentHistory.present, ...currentHistory.future]
+      };
+    });
+  };
+
+  const handleRedo = () => {
+    setHistory(currentHistory => {
+      if (!currentHistory || currentHistory.future.length === 0) return currentHistory;
+      const next = currentHistory.future[0];
+      const newFuture = currentHistory.future.slice(1);
+      return {
+        past: [...currentHistory.past, currentHistory.present],
+        present: next,
+        future: newFuture
+      };
+    });
+  };
+
+  const handleInputChange = (field: keyof PromptTemplateVersion, value: any) => {
+    setHistory(currentHistory => {
+      if (!currentHistory) return null;
+      // To prevent excessive history entries for single character changes,
+      // you might add debouncing or more complex logic here in a real app.
+      const newPresent = { ...currentHistory.present, [field]: value };
+      return {
+        past: [...currentHistory.past, currentHistory.present],
+        present: newPresent,
+        future: [] // Clear future on new edit
+      };
+    });
   };
   
-  const handleDomainChange = (value: string) => {
-      if (template) {
-          setTemplate({ ...template, domain: value });
-      }
-  };
-
-  const handleViewVersion = (version: PromptTemplateVersion) => {
-    setEditorState(version);
-    setCurrentVersion(version.version);
-  };
-
-  const handleSetActiveVersion = (version: string) => {
-    if (template) {
-        setTemplate({ ...template, activeVersion: version });
-        // In a real app, this would be an API call
-        alert(`Version ${version} is now the active version.`);
-    }
-  };
-
-  const getNextVersion = (): string => {
-      if (!template || template.versions.length === 0) return '1.0';
-      // Simple minor version bump
-      const latestVersion = template.versions.reduce((latest, v) => parseFloat(v.version) > parseFloat(latest) ? v.version : latest, '0.0');
-      const [major, minor] = latestVersion.split('.').map(Number);
-      return `${major}.${minor + 1}`;
-  };
-
-  const handleSave = () => {
-    if (!template || !editorState) return;
-
-    const comment = window.prompt('Please enter a brief comment for this new version:', isNew ? 'Initial version.' : '');
-    if (comment === null) return; // User cancelled
-
-    const newVersionNumber = isNew ? '1.0' : getNextVersion();
-
-    const newVersion: PromptTemplateVersion = {
-        ...editorState,
-        version: newVersionNumber,
-        date: new Date().toISOString(),
-        comment,
-    };
-    
-    const updatedVersions = [...template.versions, newVersion].sort((a,b) => b.date.localeCompare(a.date));
-
-    // In a real app, this would make an API call to save the new version
-    console.log('Saving new version:', newVersion);
-    alert(`Template saved as new version "${newVersion.version}"!`);
-    
-    // This part is a mock of updating the "database"
-    const templateIndex = MOCK_TEMPLATES.findIndex(t => t.id === template.id);
-    const updatedTemplate = { ...template, versions: updatedVersions, activeVersion: newVersion.version };
-    if (templateIndex > -1) {
-        MOCK_TEMPLATES[templateIndex] = updatedTemplate;
-    } else {
-        MOCK_TEMPLATES.push(updatedTemplate);
-    }
-
-    window.location.hash = '#/templates';
-  };
-
-  if (!template || !editorState) {
-    return <div>Loading template...</div>;
+  const handleVersionChange = (version: PromptTemplateVersion) => {
+    setHistory({
+        past: [],
+        present: version,
+        future: []
+    });
+    setIsVersionDropdownOpen(false);
   }
+
+  if (!template || !history) {
+    return <div className="text-center p-8">Template not found. <a href="#/templates" className="text-primary hover:underline">Return to Library</a></div>;
+  }
+  
+  const { present: selectedVersion } = history;
 
   return (
     <div className="space-y-6">
-       <div className="flex items-center justify-between">
-        <a href="#/templates" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeftIcon className="h-4 w-4" />
-            Back to Library
-        </a>
-        <h1 className="text-3xl font-bold text-foreground">
-          {isNew ? 'Create New Template' : `Edit Template (Viewing v${currentVersion})`}
-        </h1>
-        <button
-          onClick={handleSave}
-          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90"
-        >
-          <SaveIcon className="h-5 w-5 mr-2" />
-          Save as New Version
-        </button>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex-1">
+          <input
+             type="text"
+             value={selectedVersion.name}
+             onChange={(e) => handleInputChange('name', e.target.value)}
+             className="w-full text-3xl font-bold text-foreground bg-transparent focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2 -mx-2"
+           />
+           <textarea
+             value={selectedVersion.description}
+             onChange={(e) => handleInputChange('description', e.target.value)}
+             className="w-full text-muted-foreground max-w-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2 -mx-2 mt-1 resize-none"
+             rows={2}
+           />
+        </div>
+        <div className="flex items-center gap-2">
+            <button onClick={handleUndo} disabled={history.past.length === 0} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Undo">
+                <ArrowUturnLeftIcon className="h-5 w-5" />
+            </button>
+             <button onClick={handleRedo} disabled={history.future.length === 0} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Redo">
+                <ArrowUturnRightIcon className="h-5 w-5" />
+            </button>
+            <a href="#/playground" className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90">
+                <PlayIcon className="h-5 w-5 mr-2" />
+                Run in Playground
+            </a>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-4 bg-card p-6 rounded-lg shadow-card">
-           <div>
-              <label htmlFor="name" className="block text-sm font-medium text-muted-foreground mb-1">Template Name</label>
-              <input type="text" id="name" value={editorState.name} onChange={e => handleInputChange('name', e.target.value)} className="w-full p-2 bg-input rounded-md"/>
-           </div>
-           <div>
-              <label htmlFor="description" className="block text-sm font-medium text-muted-foreground mb-1">Description</label>
-              <textarea id="description" value={editorState.description} onChange={e => handleInputChange('description', e.target.value)} rows={3} className="w-full p-2 bg-input rounded-md"/>
-           </div>
-            <div>
-                <label htmlFor="risk" className="block text-sm font-medium text-muted-foreground mb-1">Risk Level</label>
-                <select id="risk" value={editorState.riskLevel} onChange={e => handleInputChange('riskLevel', e.target.value as any)} className="w-full p-2 bg-input rounded-md">
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
-                </select>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-6">
+            <div className="bg-card shadow-card rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Template Content</h2>
+                    <div className="relative">
+                        <button onClick={() => setIsVersionDropdownOpen(!isVersionDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 text-sm bg-secondary rounded-md hover:bg-accent">
+                            Version {selectedVersion.version}
+                            <ChevronDownIcon className={`h-4 w-4 transition-transform ${isVersionDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isVersionDropdownOpen && (
+                             <div className="absolute right-0 mt-2 w-48 bg-popover rounded-md shadow-lg ring-1 ring-border py-1 z-10">
+                                {template.versions.map(v => (
+                                    <a key={v.version} onClick={() => handleVersionChange(v)} className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent cursor-pointer">
+                                        Version {v.version} {v.version === template.activeVersion && '(Active)'}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                 <textarea
+                    value={selectedVersion.content}
+                    onChange={(e) => handleInputChange('content', e.target.value)}
+                    className="w-full h-80 p-4 font-mono text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none resize-y"
+                />
             </div>
-           <div>
-              <label htmlFor="content" className="block text-sm font-medium text-muted-foreground mb-1">Prompt Content</label>
-              <textarea id="content" value={editorState.content} onChange={e => handleInputChange('content', e.target.value)} rows={15} className="w-full p-2 bg-input rounded-md font-mono text-sm"/>
-           </div>
-            <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Variables</h3>
-            <p className="text-xs text-muted-foreground">{'Define variables using `{{variableName}}` in the content.'}</p>
-          </div>
+             <div className="bg-card shadow-card rounded-lg p-6">
+                 <h2 className="text-xl font-semibold mb-4">Version History</h2>
+                 <ul className="space-y-4">
+                     {template.versions.map(v => (
+                         <li key={v.version} className="border-l-2 pl-4 border-border">
+                             <p className="font-semibold">Version {v.version} <span className="text-xs font-normal text-muted-foreground">- {new Date(v.date).toLocaleDateString()}</span></p>
+                             <p className="text-sm text-muted-foreground">{v.comment}</p>
+                         </li>
+                     ))}
+                 </ul>
+             </div>
         </div>
-        <div className="space-y-6 bg-card p-6 rounded-lg shadow-card">
-          <div>
-            <label htmlFor="domain" className="block text-sm font-medium text-muted-foreground mb-1">Domain</label>
-            <select id="domain" value={template.domain} onChange={e => handleDomainChange(e.target.value)} className="w-full p-2 bg-input rounded-md">
-              <option>Marketing</option>
-              <option>Code Gen</option>
-              <option>Support</option>
-              <option>Content</option>
-              <option>General</option>
-            </select>
-          </div>
-          
-          {!isNew && (
-            <div>
-                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
-                    <ClockIcon className="h-5 w-5 mr-2" />
-                    Version History
-                </h3>
-                <ul className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-                    {template.versions.map(v => (
-                        <li key={v.version} className="bg-secondary p-3 rounded-md">
-                            <div className="flex justify-between items-start">
-                                <p className="font-bold text-foreground">
-                                    v{v.version}
-                                    {v.version === template.activeVersion && <span className="ml-2 text-xs font-medium bg-success text-success-foreground px-2 py-0.5 rounded-full">Active</span>}
-                                </p>
-                                <p className="text-xs text-muted-foreground">{new Date(v.date).toLocaleDateString()}</p>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1 italic">"{v.comment}"</p>
-                            <div className="flex gap-2 mt-3">
-                                <button onClick={() => handleViewVersion(v)} className="text-xs font-medium text-primary hover:underline">View</button>
-                                {v.version !== template.activeVersion && (
-                                    <button onClick={() => handleSetActiveVersion(v.version)} className="text-xs font-medium text-primary hover:underline">Set as Active</button>
-                                )}
-                            </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+             <div className="bg-card shadow-card rounded-lg p-6 text-center">
+                <h3 className="text-lg font-semibold mb-4">Quality Score</h3>
+                <QualityScoreDisplay score={template.qualityScore} size="lg" />
+                <p className="text-xs text-muted-foreground mt-2">Based on {template.metrics.totalRuns.toLocaleString()} runs</p>
+            </div>
+            <div className="bg-card shadow-card rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Variables</h3>
+                <ul className="space-y-2">
+                    {selectedVersion.variables.map(v => (
+                        <li key={v.name} className="flex justify-between items-center text-sm p-2 bg-secondary rounded-md">
+                            <span className="font-mono text-primary">{`{{${v.name}}}`}</span>
+                            <span className="text-muted-foreground capitalize">{v.type}</span>
                         </li>
                     ))}
                 </ul>
             </div>
-          )}
+            <div className="bg-card shadow-card rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Recent Evaluations</h3>
+                {evaluations.length > 0 ? (
+                    <ul className="space-y-3">
+                        {evaluations.map(e => (
+                             <li key={e.id} className="flex items-start gap-3">
+                                <img src={e.evaluator.avatarUrl} alt={e.evaluator.name} className="h-8 w-8 rounded-full" />
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-semibold text-sm">{e.evaluator.name}</p>
+                                        <div className="flex items-center text-xs text-warning">
+                                            <StarIcon className="h-4 w-4 mr-0.5" />
+                                            <span>{e.score}/100</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground italic">"{e.comment}"</p>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-muted-foreground text-center">No evaluations yet.</p>
+                )}
+            </div>
         </div>
       </div>
     </div>
