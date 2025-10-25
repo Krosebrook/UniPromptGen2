@@ -112,6 +112,9 @@ export interface Tool {
   responseSchema: string; // JSON string
 }
 
+export type ToolFormData = Omit<Tool, 'id'>;
+
+
 // From constants.ts, KnowledgeLibrary.tsx
 export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
 
@@ -122,6 +125,8 @@ export interface KnowledgeSource {
   description: string;
   dateAdded: string;
 }
+
+export type KnowledgeSourceFormData = Omit<KnowledgeSource, 'id' | 'dateAdded'>;
 
 // From geminiService.ts, Chatbot.tsx
 export interface ChatMessage {

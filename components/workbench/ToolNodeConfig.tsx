@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ToolNodeData, AuthMethod, Tool } from '../../types.ts';
-import { MOCK_TOOLS } from '../../constants.ts';
+import { getTools } from '../../services/apiService.ts';
 
 interface ToolNodeConfigProps {
   data: ToolNodeData;
@@ -8,11 +8,17 @@ interface ToolNodeConfigProps {
 }
 
 const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
+  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+  
+  useEffect(() => {
+    getTools().then(setAvailableTools);
+  }, []);
+
   const authMethods: AuthMethod[] = ['None', 'API Key', 'OAuth 2.0'];
   const isLinkedToTool = !!data.toolId;
 
   const handleToolSelect = (toolId: string) => {
-    const selectedTool = MOCK_TOOLS.find(t => t.id === toolId);
+    const selectedTool = availableTools.find(t => t.id === toolId);
     if (selectedTool) {
       onUpdate({
         toolId: selectedTool.id,
@@ -42,7 +48,7 @@ const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
           className="w-full p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
         >
           <option value="">-- Manual Configuration --</option>
-          {MOCK_TOOLS.map(tool => <option key={tool.id} value={tool.id}>{tool.name}</option>)}
+          {availableTools.map(tool => <option key={tool.id} value={tool.id}>{tool.name}</option>)}
         </select>
          {isLinkedToTool && (
             <button onClick={handleDetachTool} className="text-xs text-primary hover:underline mt-1">

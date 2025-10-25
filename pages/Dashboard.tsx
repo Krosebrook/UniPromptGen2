@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CodeBracketSquareIcon, StarIcon, UserGroupIcon, ChartBarIcon
 } from '../components/icons/Icons.tsx';
-import { MOCK_TEMPLATES, MOCK_EVALUATIONS } from '../constants.ts';
+import { getTemplates, getEvaluationsByTemplateId } from '../services/apiService.ts'; // Fictional function
+import { PromptTemplate, Evaluation } from '../types.ts';
 import {
   ResponsiveContainer,
   LineChart,
@@ -38,6 +39,23 @@ const chartData = [
 
 
 const Dashboard: React.FC = () => {
+  const [recentTemplates, setRecentTemplates] = useState<PromptTemplate[]>([]);
+  const [recentEvaluations, setRecentEvaluations] = useState<Evaluation[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+        const templates = await getTemplates();
+        setRecentTemplates(templates.slice(0, 3));
+        
+        // In a real app, you'd have a dedicated endpoint for recent evaluations
+        const evals1 = await getEvaluationsByTemplateId('template-001');
+        const evals2 = await getEvaluationsByTemplateId('template-002');
+        const evals3 = await getEvaluationsByTemplateId('template-003');
+        setRecentEvaluations([...evals1, ...evals2, ...evals3].slice(0, 3));
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
@@ -75,8 +93,7 @@ const Dashboard: React.FC = () => {
          <div className="bg-card shadow-card rounded-lg p-6">
            <h2 className="text-xl font-semibold mb-4">Recent Templates</h2>
            <ul className="space-y-3">
-             {/* FIX: Use the active version's name for display as PromptTemplate itself doesn't have a name. */}
-             {MOCK_TEMPLATES.slice(0, 3).map(t => {
+             {recentTemplates.map(t => {
                const activeVersion = t.versions.find(v => v.version === t.activeVersion);
                return (
                  <li key={t.id} className="flex justify-between items-center text-sm">
@@ -90,7 +107,7 @@ const Dashboard: React.FC = () => {
          <div className="bg-card shadow-card rounded-lg p-6">
            <h2 className="text-xl font-semibold mb-4">Recent Evaluations</h2>
             <ul className="space-y-3">
-             {MOCK_EVALUATIONS.map(e => (
+             {recentEvaluations.map(e => (
                <li key={e.id} className="flex justify-between items-center text-sm">
                  <div className="flex items-center">
                     <img src={e.evaluator.avatarUrl} className="h-6 w-6 rounded-full mr-2" />

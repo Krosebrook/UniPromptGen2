@@ -1,6 +1,6 @@
-import React from 'react';
-import { KnowledgeNodeData } from '../../types.ts';
-import { MOCK_KNOWLEDGE_SOURCES } from '../../constants.ts';
+import React, { useState, useEffect } from 'react';
+import { KnowledgeNodeData, KnowledgeSource } from '../../types.ts';
+import { getKnowledgeSources } from '../../services/apiService.ts';
 
 interface KnowledgeNodeConfigProps {
   data: KnowledgeNodeData;
@@ -8,9 +8,14 @@ interface KnowledgeNodeConfigProps {
 }
 
 const KnowledgeNodeConfig: React.FC<KnowledgeNodeConfigProps> = ({ data, onUpdate }) => {
+  const [availableSources, setAvailableSources] = useState<KnowledgeSource[]>([]);
   
+  useEffect(() => {
+    getKnowledgeSources().then(setAvailableSources);
+  }, []);
+
   const handleSourceSelect = (sourceId: string) => {
-    const selectedSource = MOCK_KNOWLEDGE_SOURCES.find(s => s.id === sourceId);
+    const selectedSource = availableSources.find(s => s.id === sourceId);
     if (selectedSource) {
       onUpdate({
         sourceId: selectedSource.id,
@@ -35,7 +40,7 @@ const KnowledgeNodeConfig: React.FC<KnowledgeNodeConfigProps> = ({ data, onUpdat
           className="w-full p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
         >
           <option value="">-- Select a Source --</option>
-          {MOCK_KNOWLEDGE_SOURCES.map(source => (
+          {availableSources.map(source => (
             <option key={source.id} value={source.id}>
               {source.name} ({source.type})
             </option>

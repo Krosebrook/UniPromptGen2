@@ -1,9 +1,76 @@
-import React from 'react';
-import { MOCK_TEMPLATES } from '../constants.ts';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getTemplates, deleteTemplate } from '../services/apiService.ts';
+import { PromptTemplate } from '../types.ts';
 import TemplateCard from '../components/TemplateCard.tsx';
-import { MagnifyingGlassIcon, PlusIcon } from '../components/icons/Icons.tsx';
+import { MagnifyingGlassIcon, PlusIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
 
 const TemplateLibrary: React.FC = () => {
+  const [templates, setTemplates] = useState<PromptTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTemplates = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getTemplates();
+      setTemplates(data);
+    } catch (err) {
+      setError('Failed to load templates. Please try again later.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+  
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete the template "${name}"?`)) {
+        try {
+            await deleteTemplate(id);
+            // Refetch templates to update the list
+            await fetchTemplates();
+        } catch (err) {
+            setError(`Failed to delete template: ${name}. Please try again.`);
+            console.error(err);
+        }
+    }
+  };
+  
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <SpinnerIcon className="h-8 w-8 text-primary" />
+          <span className="ml-2 text-muted-foreground">Loading Templates...</span>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center text-destructive bg-destructive/10 p-4 rounded-md">
+          <p className="font-semibold">An Error Occurred</p>
+          <p>{error}</p>
+        </div>
+      );
+    }
+    
+    return (
+       <div className="flex space-x-4 overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 md:gap-6 md:space-x-0">
+        {templates.map((template) => (
+          <div key={template.id} className="w-80 md:w-auto flex-shrink-0 md:flex-shrink">
+            <TemplateCard template={template} onDelete={handleDelete} />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -27,13 +94,7 @@ const TemplateLibrary: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex space-x-4 overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0 md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 md:gap-6 md:space-x-0">
-        {MOCK_TEMPLATES.map((template) => (
-          <div key={template.id} className="w-80 md:w-auto flex-shrink-0 md:flex-shrink">
-            <TemplateCard template={template} />
-          </div>
-        ))}
-      </div>
+      {renderContent()}
     </div>
   );
 };
