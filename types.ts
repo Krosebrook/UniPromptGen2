@@ -151,6 +151,7 @@ export type NodeRunStatus = 'idle' | 'running' | 'success' | 'error';
 
 export interface BaseNodeData {
     label: string;
+    initialValue?: any;
 }
 
 export interface ModelNodeData extends BaseNodeData {
@@ -191,4 +192,18 @@ export interface Edge {
     animated?: boolean;
     // FIX: Changed React.CSSProperties to CSSProperties to fix namespace error.
     style?: CSSProperties;
+}
+
+export interface LogEntry {
+    timestamp: string;
+    message: string;
+    status: 'info' | 'success' | 'error' | 'running';
+}
+
+export interface Run {
+    id: string;
+    startTime: Date;
+    endTime?: Date;
+    status: 'running' | 'completed' | 'failed';
+    logs: LogEntry[];
 }
