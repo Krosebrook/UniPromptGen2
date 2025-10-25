@@ -1,8 +1,9 @@
 import React from 'react';
-import { Node, ModelNodeData, ToolNodeData } from '../../types.ts';
+import { Node, ModelNodeData, ToolNodeData, KnowledgeNodeData } from '../../types.ts';
 import { CogIcon } from '../icons/Icons.tsx';
 import ModelNodeConfig from './ModelNodeConfig.tsx';
 import ToolNodeConfig from './ToolNodeConfig.tsx';
+import KnowledgeNodeConfig from './KnowledgeNodeConfig.tsx';
 
 interface WorkbenchConfigPanelProps {
   selectedNode: Node | null;
@@ -43,8 +44,15 @@ const WorkbenchConfigPanel: React.FC<WorkbenchConfigPanelProps> = ({ selectedNod
                 />
             )}
             
-            {selectedNode.type !== 'model' && selectedNode.type !== 'tool' && (
-                 <p className="text-center text-sm text-muted-foreground pt-4">No configuration available for this node type yet.</p>
+            {selectedNode.type === 'knowledge' && (
+                <KnowledgeNodeConfig 
+                    data={selectedNode.data as KnowledgeNodeData}
+                    onUpdate={(newData) => onUpdateNode(selectedNode.id, newData)}
+                />
+            )}
+            
+            {(selectedNode.type === 'input' || selectedNode.type === 'output') && (
+                 <p className="text-center text-sm text-muted-foreground pt-4">No configuration available for this node type.</p>
             )}
 
         </div>

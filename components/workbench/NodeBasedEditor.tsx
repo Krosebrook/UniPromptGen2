@@ -10,10 +10,10 @@ import ReactFlow, {
   OnConnect,
   NodeTypes,
   Connection,
+  OnDelete,
 } from 'reactflow';
-import 'reactflow/dist/style.css';
 import CustomNode from './nodes/CustomNode.tsx';
-import { CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon } from '../icons/Icons.tsx';
+import { CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon, CollectionIcon } from '../icons/Icons.tsx';
 import { NodeRunStatus, Node, Edge } from '../../types.ts';
 
 interface NodeBasedEditorProps {
@@ -38,39 +38,71 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
   );
 
   const onConnect: OnConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds)),
+    (params) => {
+        const newEdge = { ...params, style: { strokeWidth: 2 } };
+        if (params.targetHandle === 'knowledge_input') {
+            newEdge.style = { ...newEdge.style, stroke: '#9333ea' };
+        } else {
+             newEdge.animated = true;
+        }
+        setEdges((eds) => addEdge(newEdge, eds))
+    },
     [setEdges]
   );
+
+  const onDelete: OnDelete = useCallback(({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+    const nodesToDeleteCount = nodesToDelete.length;
+    const edgesToDeleteCount = edgesToDelete.length;
+
+    if (nodesToDeleteCount === 0 && edgesToDeleteCount === 0) {
+      return;
+    }
+
+    let message = 'Are you sure you want to delete ';
+    const parts = [];
+    if (nodesToDeleteCount > 0) {
+        parts.push(`${nodesToDeleteCount} node${nodesToDeleteCount > 1 ? 's' : ''}`);
+    }
+    if (edgesToDeleteCount > 0) {
+        parts.push(`${edgesToDeleteCount} edge${edgesToDeleteCount > 1 ? 's' : ''}`);
+    }
+    message += parts.join(' and ') + '?';
+
+    if (window.confirm(message)) {
+      const nodeIdsToDelete = new Set(nodesToDelete.map(n => n.id));
+      const edgeIdsToDelete = new Set(edgesToDelete.map(e => e.id));
+
+      setNodes((nds) => nds.filter(n => !nodeIdsToDelete.has(n.id)));
+      setEdges((eds) => eds.filter(e => !edgeIdsToDelete.has(e.id)));
+      setSelectedNode(null); // Deselect after deletion
+    }
+  }, [setNodes, setEdges, setSelectedNode]);
   
   const isValidConnection = useCallback(
     (connection: Connection) => {
       // Prevent connecting a node to itself
-      if (connection.source === connection.target) {
-        return false;
-      }
+      if (connection.source === connection.target) return false;
       
       const sourceNode = nodes.find((node) => node.id === connection.source);
       const targetNode = nodes.find((node) => node.id === connection.target);
 
-      if (!sourceNode || !targetNode) {
-        return false;
+      if (!sourceNode || !targetNode) return false;
+
+      // Rule 1: Knowledge nodes can only connect to the 'knowledge_input' handle of a model node.
+      if (sourceNode.type === 'knowledge') {
+          return targetNode.type === 'model' && connection.targetHandle === 'knowledge_input';
       }
 
-      // Prevent connections FROM an 'output' node
-      if (sourceNode.type === 'output') {
-        return false;
-      }
-
-      // Prevent connections TO an 'input' node
-      if (targetNode.type === 'input') {
-        return false;
+      // Rule 2: 'knowledge_input' handle only accepts connections from knowledge nodes.
+      if (connection.targetHandle === 'knowledge_input') {
+          return sourceNode.type === 'knowledge';
       }
       
-      // Enforce a single incoming connection per node.
-      const isTargetAlreadyConnected = edges.some(
-        (edge) => edge.target === connection.target
+      // Rule 3: Enforce a single incoming connection per handle.
+      const isTargetHandleAlreadyConnected = edges.some(
+        (edge) => edge.target === connection.target && edge.targetHandle === connection.targetHandle
       );
-      if (isTargetAlreadyConnected) {
+      if (isTargetHandleAlreadyConnected) {
         return false;
       }
 
@@ -92,6 +124,7 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
     output: (props) => <CustomNode {...props} icon={ArrowLeftEndOnRectangleIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
     model: (props) => <CustomNode {...props} icon={CpuChipIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
     tool: (props) => <CustomNode {...props} icon={WrenchScrewdriverIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
+    knowledge: (props) => <CustomNode {...props} icon={CollectionIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
   }), [runStatus, selectedNodeId]);
 
 
@@ -107,6 +140,8 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         isValidConnection={isValidConnection}
+        deleteKeyCode={['Backspace', 'Delete']}
+        onDelete={onDelete}
         fitView
       >
         <Controls />

@@ -1,10 +1,8 @@
 // types.ts
-import { Node as ReactFlowNode, Edge as ReactFlowEdge } from 'reactflow';
+// FIX: Import CSSProperties from react to resolve namespace error.
+import type { CSSProperties } from 'react';
 
-export type RiskLevel = 'Low' | 'Medium' | 'High';
-export type ABTestStatus = 'running' | 'completed';
-export type NodeRunStatus = 'idle' | 'running' | 'success' | 'error';
-
+// From constants.ts and Profile.tsx
 export interface User {
   id: string;
   name: string;
@@ -18,7 +16,7 @@ export interface User {
 }
 
 export interface Achievement {
-  id:string;
+  id: string;
   name: string;
   description: string;
 }
@@ -30,10 +28,13 @@ export interface Certification {
   date: string;
 }
 
-export interface PromptTemplateVariable {
+// From constants.ts, TemplateLibrary.tsx, TemplateEditor.tsx
+export type RiskLevel = 'Low' | 'Medium' | 'High';
+
+export interface PromptVariable {
   name: string;
   type: 'string' | 'number' | 'boolean';
-  defaultValue?: string;
+  defaultValue?: string | number | boolean;
 }
 
 export interface PromptTemplateVersion {
@@ -44,7 +45,7 @@ export interface PromptTemplateVersion {
   comment: string;
   riskLevel: RiskLevel;
   content: string;
-  variables: PromptTemplateVariable[];
+  variables: PromptVariable[];
 }
 
 export interface PromptTemplateMetrics {
@@ -63,16 +64,17 @@ export interface ABTestMetrics {
 }
 
 export interface ABTest {
-  id: string;
-  name: string;
-  status: ABTestStatus;
-  winner?: 'A' | 'B';
-  trafficSplit: number; // Percentage for version A
-  versionA: string;
-  versionB: string;
-  metricsA: ABTestMetrics;
-  metricsB: ABTestMetrics;
+    id: string;
+    name: string;
+    status: 'running' | 'completed';
+    winner?: 'A' | 'B';
+    trafficSplit: number;
+    versionA: string;
+    versionB: string;
+    metricsA: ABTestMetrics;
+    metricsB: ABTestMetrics;
 }
+
 
 export interface PromptTemplate {
   id: string;
@@ -84,6 +86,7 @@ export interface PromptTemplate {
   abTests?: ABTest[];
 }
 
+// From constants.ts, TemplateEditor.tsx
 export interface Evaluation {
   id: string;
   templateId: string;
@@ -96,31 +99,55 @@ export interface Evaluation {
   comment: string;
 }
 
-export interface ExecutionEvent {
-  templateId: string;
-  version: string;
-  success: boolean;
-  userRating: number; // e.g., 1-5
-  latencyMs: number;
-  cost: number;
+// From constants.ts, ToolLibrary.tsx
+export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
+
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  apiEndpoint: string;
+  authMethod: AuthMethod;
+  requestSchema: string; // JSON string
+  responseSchema: string; // JSON string
 }
 
+// From constants.ts, KnowledgeLibrary.tsx
+export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
+
+export interface KnowledgeSource {
+  id: string;
+  name: string;
+  type: KnowledgeSourceType;
+  description: string;
+  dateAdded: string;
+}
+
+// From geminiService.ts, Chatbot.tsx
 export interface ChatMessage {
-    id: string;
-    role: 'user' | 'model';
-    text: string;
-    timestamp: Date;
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: Date;
 }
 
+// From geminiService.ts, Search.tsx
 export interface GroundingSource {
     web?: {
         uri: string;
         title: string;
-    };
+    }
 }
 
-// Workbench Types
-export type NodeType = 'input' | 'output' | 'model' | 'tool';
+// From qualityService.ts
+export interface ExecutionEvent {
+    success: boolean;
+    userRating: number; // e.g., 1-5
+}
+
+// From AgenticWorkbench and related components
+export type NodeType = 'input' | 'output' | 'model' | 'tool' | 'knowledge';
+export type NodeRunStatus = 'idle' | 'running' | 'success' | 'error';
 
 export interface BaseNodeData {
     label: string;
@@ -133,21 +160,35 @@ export interface ModelNodeData extends BaseNodeData {
     topK: number;
 }
 
-export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
-
 export interface ToolNodeData extends BaseNodeData {
+    toolId?: string;
     apiEndpoint: string;
     authMethod: AuthMethod;
     requestSchema: string;
     responseSchema: string;
 }
 
-export interface DefaultNodeData extends BaseNodeData {}
+export interface KnowledgeNodeData extends BaseNodeData {
+    sourceId: string | null;
+}
 
-// A discriminated union for the node data based on the node type.
-export type NodeData = ModelNodeData | ToolNodeData | DefaultNodeData;
+export type NodeData = BaseNodeData | ModelNodeData | ToolNodeData | KnowledgeNodeData;
 
-// The application's definition of a node, extending React Flow's Node type.
-export type Node = ReactFlowNode<NodeData, NodeType>;
-// Re-export the Edge type for consistency.
-export type Edge = ReactFlowEdge;
+// Using ReactFlow's types as a base but defining our own for app-specific data
+export interface Node<T = NodeData> {
+    id: string;
+    position: { x: number; y: number };
+    data: T;
+    type?: NodeType;
+}
+
+export interface Edge {
+    id: string;
+    source: string;
+    target: string;
+    sourceHandle?: string | null;
+    targetHandle?: string | null;
+    animated?: boolean;
+    // FIX: Changed React.CSSProperties to CSSProperties to fix namespace error.
+    style?: CSSProperties;
+}

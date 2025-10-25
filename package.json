@@ -13,7 +13,8 @@
     "react-dom": "^19.2.0",
     "@google/genai": "^1.26.0",
     "recharts": "^2.12.7",
-    "reactflow": "^11.11.4"
+    "reactflow": "^11.11.4",
+    "immer": "^10.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

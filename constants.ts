@@ -1,6 +1,6 @@
 // constants.ts
 
-import type { User, PromptTemplate, Evaluation } from './types.ts';
+import type { User, PromptTemplate, Evaluation, Tool, KnowledgeSource } from './types.ts';
 
 export const MOCK_USER: User = {
   id: 'user-001',
@@ -161,6 +161,67 @@ export const MOCK_EVALUATIONS: Evaluation[] = [
   { id: 'eval-1', templateId: 'template-001', evaluator: { name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=janedoe' }, date: '2024-07-20', score: 95, comment: 'Excellent performance on recent campaigns.'},
   { id: 'eval-2', templateId: 'template-002', evaluator: { name: 'John Smith', avatarUrl: 'https://i.pravatar.cc/150?u=johnsmith' }, date: '2024-07-19', score: 88, comment: 'Good refactoring, but struggles with highly complex algorithms.'},
   { id: 'eval-3', templateId: 'template-003', evaluator: { name: 'Emily White', avatarUrl: 'https://i.pravatar.cc/150?u=emilywhite' }, date: '2024-07-18', score: 92, comment: 'Very consistent and reliable for standard queries.'},
+];
+
+export const MOCK_TOOLS: Tool[] = [
+    {
+        id: 'tool-001',
+        name: 'Get Weather Data',
+        description: 'Fetches the current weather for a given city from a public API.',
+        apiEndpoint: 'https://api.open-meteo.com/v1/forecast',
+        authMethod: 'None',
+        requestSchema: JSON.stringify({ latitude: 52.52, longitude: 13.41, current_weather: true }, null, 2),
+        responseSchema: JSON.stringify({ current_weather: { temperature: 18.3, windspeed: 10.2 } }, null, 2)
+    },
+    {
+        id: 'tool-002',
+        name: 'Add Product API',
+        description: 'Adds a new product to a dummy product database.',
+        apiEndpoint: 'https://dummyjson.com/products/add',
+        authMethod: 'None',
+        requestSchema: JSON.stringify({ title: 'Perfume Oil', price: 13.99 }, null, 2),
+        responseSchema: JSON.stringify({ id: 101, title: 'Perfume Oil' }, null, 2)
+    },
+    {
+        id: 'tool-003',
+        name: 'User Authentication',
+        description: 'A mock tool that simulates authenticating a user with an API key.',
+        apiEndpoint: 'https://api.example.com/auth/login',
+        authMethod: 'API Key',
+        requestSchema: JSON.stringify({ user: 'admin', pass: 'secret' }, null, 2),
+        responseSchema: JSON.stringify({ token: 'xyz123', expires: '24h' }, null, 2)
+    }
+];
+
+export const MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
+    {
+        id: 'ks-001',
+        name: 'Q3 2024 Financial Report',
+        type: 'PDF',
+        description: 'The complete financial report for the third quarter of 2024.',
+        dateAdded: '2024-07-20'
+    },
+    {
+        id: 'ks-002',
+        name: 'Company Onboarding Guide',
+        type: 'PDF',
+        description: 'Internal documentation for new hires, covering company policies and procedures.',
+        dateAdded: '2024-06-15'
+    },
+    {
+        id: 'ks-003',
+        name: 'Public Website Documentation',
+        type: 'Website',
+        description: 'A scrape of the public-facing documentation website for product information.',
+        dateAdded: '2024-07-22'
+    },
+     {
+        id: 'ks-004',
+        name: 'Internal API Specs',
+        type: 'API',
+        description: 'OpenAPI specification for internal microservices.',
+        dateAdded: '2024-07-18'
+    }
 ];
 
 

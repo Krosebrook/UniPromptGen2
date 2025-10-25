@@ -1,94 +1,82 @@
 // services/agentExecutorService.ts
-import { Node, Edge, NodeRunStatus, ToolNodeData } from '../types.ts';
+import { Node, Edge, NodeRunStatus } from '../types.ts';
 
-type StatusUpdateCallback = (nodeId: string, status: NodeRunStatus) => void;
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-/**
- * Executes the logic for a single tool node by making an API call.
- */
-async function executeToolNode(node: Node): Promise<any> {
-    const data = node.data as ToolNodeData;
-    if (!data.apiEndpoint) {
-        throw new Error("API Endpoint is not configured for this tool node.");
-    }
-
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-    };
-
-    if (data.authMethod === 'API Key') {
-        // In a real app, the key would come from a secure store.
-        headers['Authorization'] = `Bearer MOCK_API_KEY_12345`;
-    }
-
-    let body;
-    try {
-        body = JSON.parse(data.requestSchema || '{}');
-    } catch (e) {
-        throw new Error("Invalid Request Schema JSON.");
-    }
-    
-    // For this demo, we assume a POST request.
-    const response = await fetch(data.apiEndpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API call failed with status ${response.status}: ${errorText}`);
-    }
-
-    return await response.json();
-}
-
-
-/**
- * Simulates the execution of an agent graph.
- * Traverses the graph, executing the logic for each node.
- * Provides real-time status updates via a callback.
- */
 export const executeAgent = async (
-    nodes: Node[],
-    edges: Edge[],
-    onStatusUpdate: StatusUpdateCallback
-): Promise<any> => {
-  console.log("Executing agent graph...");
+  nodes: Node[],
+  edges: Edge[],
+  setStatus: (updater: (prev: Record<string, NodeRunStatus>) => Record<string, NodeRunStatus>) => void,
+  addLog: (log: string) => void
+): Promise<void> => {
+  // Reset all statuses to idle
+  setStatus(() => ({}));
   
-  // For now, we execute in the order of the nodes array. A real implementation would
-  // use the edges to determine the correct topological sort.
-  const executionOrder = nodes; 
+  const executionOrder = topologicalSort(nodes, edges);
 
-  for (const node of executionOrder) {
-    onStatusUpdate(node.id, 'running');
-    
-    try {
-        let result;
-        if (node.type === 'tool') {
-            result = await executeToolNode(node);
-            console.log(`Tool node ${node.id} executed successfully`, result);
-        } else {
-            // Simulate async work for other node types
-            const randomDelay = Math.random() * 500 + 200;
-            await new Promise(resolve => setTimeout(resolve, randomDelay));
-            
-            // Simulate potential failure for non-tool nodes for demonstration
-            if (Math.random() < 0.1 && node.type !== 'input') {
-                throw new Error(`Simulated failure for ${node.type} node.`);
-            }
-        }
-        onStatusUpdate(node.id, 'success');
-    } catch (error) {
-        onStatusUpdate(node.id, 'error');
-        console.error(`Execution failed at node ${node.id}:`, error);
-        // Stop execution on failure
-        throw new Error(`Node ${node.data.label} (${node.id}) failed.`);
-    }
+  if (!executionOrder) {
+    addLog("Error: Cycle detected in the graph. Cannot execute.");
+    return;
   }
 
-  return {
-    success: true,
-    result: "Agent execution completed successfully.",
-  };
+  addLog(`Execution order: ${executionOrder.join(' -> ')}`);
+
+  for (const nodeId of executionOrder) {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) continue;
+    
+    addLog(`[${node.data.label}] - Running...`);
+    setStatus(prev => ({ ...prev, [nodeId]: 'running' }));
+    await sleep(1000 + Math.random() * 1000); // Simulate work
+
+    // Simulate success/error
+    const success = Math.random() > 0.15; 
+    if (success) {
+      addLog(`[${node.data.label}] - Success.`);
+      setStatus(prev => ({ ...prev, [nodeId]: 'success' }));
+    } else {
+      addLog(`[${node.data.label}] - Error!`);
+      setStatus(prev => ({ ...prev, [nodeId]: 'error' }));
+      addLog("Execution halted due to error.");
+      return; // Stop execution on error
+    }
+  }
+};
+
+// Simple topological sort to determine execution order
+const topologicalSort = (nodes: Node[], edges: Edge[]): string[] | null => {
+    const sorted: string[] = [];
+    const inDegree: Record<string, number> = {};
+    const adjList: Record<string, string[]> = {};
+
+    for (const node of nodes) {
+        inDegree[node.id] = 0;
+        adjList[node.id] = [];
+    }
+
+    for (const edge of edges) {
+        adjList[edge.source] = adjList[edge.source] || [];
+        adjList[edge.source].push(edge.target);
+        inDegree[edge.target] = (inDegree[edge.target] || 0) + 1;
+    }
+
+    const queue = nodes.filter(node => inDegree[node.id] === 0).map(node => node.id);
+
+    while (queue.length > 0) {
+        const u = queue.shift()!;
+        sorted.push(u);
+
+        for (const v of adjList[u] || []) {
+            inDegree[v]--;
+            if (inDegree[v] === 0) {
+                queue.push(v);
+            }
+        }
+    }
+
+    if (sorted.length !== nodes.length) {
+        return null; // Cycle detected
+    }
+
+    return sorted;
 };

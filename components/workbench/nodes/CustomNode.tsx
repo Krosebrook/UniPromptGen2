@@ -16,7 +16,7 @@ const statusStyles: Record<NodeRunStatus, string> = {
     error: 'border-destructive',
 };
 
-const CustomNode: React.FC<CustomNodeProps> = ({ data, isConnectable, icon: Icon, runStatus = 'idle', isSelected }) => {
+const CustomNode: React.FC<CustomNodeProps> = ({ data, type, isConnectable, icon: Icon, runStatus = 'idle', isSelected }) => {
   const borderClass = statusStyles[runStatus];
   // Separate ring class for selection to coexist with status border
   const ringClass = isSelected ? 'ring-2 ring-ring ring-offset-card ring-offset-2' : '';
@@ -34,9 +34,34 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data, isConnectable, icon: Icon
     }
   }
 
+  // Determine which handles to show based on node type
+  const showDataInput = type === 'model' || type === 'tool' || type === 'output';
+  const showDataOutput = type === 'model' || type === 'tool' || type === 'input' || type === 'knowledge';
+  const showKnowledgeInput = type === 'model';
+
   return (
     <div className={`bg-secondary p-3 border-2 rounded-md w-48 transition-all ${borderClass} ${ringClass}`}>
-      <Handle type="target" position={Position.Left} isConnectable={isConnectable} style={{ background: '#555' }} />
+      {showKnowledgeInput && (
+        <Handle
+            type="target"
+            id="knowledge_input"
+            position={Position.Top}
+            isConnectable={isConnectable}
+            style={{ background: '#9333ea', width: '10px', height: '10px' }}
+            title="Knowledge Input"
+        />
+      )}
+      {showDataInput && (
+        <Handle
+            type="target"
+            id="data_input"
+            position={Position.Left}
+            isConnectable={isConnectable}
+            style={{ background: '#555' }}
+            title="Data Input"
+        />
+      )}
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 overflow-hidden">
             <div className="p-1 bg-primary/20 rounded-md flex-shrink-0">
@@ -48,7 +73,17 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data, isConnectable, icon: Icon
             <StatusIcon />
         </div>
       </div>
-      <Handle type="source" position={Position.Right} isConnectable={isConnectable} style={{ background: '#555' }} />
+
+      {showDataOutput && (
+         <Handle
+            type="source"
+            id="data_output"
+            position={Position.Right}
+            isConnectable={isConnectable}
+            style={{ background: '#555' }}
+            title="Data Output"
+        />
+      )}
     </div>
   );
 };
