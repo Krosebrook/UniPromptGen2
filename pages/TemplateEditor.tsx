@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { MOCK_TEMPLATES, MOCK_EVALUATIONS } from '../constants.ts';
-import { PromptTemplate, PromptTemplateVersion, Evaluation } from '../types.ts';
+import { PromptTemplate, PromptTemplateVersion, Evaluation, PromptVariable } from '../types.ts';
 import QualityScoreDisplay from '../components/QualityScoreDisplay.tsx';
-import { PlayIcon, StarIcon, ChevronDownIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon } from '../components/icons/Icons.tsx';
+import { PlayIcon, StarIcon, ChevronDownIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon, PlusIcon, XCircleIcon } from '../components/icons/Icons.tsx';
 import ABTestManager from '../components/ab-testing/ABTestManager.tsx';
 
 interface TemplateEditorProps {
@@ -28,6 +28,38 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   } : null);
 
   const [isVersionDropdownOpen, setIsVersionDropdownOpen] = useState(false);
+  const [variableErrors, setVariableErrors] = useState<Array<Record<string, string>>>([]);
+  const [isVariablesValid, setIsVariablesValid] = useState(true);
+
+  const validateVariables = useCallback((variables: PromptVariable[]) => {
+    const errors: Array<Record<string, string>> = [];
+    const names = new Set();
+    variables.forEach((v, index) => {
+        const error: Record<string, string> = {};
+        if (!v.name.trim()) {
+            error.name = 'Name cannot be empty.';
+        } else if (!/^[a-zA-Z0-9_]+$/.test(v.name)) {
+            error.name = 'Name can only contain letters, numbers, and underscores.';
+        } else if (names.has(v.name)) {
+            error.name = 'Variable names must be unique.';
+        }
+        names.add(v.name);
+
+        if (!v.type) {
+            error.type = 'Type must be selected.';
+        }
+        errors[index] = error;
+    });
+    setVariableErrors(errors);
+    const isValid = errors.every(e => Object.keys(e).length === 0);
+    setIsVariablesValid(isValid);
+  }, []);
+
+  useEffect(() => {
+    if (history?.present.variables) {
+        validateVariables(history.present.variables);
+    }
+  }, [history?.present.variables, validateVariables]);
 
   const handleUndo = () => {
     setHistory(currentHistory => {
@@ -58,13 +90,11 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const handleInputChange = (field: keyof PromptTemplateVersion, value: any) => {
     setHistory(currentHistory => {
       if (!currentHistory) return null;
-      // To prevent excessive history entries for single character changes,
-      // you might add debouncing or more complex logic here in a real app.
       const newPresent = { ...currentHistory.present, [field]: value };
       return {
         past: [...currentHistory.past, currentHistory.present],
         present: newPresent,
-        future: [] // Clear future on new edit
+        future: [] 
       };
     });
   };
@@ -77,6 +107,74 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
     });
     setIsVersionDropdownOpen(false);
   }
+
+  const handleVariableChange = (index: number, field: keyof PromptVariable, value: string | number | boolean) => {
+    if (field === 'type' && !['string', 'number', 'boolean'].includes(value as string)) {
+        return;
+    }
+
+    setHistory(currentHistory => {
+        if (!currentHistory) return null;
+        
+        const newVariables = currentHistory.present.variables.map((v, i) => {
+            if (i === index) {
+                const newVar = { ...v, [field]: value };
+                if (field === 'type') {
+                    if (value === 'boolean') newVar.defaultValue = false;
+                    else if (value === 'number') newVar.defaultValue = 0;
+                    else newVar.defaultValue = '';
+                }
+                return newVar;
+            }
+            return v;
+        });
+
+        const newPresent = { ...currentHistory.present, variables: newVariables };
+        return {
+            past: [...currentHistory.past, currentHistory.present],
+            present: newPresent,
+            future: []
+        };
+    });
+  };
+
+  const handleAddVariable = () => {
+      setHistory(currentHistory => {
+          if (!currentHistory) return null;
+          const existingNames = new Set(currentHistory.present.variables.map(v => v.name));
+          let newName = 'new_variable';
+          let counter = 1;
+          while(existingNames.has(newName)) {
+              newName = `new_variable_${counter++}`;
+          }
+          
+          const newVariable: PromptVariable = { 
+              name: newName,
+              type: 'string', 
+              defaultValue: '' 
+          };
+          const newVariables = [...currentHistory.present.variables, newVariable];
+          const newPresent = { ...currentHistory.present, variables: newVariables };
+          return {
+              past: [...currentHistory.past, currentHistory.present],
+              present: newPresent,
+              future: []
+          };
+      });
+  };
+
+  const handleRemoveVariable = (index: number) => {
+      setHistory(currentHistory => {
+          if (!currentHistory) return null;
+          const newVariables = currentHistory.present.variables.filter((_, i) => i !== index);
+          const newPresent = { ...currentHistory.present, variables: newVariables };
+          return {
+              past: [...currentHistory.past, currentHistory.present],
+              present: newPresent,
+              future: []
+          };
+      });
+  };
 
   if (!template || !history) {
     return <div className="text-center p-8">Template not found. <a href="#/templates" className="text-primary hover:underline">Return to Library</a></div>;
@@ -108,7 +206,13 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
              <button onClick={handleRedo} disabled={history.future.length === 0} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Redo">
                 <ArrowUturnRightIcon className="h-5 w-5" />
             </button>
-            <a href="#/playground" className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90">
+            <a 
+              href="#/playground" 
+              onClick={(e) => { if (!isVariablesValid) e.preventDefault(); }}
+              className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 ${!isVariablesValid && 'opacity-50 cursor-not-allowed'}`}
+              aria-disabled={!isVariablesValid}
+              tabIndex={!isVariablesValid ? -1 : undefined}
+            >
                 <PlayIcon className="h-5 w-5 mr-2" />
                 Run in Playground
             </a>
@@ -168,14 +272,65 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
             </div>
             <div className="bg-card shadow-card rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-4">Variables</h3>
-                <ul className="space-y-2">
-                    {selectedVersion.variables.map(v => (
-                        <li key={v.name} className="flex justify-between items-center text-sm p-2 bg-secondary rounded-md">
-                            <span className="font-mono text-primary">{`{{${v.name}}}`}</span>
-                            <span className="text-muted-foreground capitalize">{v.type}</span>
-                        </li>
+                <div className="space-y-3">
+                    {selectedVersion.variables.map((v, index) => (
+                        <div key={index} className="p-3 bg-secondary rounded-md space-y-2">
+                            <div className="flex items-start gap-2">
+                                <div className="flex-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Name</label>
+                                    <input
+                                        type="text"
+                                        value={v.name}
+                                        onChange={(e) => handleVariableChange(index, 'name', e.target.value)}
+                                        className={`w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 ${variableErrors[index]?.name ? 'ring-destructive' : 'focus:ring-ring'}`}
+                                        placeholder="variable_name"
+                                    />
+                                    {variableErrors[index]?.name && <p className="text-xs text-destructive mt-1">{variableErrors[index].name}</p>}
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Type</label>
+                                    <select
+                                        value={v.type}
+                                        onChange={(e) => handleVariableChange(index, 'type', e.target.value as PromptVariable['type'])}
+                                        className={`w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 ${variableErrors[index]?.type ? 'ring-destructive' : 'focus:ring-ring'}`}
+                                    >
+                                        <option value="string">String</option>
+                                        <option value="number">Number</option>
+                                        <option value="boolean">Boolean</option>
+                                    </select>
+                                    {variableErrors[index]?.type && <p className="text-xs text-destructive mt-1">{variableErrors[index].type}</p>}
+                                </div>
+                                <button onClick={() => handleRemoveVariable(index)} className="mt-5 p-1.5 text-muted-foreground hover:text-destructive" aria-label="Remove variable">
+                                    <XCircleIcon className="h-5 w-5" />
+                                </button>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground">Default Value (optional)</label>
+                                {v.type === 'boolean' ? (
+                                    <select
+                                        value={String(v.defaultValue)}
+                                        onChange={(e) => handleVariableChange(index, 'defaultValue', e.target.value === 'true')}
+                                        className="w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    >
+                                        <option value="true">True</option>
+                                        <option value="false">False</option>
+                                    </select>
+                                ) : (
+                                    <input
+                                        type={v.type === 'number' ? 'number' : 'text'}
+                                        value={v.defaultValue as string | number}
+                                        onChange={(e) => handleVariableChange(index, 'defaultValue', e.target.value)}
+                                        className="w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    />
+                                )}
+                            </div>
+                        </div>
                     ))}
-                </ul>
+                </div>
+                <button onClick={handleAddVariable} className="mt-4 w-full flex items-center justify-center gap-2 p-2 text-sm font-medium text-primary bg-secondary rounded-md hover:bg-accent">
+                    <PlusIcon className="h-5 w-5" />
+                    Add Variable
+                </button>
             </div>
             <div className="bg-card shadow-card rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-4">Recent Evaluations</h3>
