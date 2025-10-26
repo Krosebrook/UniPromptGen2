@@ -45,7 +45,7 @@ export const executeAgent = async (
       switch (node.type) {
         case 'input':
           output = node.data.initialValue || '';
-          log(`[${node.data.label}] - Provided initial input: "${output.substring(0, 100)}..."`, 'info');
+          log(`[${node.data.label}] - Provided initial input: "${String(output).substring(0, 100)}..."`, 'info');
           break;
           
         case 'model':

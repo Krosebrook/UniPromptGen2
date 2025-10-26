@@ -4,18 +4,23 @@ import { getKnowledgeSources, deleteKnowledgeSource, addKnowledgeSource } from '
 import { KnowledgeSource, KnowledgeSourceFormData } from '../types.ts';
 import KnowledgeSourceCard from '../components/KnowledgeSourceCard.tsx';
 import CreateKnowledgeSourceModal from '../components/modals/CreateKnowledgeSourceModal.tsx';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
 
 const KnowledgeLibrary: React.FC = () => {
+  const { currentWorkspace, currentUserRole } = useWorkspace();
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
+
   const fetchSources = useCallback(async () => {
+      if (!currentWorkspace) return;
       setIsLoading(true);
       setError(null);
       try {
-          const data = await getKnowledgeSources();
+          const data = await getKnowledgeSources(currentWorkspace.id);
           setSources(data);
       } catch(err) {
           setError('Failed to load knowledge sources. Please try again later.');
@@ -23,7 +28,7 @@ const KnowledgeLibrary: React.FC = () => {
       } finally {
           setIsLoading(false);
       }
-  }, []);
+  }, [currentWorkspace]);
 
   useEffect(() => {
     fetchSources();
@@ -42,8 +47,9 @@ const KnowledgeLibrary: React.FC = () => {
   };
 
   const handleCreate = async (sourceData: KnowledgeSourceFormData) => {
+    if (!currentWorkspace) return;
     try {
-        await addKnowledgeSource(sourceData);
+        await addKnowledgeSource(sourceData, currentWorkspace.id);
         setIsCreateModalOpen(false);
         await fetchSources();
     } catch(err) {
@@ -53,7 +59,7 @@ const KnowledgeLibrary: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading || !currentWorkspace) {
       return (
         <div className="flex justify-center items-center h-64">
           <SpinnerIcon className="h-8 w-8 text-primary" />
@@ -69,6 +75,15 @@ const KnowledgeLibrary: React.FC = () => {
           <p>{error}</p>
         </div>
       );
+    }
+    
+    if (sources.length === 0) {
+        return (
+            <div className="text-center py-16 text-muted-foreground">
+                <p>No knowledge sources found in this workspace.</p>
+                {canEdit && <p className="text-sm">Click "Add Knowledge Source" to get started.</p>}
+            </div>
+        );
     }
 
     return (
@@ -89,13 +104,15 @@ const KnowledgeLibrary: React.FC = () => {
               <h1 className="text-3xl font-bold text-foreground">Knowledge Library</h1>
               <p className="text-muted-foreground">Manage internal documents and data sources for agent grounding.</p>
             </div>
-            <button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-            >
-                <PlusIcon className="h-5 w-5 mr-2" />
-                Add Knowledge Source
-              </button>
+            {canEdit && (
+                <button 
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                >
+                    <PlusIcon className="h-5 w-5 mr-2" />
+                    Add Knowledge Source
+                </button>
+            )}
           </div>
           {renderContent()}
         </div>

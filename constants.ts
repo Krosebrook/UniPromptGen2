@@ -18,6 +18,11 @@ export const MOCK_USER: User = {
   certifications: [
     { id: 'cert-1', name: 'Advanced Prompt Engineering', issuer: 'AI University', date: '2023-10-15' },
     { id: 'cert-2', name: 'Generative AI for Developers', issuer: 'Cloud Academy', date: '2023-05-20' },
+  ],
+  workspaces: [
+    { workspaceId: 'ws-001', role: 'Admin' },
+    { workspaceId: 'ws-002', role: 'Editor' },
+    { workspaceId: 'ws-003', role: 'Viewer' },
   ]
 };
 

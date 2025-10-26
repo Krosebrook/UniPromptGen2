@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout.tsx';
 import Dashboard from './pages/Dashboard.tsx';
@@ -14,6 +15,7 @@ import ToolLibrary from './pages/ToolLibrary.tsx';
 import KnowledgeLibrary from './pages/KnowledgeLibrary.tsx';
 import LandingPage from './pages/LandingPage.tsx';
 import { MOCK_USER } from './constants.ts';
+import { WorkspaceProvider } from './contexts/WorkspaceContext.tsx';
 
 const App: React.FC = () => {
   // Simulate authentication state. In a real app, this would be managed
@@ -72,7 +74,11 @@ const App: React.FC = () => {
   }
 
   // Otherwise, show the main application layout.
-  return <Layout user={MOCK_USER}>{renderPage()}</Layout>;
+  return (
+    <WorkspaceProvider user={MOCK_USER}>
+      <Layout user={MOCK_USER}>{renderPage()}</Layout>
+    </WorkspaceProvider>
+  );
 };
 
 export default App;

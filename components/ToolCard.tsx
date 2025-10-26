@@ -1,6 +1,7 @@
 import React from 'react';
 import { TerminalIcon, KeyIcon, TrashIcon } from './icons/Icons.tsx';
 import { Tool, AuthMethod } from '../types.ts';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
 
 const authMethodStyles: Record<AuthMethod, { icon: React.ElementType, text: string }> = {
     'None': { icon: () => <span className="w-4 h-4" />, text: 'No Auth' },
@@ -14,6 +15,8 @@ interface ToolCardProps {
 }
 
 const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete }) => {
+    const { currentUserRole } = useWorkspace();
+    const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
     const authInfo = authMethodStyles[tool.authMethod];
     
     const handleDelete = (e: React.MouseEvent) => {
@@ -44,13 +47,15 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete }) => {
                     </div>
                 </div>
             </div>
-            <button
-                onClick={handleDelete}
-                className="absolute top-2 right-2 p-1.5 bg-card/50 text-muted-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive transition-opacity"
-                aria-label="Delete tool"
-            >
-                <TrashIcon className="h-4 w-4" />
-            </button>
+            {canEdit && (
+                <button
+                    onClick={handleDelete}
+                    className="absolute top-2 right-2 p-1.5 bg-card/50 text-muted-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive transition-opacity"
+                    aria-label="Delete tool"
+                >
+                    <TrashIcon className="h-4 w-4" />
+                </button>
+            )}
         </div>
     );
 };

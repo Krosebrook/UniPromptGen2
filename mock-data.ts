@@ -1,11 +1,19 @@
 // mock-data.ts
 
-import type { PromptTemplate, Evaluation, Tool, KnowledgeSource } from './types.ts';
+import type { PromptTemplate, Evaluation, Tool, KnowledgeSource, Workspace } from './types.ts';
+
+export const MOCK_WORKSPACES: Workspace[] = [
+    { id: 'ws-001', name: 'Stark Industries', plan: 'Enterprise' },
+    { id: 'ws-002', name: 'Wayne Enterprises', plan: 'Pro' },
+    { id: 'ws-003', name: 'Cyberdyne Systems', plan: 'Free' },
+];
+
 
 // Renamed from MOCK_TEMPLATES to avoid confusion. This is the initial seed data.
 export const MOCK_INITIAL_TEMPLATES: PromptTemplate[] = [
   {
     id: 'template-001',
+    workspaceId: 'ws-001',
     domain: 'Marketing',
     qualityScore: 94.5,
     metrics: { totalRuns: 1204, successfulRuns: 1180, totalUserRating: 5719, avgUserRating: 4.75, taskSuccessRate: 0.98, efficiencyScore: 0.92 },
@@ -77,6 +85,7 @@ export const MOCK_INITIAL_TEMPLATES: PromptTemplate[] = [
   },
   {
     id: 'template-002',
+    workspaceId: 'ws-001',
     domain: 'Code Gen',
     qualityScore: 88.2,
     metrics: { totalRuns: 850, successfulRuns: 790, totalUserRating: 3825, avgUserRating: 4.5, taskSuccessRate: 0.93, efficiencyScore: 0.85 },
@@ -97,6 +106,7 @@ export const MOCK_INITIAL_TEMPLATES: PromptTemplate[] = [
   },
   {
     id: 'template-003',
+    workspaceId: 'ws-002',
     domain: 'Support',
     qualityScore: 91.8,
     metrics: { totalRuns: 2500, successfulRuns: 2450, totalUserRating: 11875, avgUserRating: 4.75, taskSuccessRate: 0.98, efficiencyScore: 0.95 },
@@ -118,6 +128,7 @@ export const MOCK_INITIAL_TEMPLATES: PromptTemplate[] = [
   },
    {
     id: 'template-004',
+    workspaceId: 'ws-003',
     domain: 'Content',
     qualityScore: 85.0,
     metrics: { totalRuns: 450, successfulRuns: 405, totalUserRating: 1980, avgUserRating: 4.4, taskSuccessRate: 0.90, efficiencyScore: 0.88 },
@@ -147,6 +158,7 @@ export const MOCK_INITIAL_EVALUATIONS: Evaluation[] = [
 export const MOCK_INITIAL_TOOLS: Tool[] = [
     {
         id: 'tool-001',
+        workspaceId: 'ws-001',
         name: 'Get Weather Data',
         description: 'Fetches the current weather for a given city from a public API.',
         apiEndpoint: 'https://api.open-meteo.com/v1/forecast',
@@ -156,6 +168,7 @@ export const MOCK_INITIAL_TOOLS: Tool[] = [
     },
     {
         id: 'tool-002',
+        workspaceId: 'ws-001',
         name: 'Add Product API',
         description: 'Adds a new product to a dummy product database.',
         apiEndpoint: 'https://dummyjson.com/products/add',
@@ -165,6 +178,7 @@ export const MOCK_INITIAL_TOOLS: Tool[] = [
     },
     {
         id: 'tool-003',
+        workspaceId: 'ws-002',
         name: 'User Authentication',
         description: 'A mock tool that simulates authenticating a user with an API key.',
         apiEndpoint: 'https://api.example.com/auth/login',
@@ -177,6 +191,7 @@ export const MOCK_INITIAL_TOOLS: Tool[] = [
 export const MOCK_INITIAL_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     {
         id: 'ks-001',
+        workspaceId: 'ws-001',
         name: 'Q3 2024 Financial Report',
         type: 'PDF',
         description: 'The complete financial report for the third quarter of 2024.',
@@ -184,6 +199,7 @@ export const MOCK_INITIAL_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     },
     {
         id: 'ks-002',
+        workspaceId: 'ws-002',
         name: 'Company Onboarding Guide',
         type: 'PDF',
         description: 'Internal documentation for new hires, covering company policies and procedures.',
@@ -191,6 +207,7 @@ export const MOCK_INITIAL_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     },
     {
         id: 'ks-003',
+        workspaceId: 'ws-001',
         name: 'Public Website Documentation',
         type: 'Website',
         description: 'A scrape of the public-facing documentation website for product information.',
@@ -198,6 +215,7 @@ export const MOCK_INITIAL_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     },
      {
         id: 'ks-004',
+        workspaceId: 'ws-003',
         name: 'Internal API Specs',
         type: 'API',
         description: 'OpenAPI specification for internal microservices.',

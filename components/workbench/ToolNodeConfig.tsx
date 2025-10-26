@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ToolNodeData, AuthMethod, Tool } from '../../types.ts';
 import { getTools } from '../../services/apiService.ts';
+import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
 
 interface ToolNodeConfigProps {
   data: ToolNodeData;
@@ -8,11 +9,14 @@ interface ToolNodeConfigProps {
 }
 
 const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
+  const { currentWorkspace } = useWorkspace();
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
   
   useEffect(() => {
-    getTools().then(setAvailableTools);
-  }, []);
+    if (currentWorkspace) {
+        getTools(currentWorkspace.id).then(setAvailableTools);
+    }
+  }, [currentWorkspace]);
 
   const authMethods: AuthMethod[] = ['None', 'API Key', 'OAuth 2.0'];
   const isLinkedToTool = !!data.toolId;

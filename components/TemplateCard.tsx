@@ -2,6 +2,7 @@ import React from 'react';
 import { PromptTemplate, RiskLevel } from '../types.ts';
 import QualityScoreDisplay from './QualityScoreDisplay.tsx';
 import { CodeBracketIcon, TrashIcon } from './icons/Icons.tsx';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
 
 interface TemplateCardProps {
   template: PromptTemplate;
@@ -15,6 +16,8 @@ const riskLevelStyles: Record<RiskLevel, string> = {
 };
 
 const TemplateCard: React.FC<TemplateCardProps> = ({ template, onDelete }) => {
+  const { currentUserRole } = useWorkspace();
+  const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
   const activeVersion = template.versions.find(v => v.version === template.activeVersion);
 
   if (!activeVersion) {
@@ -55,13 +58,15 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template, onDelete }) => {
             <span>v{template.activeVersion}</span>
           </div>
         </a>
-        <button
-            onClick={handleDelete}
-            className="absolute top-2 right-2 p-1.5 bg-card/50 text-muted-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive transition-opacity"
-            aria-label="Delete template"
-        >
-            <TrashIcon className="h-4 w-4" />
-        </button>
+        {canEdit && (
+            <button
+                onClick={handleDelete}
+                className="absolute top-2 right-2 p-1.5 bg-card/50 text-muted-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive transition-opacity"
+                aria-label="Delete template"
+            >
+                <TrashIcon className="h-4 w-4" />
+            </button>
+        )}
     </div>
   );
 };

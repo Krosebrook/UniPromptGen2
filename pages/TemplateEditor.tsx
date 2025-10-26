@@ -4,6 +4,7 @@ import { PromptTemplate, PromptTemplateVersion, Evaluation, PromptVariable } fro
 import QualityScoreDisplay from '../components/QualityScoreDisplay.tsx';
 import { PlayIcon, StarIcon, ChevronDownIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon, PlusIcon, XCircleIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
 import ABTestManager from '../components/ab-testing/ABTestManager.tsx';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
 
 interface TemplateEditorProps {
   templateId: string;
@@ -27,7 +28,10 @@ const getNewTemplateVersion = (): PromptTemplateVersion => ({
 });
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
+  const { currentWorkspace, currentUserRole } = useWorkspace();
   const isNew = templateId === 'new';
+  const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
+
   const [template, setTemplate] = useState<PromptTemplate | null>(null);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +66,11 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
         if (!templateData) {
           throw new Error('Template not found.');
         }
+        // Basic security: check if template belongs to the current workspace
+        if (templateData.workspaceId !== currentWorkspace?.id) {
+          throw new Error("Access denied. This template does not belong to the current workspace.");
+        }
+
         const evaluationsData = await getEvaluationsByTemplateId(templateId);
         
         setTemplate(templateData);
@@ -82,8 +91,10 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
         setIsLoading(false);
       }
     };
-    fetchData();
-  }, [templateId, isNew]);
+    if (currentWorkspace) {
+        fetchData();
+    }
+  }, [templateId, isNew, currentWorkspace]);
 
 
   const validateVariables = useCallback((variables: PromptVariable[]) => {
@@ -117,6 +128,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   }, [history?.present.variables, validateVariables]);
 
   const handleUndo = () => {
+    if (!canEdit) return;
     setHistory(currentHistory => {
       if (!currentHistory || currentHistory.past.length === 0) return currentHistory;
       const previous = currentHistory.past[currentHistory.past.length - 1];
@@ -130,6 +142,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   };
 
   const handleRedo = () => {
+    if (!canEdit) return;
     setHistory(currentHistory => {
       if (!currentHistory || currentHistory.future.length === 0) return currentHistory;
       const next = currentHistory.future[0];
@@ -143,6 +156,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   };
 
   const handleInputChange = (field: keyof PromptTemplateVersion, value: any) => {
+    if (!canEdit) return;
     setHistory(currentHistory => {
       if (!currentHistory) return null;
       const newPresent = { ...currentHistory.present, [field]: value };
@@ -164,6 +178,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   }
 
   const handleVariableChange = (index: number, field: keyof PromptVariable, value: string | number | boolean) => {
+    if (!canEdit) return;
     if (field === 'type' && !['string', 'number', 'boolean'].includes(value as string)) {
         return;
     }
@@ -194,6 +209,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   };
 
   const handleAddVariable = () => {
+      if (!canEdit) return;
       setHistory(currentHistory => {
           if (!currentHistory) return null;
           const existingNames = new Set(currentHistory.present.variables.map(v => v.name));
@@ -219,6 +235,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   };
 
   const handleRemoveVariable = (index: number) => {
+      if (!canEdit) return;
       setHistory(currentHistory => {
           if (!currentHistory) return null;
           const newVariables = currentHistory.present.variables.filter((_, i) => i !== index);
@@ -232,12 +249,12 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   };
 
   const handleSave = async () => {
-    if (!history || !isVariablesValid) return;
+    if (!history || !isVariablesValid || !currentWorkspace) return;
     setIsSaving(true);
     setError(null);
     try {
         if (isNew) {
-            await createTemplate(history.present);
+            await createTemplate(history.present, currentWorkspace.id);
         } else if (template) {
             // This is a simplified update. A real app would have more complex version management.
             const updatedTemplate = {
@@ -287,29 +304,35 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
              type="text"
              value={selectedVersion.name}
              onChange={(e) => handleInputChange('name', e.target.value)}
-             className="w-full text-3xl font-bold text-foreground bg-transparent focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2 -mx-2"
+             className="w-full text-3xl font-bold text-foreground bg-transparent focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2 -mx-2 disabled:cursor-not-allowed"
+             disabled={!canEdit}
            />
            <textarea
              value={selectedVersion.description}
              onChange={(e) => handleInputChange('description', e.target.value)}
-             className="w-full text-muted-foreground max-w-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2 -mx-2 mt-1 resize-none"
+             className="w-full text-muted-foreground max-w-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2 -mx-2 mt-1 resize-none disabled:cursor-not-allowed"
              rows={2}
+             disabled={!canEdit}
            />
         </div>
         <div className="flex items-center gap-2">
-            <button onClick={handleUndo} disabled={history.past.length === 0} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Undo">
-                <ArrowUturnLeftIcon className="h-5 w-5" />
-            </button>
-             <button onClick={handleRedo} disabled={history.future.length === 0} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Redo">
-                <ArrowUturnRightIcon className="h-5 w-5" />
-            </button>
-            <button 
-              onClick={handleSave} 
-              disabled={isSaving || !isVariablesValid}
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-success-foreground bg-success rounded-md hover:bg-success/90 disabled:opacity-50"
-            >
-                {isSaving ? 'Saving...' : (isNew ? 'Create Template' : 'Save Changes')}
-            </button>
+            {canEdit && (
+                <>
+                <button onClick={handleUndo} disabled={history.past.length === 0} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Undo">
+                    <ArrowUturnLeftIcon className="h-5 w-5" />
+                </button>
+                 <button onClick={handleRedo} disabled={history.future.length === 0} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Redo">
+                    <ArrowUturnRightIcon className="h-5 w-5" />
+                </button>
+                <button 
+                  onClick={handleSave} 
+                  disabled={isSaving || !isVariablesValid}
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-success-foreground bg-success rounded-md hover:bg-success/90 disabled:opacity-50"
+                >
+                    {isSaving ? 'Saving...' : (isNew ? 'Create Template' : 'Save Changes')}
+                </button>
+                </>
+            )}
         </div>
       </div>
        {error && isSaving && (
@@ -345,7 +368,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                  <textarea
                     value={selectedVersion.content}
                     onChange={(e) => handleInputChange('content', e.target.value)}
-                    className="w-full h-80 p-4 font-mono text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none resize-y"
+                    className="w-full h-80 p-4 font-mono text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none resize-y disabled:cursor-not-allowed"
+                    disabled={!canEdit}
                 />
             </div>
              {!isNew && template && (
@@ -380,7 +404,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                 <h3 className="text-lg font-semibold mb-4">Variables</h3>
                 <div className="space-y-3">
                     {selectedVersion.variables.map((v, index) => (
-                        <div key={index} className="p-3 bg-secondary rounded-md space-y-2">
+                        <fieldset key={index} disabled={!canEdit} className="p-3 bg-secondary rounded-md space-y-2 disabled:opacity-70">
                             <div className="flex items-start gap-2">
                                 <div className="flex-1">
                                     <label className="text-xs font-medium text-muted-foreground">Name</label>
@@ -406,7 +430,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                                     </select>
                                     {variableErrors[index]?.type && <p className="text-xs text-destructive mt-1">{variableErrors[index].type}</p>}
                                 </div>
-                                <button onClick={() => handleRemoveVariable(index)} className="mt-5 p-1.5 text-muted-foreground hover:text-destructive" aria-label="Remove variable">
+                                <button onClick={() => handleRemoveVariable(index)} className="mt-5 p-1.5 text-muted-foreground hover:text-destructive" aria-label="Remove variable" disabled={!canEdit}>
                                     <XCircleIcon className="h-5 w-5" />
                                 </button>
                             </div>
@@ -430,13 +454,15 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                                     />
                                 )}
                             </div>
-                        </div>
+                        </fieldset>
                     ))}
                 </div>
-                <button onClick={handleAddVariable} className="mt-4 w-full flex items-center justify-center gap-2 p-2 text-sm font-medium text-primary bg-secondary rounded-md hover:bg-accent">
-                    <PlusIcon className="h-5 w-5" />
-                    Add Variable
-                </button>
+                {canEdit && (
+                    <button onClick={handleAddVariable} className="mt-4 w-full flex items-center justify-center gap-2 p-2 text-sm font-medium text-primary bg-secondary rounded-md hover:bg-accent">
+                        <PlusIcon className="h-5 w-5" />
+                        Add Variable
+                    </button>
+                )}
             </div>
             {!isNew && template && (
                 <div className="bg-card shadow-card rounded-lg p-6">

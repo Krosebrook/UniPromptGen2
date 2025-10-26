@@ -3,17 +3,23 @@ import { getTemplates, deleteTemplate } from '../services/apiService.ts';
 import { PromptTemplate } from '../types.ts';
 import TemplateCard from '../components/TemplateCard.tsx';
 import { MagnifyingGlassIcon, PlusIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
 
 const TemplateLibrary: React.FC = () => {
+  const { currentWorkspace, currentUserRole } = useWorkspace();
   const [templates, setTemplates] = useState<PromptTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
 
   const fetchTemplates = useCallback(async () => {
+    if (!currentWorkspace) return;
+
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getTemplates();
+      const data = await getTemplates(currentWorkspace.id);
       setTemplates(data);
     } catch (err) {
       setError('Failed to load templates. Please try again later.');
@@ -21,7 +27,7 @@ const TemplateLibrary: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentWorkspace]);
 
   useEffect(() => {
     fetchTemplates();
@@ -41,7 +47,7 @@ const TemplateLibrary: React.FC = () => {
   };
   
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading || !currentWorkspace) {
       return (
         <div className="flex justify-center items-center h-64">
           <SpinnerIcon className="h-8 w-8 text-primary" />
@@ -57,6 +63,15 @@ const TemplateLibrary: React.FC = () => {
           <p>{error}</p>
         </div>
       );
+    }
+    
+    if (templates.length === 0) {
+        return (
+            <div className="text-center py-16 text-muted-foreground">
+                <p>No templates found in this workspace.</p>
+                {canEdit && <p className="text-sm">Click "New Template" to get started.</p>}
+            </div>
+        );
     }
     
     return (
@@ -87,10 +102,12 @@ const TemplateLibrary: React.FC = () => {
               className="w-full md:w-64 pl-10 pr-4 py-2 rounded-md bg-input text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
             />
           </div>
-          <a href="#/templates/new" className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
-            <PlusIcon className="h-5 w-5 mr-2" />
-            New Template
-          </a>
+          {canEdit && (
+            <a href="#/templates/new" className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
+                <PlusIcon className="h-5 w-5 mr-2" />
+                New Template
+            </a>
+          )}
         </div>
       </div>
 

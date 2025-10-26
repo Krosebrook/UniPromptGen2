@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { KnowledgeNodeData, KnowledgeSource } from '../../types.ts';
 import { getKnowledgeSources } from '../../services/apiService.ts';
+import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
 
 interface KnowledgeNodeConfigProps {
   data: KnowledgeNodeData;
@@ -8,11 +9,14 @@ interface KnowledgeNodeConfigProps {
 }
 
 const KnowledgeNodeConfig: React.FC<KnowledgeNodeConfigProps> = ({ data, onUpdate }) => {
+  const { currentWorkspace } = useWorkspace();
   const [availableSources, setAvailableSources] = useState<KnowledgeSource[]>([]);
   
   useEffect(() => {
-    getKnowledgeSources().then(setAvailableSources);
-  }, []);
+    if (currentWorkspace) {
+        getKnowledgeSources(currentWorkspace.id).then(setAvailableSources);
+    }
+  }, [currentWorkspace]);
 
   const handleSourceSelect = (sourceId: string) => {
     const selectedSource = availableSources.find(s => s.id === sourceId);

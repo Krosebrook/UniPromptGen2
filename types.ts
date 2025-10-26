@@ -2,9 +2,22 @@
 // FIX: Import CSSProperties from react to resolve namespace error.
 import type { CSSProperties } from 'react';
 
-// From constants.ts and Profile.tsx
-export interface User {
+// --- Workspace & User Types ---
+export type UserRole = 'Admin' | 'Editor' | 'Viewer';
+
+export interface Workspace {
   id: string;
+  name: string;
+  plan: 'Free' | 'Pro' | 'Enterprise';
+}
+
+export interface UserWorkspace {
+  workspaceId: string;
+  role: UserRole;
+}
+
+export interface User {
+  id:string;
   name: string;
   email: string;
   title: string;
@@ -13,6 +26,7 @@ export interface User {
   level: number;
   achievements: Achievement[];
   certifications: Certification[];
+  workspaces: UserWorkspace[];
 }
 
 export interface Achievement {
@@ -28,7 +42,7 @@ export interface Certification {
   date: string;
 }
 
-// From constants.ts, TemplateLibrary.tsx, TemplateEditor.tsx
+// --- Template & Evaluation Types ---
 export type RiskLevel = 'Low' | 'Medium' | 'High';
 
 export interface PromptVariable {
@@ -78,6 +92,7 @@ export interface ABTest {
 
 export interface PromptTemplate {
   id: string;
+  workspaceId: string;
   domain: string;
   qualityScore: number;
   metrics: PromptTemplateMetrics;
@@ -86,7 +101,6 @@ export interface PromptTemplate {
   abTests?: ABTest[];
 }
 
-// From constants.ts, TemplateEditor.tsx
 export interface Evaluation {
   id: string;
   templateId: string;
@@ -99,11 +113,12 @@ export interface Evaluation {
   comment: string;
 }
 
-// From constants.ts, ToolLibrary.tsx
+// --- Tool & Knowledge Types ---
 export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
 
 export interface Tool {
   id: string;
+  workspaceId: string;
   name: string;
   description: string;
   apiEndpoint: string;
@@ -112,23 +127,23 @@ export interface Tool {
   responseSchema: string; // JSON string
 }
 
-export type ToolFormData = Omit<Tool, 'id'>;
+export type ToolFormData = Omit<Tool, 'id' | 'workspaceId'>;
 
 
-// From constants.ts, KnowledgeLibrary.tsx
 export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
 
 export interface KnowledgeSource {
   id: string;
+  workspaceId: string;
   name: string;
   type: KnowledgeSourceType;
   description: string;
   dateAdded: string;
 }
 
-export type KnowledgeSourceFormData = Omit<KnowledgeSource, 'id' | 'dateAdded'>;
+export type KnowledgeSourceFormData = Omit<KnowledgeSource, 'id' | 'dateAdded' | 'workspaceId'>;
 
-// From geminiService.ts, Chatbot.tsx
+// --- Service & Component Types ---
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
@@ -136,7 +151,6 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-// From geminiService.ts, Search.tsx
 export interface GroundingSource {
     web?: {
         uri: string;
@@ -144,7 +158,6 @@ export interface GroundingSource {
     }
 }
 
-// From qualityService.ts
 export interface ExecutionEvent {
     success: boolean;
     userRating: number; // e.g., 1-5

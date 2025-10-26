@@ -4,6 +4,7 @@ import {
 } from '../components/icons/Icons.tsx';
 import { getTemplates, getEvaluationsByTemplateId } from '../services/apiService.ts'; // Fictional function
 import { PromptTemplate, Evaluation } from '../types.ts';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
 import {
   ResponsiveContainer,
   LineChart,
@@ -39,22 +40,29 @@ const chartData = [
 
 
 const Dashboard: React.FC = () => {
+  const { currentWorkspace } = useWorkspace();
   const [recentTemplates, setRecentTemplates] = useState<PromptTemplate[]>([]);
   const [recentEvaluations, setRecentEvaluations] = useState<Evaluation[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-        const templates = await getTemplates();
+        if (!currentWorkspace) return;
+
+        const templates = await getTemplates(currentWorkspace.id);
         setRecentTemplates(templates.slice(0, 3));
         
-        // In a real app, you'd have a dedicated endpoint for recent evaluations
-        const evals1 = await getEvaluationsByTemplateId('template-001');
-        const evals2 = await getEvaluationsByTemplateId('template-002');
-        const evals3 = await getEvaluationsByTemplateId('template-003');
-        setRecentEvaluations([...evals1, ...evals2, ...evals3].slice(0, 3));
+        // Fetch evaluations for the recent templates within this workspace
+        if (templates.length > 0) {
+            const evalPromises = templates.slice(0, 3).map(t => getEvaluationsByTemplateId(t.id));
+            const evalsArrays = await Promise.all(evalPromises);
+            const allEvals = evalsArrays.flat();
+            setRecentEvaluations(allEvals.slice(0, 3));
+        } else {
+            setRecentEvaluations([]);
+        }
     };
     fetchData();
-  }, []);
+  }, [currentWorkspace]);
 
   return (
     <div className="space-y-6">

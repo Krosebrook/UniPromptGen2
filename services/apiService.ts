@@ -1,8 +1,9 @@
 // services/apiService.ts
-import { MOCK_INITIAL_TEMPLATES, MOCK_INITIAL_EVALUATIONS, MOCK_INITIAL_TOOLS, MOCK_INITIAL_KNOWLEDGE_SOURCES } from '../mock-data.ts';
-import type { PromptTemplate, Evaluation, Tool, KnowledgeSource, PromptTemplateVersion, ToolFormData, KnowledgeSourceFormData } from '../types.ts';
+import { MOCK_WORKSPACES, MOCK_INITIAL_TEMPLATES, MOCK_INITIAL_EVALUATIONS, MOCK_INITIAL_TOOLS, MOCK_INITIAL_KNOWLEDGE_SOURCES } from '../mock-data.ts';
+import type { PromptTemplate, Evaluation, Tool, KnowledgeSource, PromptTemplateVersion, ToolFormData, KnowledgeSourceFormData, Workspace } from '../types.ts';
 
 // --- In-Memory Database ---
+let workspacesDB: Workspace[] = MOCK_WORKSPACES;
 let templatesDB: PromptTemplate[] = MOCK_INITIAL_TEMPLATES;
 let evaluationsDB: Evaluation[] = MOCK_INITIAL_EVALUATIONS;
 let toolsDB: Tool[] = MOCK_INITIAL_TOOLS;
@@ -12,11 +13,18 @@ let knowledgeSourcesDB: KnowledgeSource[] = MOCK_INITIAL_KNOWLEDGE_SOURCES;
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
+// --- Workspace APIs ---
+export const getWorkspacesByIds = async (ids: string[]): Promise<Workspace[]> => {
+    await delay(100);
+    const workspaces = workspacesDB.filter(w => ids.includes(w.id));
+    return JSON.parse(JSON.stringify(workspaces));
+};
 
 // --- Template APIs ---
-export const getTemplates = async (): Promise<PromptTemplate[]> => {
+export const getTemplates = async (workspaceId: string): Promise<PromptTemplate[]> => {
     await delay(500);
-    return JSON.parse(JSON.stringify(templatesDB)); // Return deep copy
+    const results = templatesDB.filter(t => t.workspaceId === workspaceId);
+    return JSON.parse(JSON.stringify(results)); // Return deep copy
 };
 
 export const getTemplateById = async (id: string): Promise<PromptTemplate | undefined> => {
@@ -25,10 +33,11 @@ export const getTemplateById = async (id: string): Promise<PromptTemplate | unde
     return template ? JSON.parse(JSON.stringify(template)) : undefined;
 };
 
-export const createTemplate = async (newVersionData: PromptTemplateVersion): Promise<PromptTemplate> => {
+export const createTemplate = async (newVersionData: PromptTemplateVersion, workspaceId: string): Promise<PromptTemplate> => {
     await delay(400);
     const newTemplate: PromptTemplate = {
         id: generateId('template'),
+        workspaceId: workspaceId,
         domain: 'Uncategorized',
         qualityScore: 75, // Starting score
         metrics: { totalRuns: 0, successfulRuns: 0, totalUserRating: 0, avgUserRating: 0, taskSuccessRate: 0, efficiencyScore: 0.8 },
@@ -63,16 +72,18 @@ export const getEvaluationsByTemplateId = async (templateId: string): Promise<Ev
 };
 
 // --- Tool APIs ---
-export const getTools = async (): Promise<Tool[]> => {
+export const getTools = async (workspaceId: string): Promise<Tool[]> => {
     await delay(400);
-    return JSON.parse(JSON.stringify(toolsDB));
+    const results = toolsDB.filter(t => t.workspaceId === workspaceId);
+    return JSON.parse(JSON.stringify(results));
 }
 
-export const addTool = async (toolData: ToolFormData): Promise<Tool> => {
+export const addTool = async (toolData: ToolFormData, workspaceId: string): Promise<Tool> => {
     await delay(400);
     const newTool: Tool = {
         ...toolData,
         id: generateId('tool'),
+        workspaceId: workspaceId,
     };
     toolsDB.push(newTool);
     return JSON.parse(JSON.stringify(newTool));
@@ -85,17 +96,19 @@ export const deleteTool = async (id: string): Promise<void> => {
 
 
 // --- Knowledge Source APIs ---
-export const getKnowledgeSources = async (): Promise<KnowledgeSource[]> => {
+export const getKnowledgeSources = async (workspaceId: string): Promise<KnowledgeSource[]> => {
     await delay(450);
-    return JSON.parse(JSON.stringify(knowledgeSourcesDB));
+    const results = knowledgeSourcesDB.filter(ks => ks.workspaceId === workspaceId);
+    return JSON.parse(JSON.stringify(results));
 }
 
-export const addKnowledgeSource = async (sourceData: KnowledgeSourceFormData): Promise<KnowledgeSource> => {
+export const addKnowledgeSource = async (sourceData: KnowledgeSourceFormData, workspaceId: string): Promise<KnowledgeSource> => {
     await delay(400);
     const newSource: KnowledgeSource = {
         ...sourceData,
         id: generateId('ks'),
         dateAdded: new Date().toISOString().split('T')[0],
+        workspaceId: workspaceId,
     };
     knowledgeSourcesDB.push(newSource);
     return JSON.parse(JSON.stringify(newSource));
