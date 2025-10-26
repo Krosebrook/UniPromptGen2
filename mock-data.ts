@@ -1,6 +1,58 @@
 // mock-data.ts
-import { PromptTemplate, User, Workspace, Tool, KnowledgeSource, ABTest, AgentGraph } from './types.ts';
+// FIX: Added AnalyticEvent to imports
+import { PromptTemplate, User, Workspace, Tool, KnowledgeSource, ABTest, AgentGraph, AnalyticEvent } from './types.ts';
 import { MOCK_LOGGED_IN_USER, MOCK_USERS } from './constants.ts';
+
+// FIX: Added MOCK_INITIAL_ANALYTICS to provide data for the analyticsDB.
+export const MOCK_INITIAL_ANALYTICS: AnalyticEvent[] = [
+  {
+    templateId: 'tmpl-1',
+    workspaceId: 'ws-001',
+    version: '1.0',
+    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    latency: 310,
+    success: true,
+    userRating: 5,
+  },
+  {
+    templateId: 'tmpl-2',
+    workspaceId: 'ws-001',
+    version: '2.0',
+    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    latency: 450,
+    success: true,
+    userRating: 4,
+  },
+  {
+    templateId: 'tmpl-1',
+    workspaceId: 'ws-001',
+    version: '1.0',
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+    latency: 280,
+    success: false,
+    userRating: 2,
+  },
+  {
+    templateId: 'tmpl-1',
+    workspaceId: 'ws-001',
+    version: '1.0',
+    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    latency: 330,
+    success: true,
+    userRating: 4,
+    abTestVariant: 'A',
+  },
+  {
+    templateId: 'tmpl-1',
+    workspaceId: 'ws-001',
+    version: '1.1',
+    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    latency: 350,
+    success: true,
+    userRating: 5,
+    abTestVariant: 'B',
+  },
+];
 
 export const MOCK_WORKSPACES: Workspace[] = [
     { id: 'ws-001', name: 'Product Team', plan: 'Pro' },

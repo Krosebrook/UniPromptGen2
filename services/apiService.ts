@@ -1,10 +1,14 @@
 // services/apiService.ts
-import { MOCK_TEMPLATES, MOCK_USERS, MOCK_WORKSPACES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AB_TESTS, MOCK_AGENT_GRAPHS } from '../mock-data.ts';
-import { PromptTemplate, User, Workspace, Tool, ToolFormData, KnowledgeSource, KnowledgeSourceFormData, AnalyticsChartData, ABTest, AgentGraph, UserRole } from '../types.ts';
+import { MOCK_TEMPLATES, MOCK_USERS, MOCK_WORKSPACES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AB_TESTS, MOCK_AGENT_GRAPHS, MOCK_INITIAL_ANALYTICS } from '../mock-data.ts';
+import { PromptTemplate, User, Workspace, Tool, ToolFormData, KnowledgeSource, KnowledgeSourceFormData, AnalyticsChartData, ABTest, AgentGraph, UserRole, AnalyticEvent } from '../types.ts';
 import { ingestExecutionEvent } from './qualityService.ts';
 
 // Simulate network latency
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+// --- In-memory DBs ---
+let analyticsDB: AnalyticEvent[] = [...MOCK_INITIAL_ANALYTICS];
+
 
 // --- Templates ---
 export const getTemplates = async (workspaceId: string): Promise<PromptTemplate[]> => {
@@ -51,10 +55,10 @@ export const deployTemplateVersion = async (templateId: string, version: string)
     if (!template) throw new Error("Template not found");
     template.deployedVersion = version;
     
-    // Simulate some event ingestion for quality score updates
-    const updatedTemplate = ingestExecutionEvent(template, { success: true, userRating: 4.5 });
-    
-    return updatedTemplate;
+    // Simulate an initial run to populate analytics
+    runDeployedTemplate(template.id, {});
+
+    return template;
 };
 
 
@@ -100,6 +104,13 @@ export const getKnowledgeSources = async (workspaceId: string): Promise<Knowledg
     return MOCK_KNOWLEDGE_SOURCES.filter(ks => ks.workspaceId === workspaceId);
 };
 
+export const getKnowledgeSourceContent = async (sourceId: string): Promise<string> => {
+    await delay(150);
+    const source = MOCK_KNOWLEDGE_SOURCES.find(ks => ks.id === sourceId);
+    return `Content from ${source?.name}: This is the internal knowledge provided for grounding.`;
+};
+
+
 export const addKnowledgeSource = async (sourceData: KnowledgeSourceFormData, workspaceId: string): Promise<KnowledgeSource> => {
     await delay(400);
     const newSource: KnowledgeSource = {
@@ -123,11 +134,15 @@ export const deleteKnowledgeSource = async (id: string): Promise<void> => {
 // --- A/B Testing ---
 export const getABTestsForTemplate = async (templateId: string): Promise<ABTest[]> => {
     await delay(250);
-    return MOCK_AB_TESTS.filter(t => t.id.startsWith(templateId));
+    const template = await getTemplateById(templateId);
+    return template?.abTests || [];
 };
 
 export const createABTest = async (templateId: string, testData: Partial<ABTest>): Promise<ABTest> => {
     await delay(500);
+    const template = await getTemplateById(templateId);
+    if (!template) throw new Error("Template not found");
+    
     const newTest: ABTest = {
         id: `${templateId}-test-${Date.now()}`,
         name: testData.name!,
@@ -136,63 +151,170 @@ export const createABTest = async (templateId: string, testData: Partial<ABTest>
         trafficSplit: testData.trafficSplit!,
         status: 'running',
     };
-    MOCK_AB_TESTS.push(newTest);
+    template.abTests.push(newTest);
     return newTest;
 };
 
 export const declareABTestWinner = async (testId: string, winner: 'A' | 'B'): Promise<void> => {
     await delay(600);
-    const test = MOCK_AB_TESTS.find(t => t.id === testId);
+    const templateId = testId.split('-test-')[0];
+    const template = await getTemplateById(templateId);
+    if (!template) throw new Error("Template not found for this test");
+    
+    const test = template.abTests.find(t => t.id === testId);
     if (!test) throw new Error("A/B Test not found");
     
     test.status = 'completed';
-    // Here you would also update the activeVersion of the template, etc.
+    // This is a simplified results object. A real system would calculate confidence.
+    test.results = test.results || { versionA: { ...template.metrics }, versionB: { ...template.metrics }, confidence: 0.99, winner: 'inconclusive' };
+    test.results.winner = winner === 'A' ? 'versionA' : 'versionB';
+
+    // Promote the winner
+    const winningVersion = winner === 'A' ? test.versionA : test.versionB;
+    template.activeVersion = winningVersion;
 };
 
-// --- Analytics & Billing ---
+// --- Analytics, Billing & Production Simulation ---
+export const runDeployedTemplate = async (templateId: string, variables: Record<string, any>): Promise<any> => {
+    await delay(200 + Math.random() * 300); // Simulate network + execution latency
+    const template = await getTemplateById(templateId);
+    if (!template || !template.deployedVersion) throw new Error("Deployed template not found");
+
+    let versionToRun = template.deployedVersion;
+    let abTestVariant: 'A' | 'B' | undefined = undefined;
+
+    // Check for active A/B test
+    const activeTest = template.abTests.find(t => t.status === 'running');
+    if (activeTest) {
+        if (Math.random() * 100 < activeTest.trafficSplit) {
+            versionToRun = activeTest.versionA;
+            abTestVariant = 'A';
+        } else {
+            versionToRun = activeTest.versionB;
+            abTestVariant = 'B';
+        }
+    }
+
+    // Log the analytic event
+    const event: AnalyticEvent = {
+        templateId,
+        workspaceId: template.workspaceId,
+        version: versionToRun,
+        timestamp: new Date().toISOString(),
+        latency: 250 + Math.random() * 200,
+        success: Math.random() < 0.95, // 95% success rate
+        userRating: Math.floor(Math.random() * 3) + 3, // Rating between 3-5
+        abTestVariant,
+    };
+    analyticsDB.push(event);
+
+    return { success: true, message: `Simulated run of v${versionToRun}`, data: { ...variables }};
+}
+
 export const getAnalytics = async (workspaceId: string, days: number): Promise<{
-    totalDeployed: number,
-    totalCalls: number,
-    avgLatency: number,
-    successRate: number,
-    chartData: AnalyticsChartData[],
-    runsByTemplate: Record<string, number>
+    totalDeployed: number;
+    totalCalls: number;
+    avgLatency: number;
+    successRate: number;
+    chartData: AnalyticsChartData[];
+    runsByTemplate: Record<string, number>;
 }> => {
     await delay(800);
     const templates = MOCK_TEMPLATES.filter(t => t.workspaceId === workspaceId && t.deployedVersion);
-    const usageSeed = workspaceId.charCodeAt(3) || 1;
     
-    const chartData: AnalyticsChartData[] = [];
-    for (let i = days - 1; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        chartData.push({
-            time: days > 1 ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric'}) : date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
-            calls: (usageSeed * 100) + Math.floor(Math.random() * (200 + i * 50)),
-        });
-    }
+    const timeLimit = new Date();
+    timeLimit.setDate(timeLimit.getDate() - days);
+    
+    const relevantEvents = analyticsDB.filter(e => e.workspaceId === workspaceId && new Date(e.timestamp) > timeLimit);
+
+    const totalCalls = relevantEvents.length;
+    const avgLatency = totalCalls > 0 ? relevantEvents.reduce((sum, e) => sum + e.latency, 0) / totalCalls : 0;
+    const successRate = totalCalls > 0 ? relevantEvents.filter(e => e.success).length / totalCalls : 0;
 
     const runsByTemplate: Record<string, number> = {};
-    templates.forEach(t => {
-        runsByTemplate[t.id] = (t.id.charCodeAt(5) || 1) * 100 + Math.floor(Math.random() * 500);
+    relevantEvents.forEach(e => {
+        runsByTemplate[e.templateId] = (runsByTemplate[e.templateId] || 0) + 1;
     });
+
+    // Chart Data Aggregation
+    const chartData: AnalyticsChartData[] = [];
+    if (days === 1) { // Group by hour
+        const callsByHour: Record<string, number> = {};
+        for (let i = 0; i < 24; i++) {
+            const hour = new Date();
+            hour.setHours(hour.getHours() - i);
+            const key = hour.toLocaleTimeString('en-US', { hour: '2-digit' });
+            callsByHour[key] = 0;
+        }
+        relevantEvents.forEach(e => {
+            const key = new Date(e.timestamp).toLocaleTimeString('en-US', { hour: '2-digit' });
+            if (key in callsByHour) {
+                callsByHour[key]++;
+            }
+        });
+        chartData.push(...Object.entries(callsByHour).map(([time, calls]) => ({ time, calls })).reverse());
+    } else { // Group by day
+        const callsByDay: Record<string, number> = {};
+        for (let i = 0; i < days; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const key = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            callsByDay[key] = 0;
+        }
+        relevantEvents.forEach(e => {
+            const key = new Date(e.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (key in callsByDay) {
+                callsByDay[key]++;
+            }
+        });
+        chartData.push(...Object.entries(callsByDay).map(([time, calls]) => ({ time, calls })).reverse());
+    }
     
     return {
         totalDeployed: templates.length,
-        totalCalls: chartData.reduce((acc, cur) => acc + cur.calls, 0),
-        avgLatency: 250 + usageSeed * 5,
-        successRate: 0.95 - (usageSeed / 1000),
+        totalCalls,
+        avgLatency,
+        successRate,
         chartData,
         runsByTemplate,
     }
 };
 
+export const getABTestAnalytics = async (testId: string): Promise<{
+    versionA: { runs: number; successRate: number; avgRating: number };
+    versionB: { runs: number; successRate: number; avgRating: number };
+}> => {
+    await delay(400);
+    const events = analyticsDB.filter(e => e.abTestVariant && e.templateId === testId.split('-test-')[0]);
+    
+    const variantAEvents = events.filter(e => e.abTestVariant === 'A');
+    const variantBEvents = events.filter(e => e.abTestVariant === 'B');
+
+    const calculateMetrics = (arr: AnalyticEvent[]) => {
+        if (arr.length === 0) return { runs: 0, successRate: 0, avgRating: 0 };
+        return {
+            runs: arr.length,
+            successRate: arr.filter(e => e.success).length / arr.length,
+            avgRating: arr.reduce((sum, e) => sum + (e.userRating || 0), 0) / arr.length,
+        }
+    };
+
+    return {
+        versionA: calculateMetrics(variantAEvents),
+        versionB: calculateMetrics(variantBEvents),
+    }
+}
+
 
 export const getBillingUsage = async (workspaceId: string): Promise<{ apiCalls: number }> => {
     await delay(400);
-    const usageSeed = workspaceId.length + (workspaceId.charCodeAt(1) || 1);
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyEvents = analyticsDB.filter(e => e.workspaceId === workspaceId && new Date(e.timestamp) >= startOfMonth);
     return {
-        apiCalls: 5000 + usageSeed * 100 + Math.floor(Math.random() * 1000)
+        apiCalls: monthlyEvents.length
     };
 }
 
@@ -223,3 +345,23 @@ export const saveAgentGraph = async (agentData: Omit<AgentGraph, 'id' | 'workspa
     MOCK_AGENT_GRAPHS.push(newAgent);
     return newAgent;
 }
+
+// --- SECURE TOOL PROXY ---
+export const executeTool = async (toolId: string, input: any): Promise<any> => {
+    await delay(600 + Math.random() * 400);
+    const tool = MOCK_TOOLS.find(t => t.id === toolId);
+    if (!tool) throw new Error("Tool not found");
+
+    console.log(`[SECURE PROXY] Executing tool: ${tool.name}`);
+    if (tool.authMethod !== 'None') {
+        console.log(`[SECURE PROXY] Securely injecting credentials for ${tool.authMethod}`);
+    }
+
+    // In a real backend, you'd use fetch() here to call tool.apiEndpoint
+    // We will simulate it based on the mock tool
+    if (tool.apiEndpoint.includes('dummyjson.com/products/add')) {
+        return { id: Math.floor(Math.random() * 100) + 1, ...input };
+    }
+    
+    return { success: true, message: `Mock response from ${tool.name}`, received_input: input };
+};

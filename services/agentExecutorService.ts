@@ -1,13 +1,20 @@
-import type { Node, Edge, NodeRunStatus, LogEntry, ModelNodeData, ToolNodeData } from '../types.ts';
+import type { Node, Edge, NodeRunStatus, LogEntry, ModelNodeData, ToolNodeData, KnowledgeNodeData, InputNodeData } from '../types.ts';
 import { generateText } from './geminiService.ts';
+import { getKnowledgeSourceContent, executeTool } from './apiService.ts';
 import type { Dispatch, SetStateAction } from 'react';
 
 // Helper to find connected nodes
-const getTargetNode = (sourceNodeId: string, edges: Edge[], nodes: Node[]): Node | undefined => {
-  const edge = edges.find(e => e.source === sourceNodeId);
+const getTargetNode = (sourceNodeId: string, edges: Edge[], nodes: Node[], handle: 'data_output' | 'knowledge_input'): Node | undefined => {
+  const edge = edges.find(e => e.source === sourceNodeId && e.sourceHandle === handle);
   if (!edge) return undefined;
   return nodes.find(n => n.id === edge.target);
 };
+
+const getSourceNode = (targetNodeId: string, edges: Edge[], nodes: Node[], handle: 'data_input' | 'knowledge_input'): Node | undefined => {
+  const edge = edges.find(e => e.target === targetNodeId && e.targetHandle === handle);
+  if (!edge) return undefined;
+  return nodes.find(n => n.id === edge.source);
+}
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -25,66 +32,101 @@ export const executeAgent = async (
   log('Agent execution started.', 'info');
   await delay(200);
 
-  // Find the input node to start execution
   let currentNode = nodes.find(n => n.type === 'input');
   if (!currentNode) {
     log('Execution failed: No input node found.', 'error');
     throw new Error('No input node found.');
   }
   
-  let currentData: any = JSON.parse(currentNode.data.initialValue || '{}');
+  const nodeOutputs: Record<string, any> = {};
+  // FIX: Cast currentNode.data to InputNodeData to access initialValue.
+  nodeOutputs[currentNode.id] = JSON.parse((currentNode.data as InputNodeData).initialValue || '{}');
 
-  while(currentNode) {
+  const executionOrder = [currentNode];
+  let nextNode = getTargetNode(currentNode.id, edges, nodes, 'data_output');
+  while (nextNode) {
+    executionOrder.push(nextNode);
+    if (nextNode.type === 'output') break;
+    nextNode = getTargetNode(nextNode.id, edges, nodes, 'data_output');
+  }
+
+  for (const node of executionOrder) {
+    currentNode = node;
     log(`Executing node: ${currentNode.data.label} (${currentNode.id})`, 'running');
     updateStatus(currentNode.id, 'running');
     await delay(800 + Math.random() * 500);
 
+    // Aggregate inputs from all connected source nodes
+    const inputEdges = edges.filter(e => e.target === currentNode.id && e.targetHandle === 'data_input');
+    let currentData: any = {};
+    for (const edge of inputEdges) {
+        if(nodeOutputs[edge.source]) {
+            currentData = { ...currentData, ...nodeOutputs[edge.source] };
+        }
+    }
+    
     try {
         switch(currentNode.type) {
             case 'input':
-                log(`Input data: ${JSON.stringify(currentData, null, 2)}`, 'info');
+                log(`Input data: ${JSON.stringify(nodeOutputs[currentNode.id], null, 2)}`, 'info');
                 break;
             
             case 'tool':
                 const toolData = currentNode.data as ToolNodeData;
-                log(`Calling tool API: ${toolData.apiEndpoint}`, 'info');
-                // Simulate API call based on input
-                if (toolData.apiEndpoint.includes('dummyjson.com/products/add')) {
-                    log(`Request Body: ${JSON.stringify(currentData, null, 2)}`, 'info');
-                    currentData = { id: Math.floor(Math.random() * 100) + 1, ...currentData };
-                    log(`Response: ${JSON.stringify(currentData, null, 2)}`, 'info');
-                } else {
-                    log('Tool execution mocked.', 'info');
-                    currentData = { success: true, from: toolData.label, input: currentData };
+                if (!toolData.toolId) {
+                    throw new Error("Tool Node is not configured with a tool from the library.");
                 }
+                log(`Calling tool: ${toolData.label}`, 'info');
+                log(`Request Data: ${JSON.stringify(currentData, null, 2)}`, 'info');
+                
+                const toolResult = await executeTool(toolData.toolId, currentData);
+                
+                log(`Tool Response: ${JSON.stringify(toolResult, null, 2)}`, 'info');
+                nodeOutputs[currentNode.id] = toolResult;
                 break;
             
             case 'model':
                 const modelData = currentNode.data as ModelNodeData;
-                const prompt = `System: ${modelData.systemInstruction}\n\nData: ${JSON.stringify(currentData, null, 2)}\n\n---\nPlease process the data.`;
+                
+                // Check for knowledge input
+                const knowledgeNode = getSourceNode(currentNode.id, edges, nodes, 'knowledge_input');
+                let knowledgeContent = '';
+                if (knowledgeNode && knowledgeNode.type === 'knowledge' && nodeOutputs[knowledgeNode.id]) {
+                    knowledgeContent = nodeOutputs[knowledgeNode.id] as string;
+                }
+                
+                const prompt = `${knowledgeContent ? `CONTEXT:\n${knowledgeContent}\n\n---\n\n` : ''}TASK: ${modelData.systemInstruction}\n\nINPUT DATA:\n${JSON.stringify(currentData, null, 2)}`;
+                
                 log('Generating content with model...', 'info');
                 const result = await generateText(prompt, { model: 'gemini-2.5-flash', ...modelData });
                 log(`Model output: ${result.substring(0, 100)}...`, 'info');
-                currentData = { result };
+                try {
+                    // Try to parse as JSON if possible
+                    nodeOutputs[currentNode.id] = JSON.parse(result);
+                } catch {
+                    nodeOutputs[currentNode.id] = { result };
+                }
                 break;
 
             case 'knowledge':
-                log(`Accessing knowledge source: ${currentNode.data.label}`, 'info');
-                // In a real scenario, this would fetch data and inject it into context.
-                // For the mock, we just pass through.
+                // FIX: Cast currentNode.data to KnowledgeNodeData to access its properties.
+                const knowledgeData = currentNode.data as KnowledgeNodeData;
+                log(`Accessing knowledge source: ${knowledgeData.label}`, 'info');
+                if (!knowledgeData.sourceId) throw new Error("Knowledge node is not configured.");
+                
+                const content = await getKnowledgeSourceContent(knowledgeData.sourceId);
+                nodeOutputs[currentNode.id] = content;
                 break;
 
             case 'output':
                 log(`Final output: ${JSON.stringify(currentData, null, 2)}`, 'success');
+                nodeOutputs[currentNode.id] = currentData;
                 break;
         }
 
         updateStatus(currentNode.id, 'success');
         log(`Node ${currentNode.data.label} completed successfully.`, 'success');
         
-        // Move to the next node
-        currentNode = getTargetNode(currentNode.id, edges, nodes);
-
     } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
         log(`Error at node ${currentNode.data.label}: ${errorMessage}`, 'error');

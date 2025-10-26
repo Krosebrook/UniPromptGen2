@@ -106,6 +106,18 @@ export interface AnalyticsChartData {
     calls: number;
 }
 
+// FIX: Added AnalyticEvent type to be used by apiService and mock-data.
+export interface AnalyticEvent {
+    templateId: string;
+    workspaceId: string;
+    version: string;
+    timestamp: string;
+    latency: number;
+    success: boolean;
+    userRating?: number;
+    abTestVariant?: 'A' | 'B';
+}
+
 
 // Tools
 export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
