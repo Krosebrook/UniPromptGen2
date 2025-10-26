@@ -128,7 +128,7 @@ const TemplateEditor: React.FC<{ templateId?: string }> = ({ templateId }) => {
         varErrors.name = 'Name is required.';
         isValid = false;
       } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(v.name)) {
-        varErrors.name = 'Invalid name format.';
+        varErrors.name = 'Invalid format. Use letters, numbers, and underscores, and start with a letter or underscore.';
         isValid = false;
       } else if (nameSet.has(v.name)) {
         varErrors.name = 'Name must be unique.';

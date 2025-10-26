@@ -106,9 +106,9 @@ export let MOCK_TEMPLATES: PromptTemplate[] = [
 
 
 export let MOCK_TOOLS: Tool[] = [
-    { id: 'tool-1', workspaceId: 'ws-001', name: 'Get Current Weather', description: 'Fetches the current weather for a given location.', apiEndpoint: 'https://api.weather.com/v1/current', authMethod: 'API Key', requestSchema: '{"location": "string"}', responseSchema: '{"temp_c": "number", "condition": "string"}' },
+    { id: 'tool-1', workspaceId: 'ws-001', name: 'Get Current Weather', description: 'Fetches the current weather for a given location.', apiEndpoint: 'https://api.weather.com/v1/current', authMethod: 'API Key', requestSchema: '{"location": "string"}', responseSchema: '{"temp_c": "number", "condition": "string"}', apiKeyLocation: 'header', apiKeyName: 'X-Weather-API-Key' },
     { id: 'tool-2', workspaceId: 'ws-001', name: 'Create Product', description: 'Adds a new product to the database.', apiEndpoint: 'https://dummyjson.com/products/add', authMethod: 'None', requestSchema: '{"title": "string"}', responseSchema: '{"id": "number", "title": "string"}' },
-    { id: 'tool-3', workspaceId: 'ws-002', name: 'Google Calendar API', description: 'Interacts with Google Calendar.', apiEndpoint: 'https://www.googleapis.com/calendar/v3', authMethod: 'OAuth 2.0', requestSchema: '{...}', responseSchema: '{...}' },
+    { id: 'tool-3', workspaceId: 'ws-002', name: 'Google Calendar API', description: 'Interacts with Google Calendar.', apiEndpoint: 'https://www.googleapis.com/calendar/v3', authMethod: 'OAuth 2.0', requestSchema: '{...}', responseSchema: '{...}', oauthClientId: '123456789-abc.apps.googleusercontent.com', oauthAuthorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth', oauthTokenUrl: 'https://oauth2.googleapis.com/token', oauthScopes: 'https://www.googleapis.com/auth/calendar.readonly' },
 ];
 
 export let MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [

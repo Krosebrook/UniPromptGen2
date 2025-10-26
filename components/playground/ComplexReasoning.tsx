@@ -55,7 +55,9 @@ const ComplexReasoning: React.FC = () => {
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold text-foreground mb-2">Result</h3>
-              <div className="text-foreground whitespace-pre-wrap prose prose-sm prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: result.replace(/\n/g, '<br />') }}></div>
+              <div className="text-foreground whitespace-pre-wrap prose prose-sm prose-invert max-w-none">
+                {result}
+              </div>
             </div>
           </div>
         )}

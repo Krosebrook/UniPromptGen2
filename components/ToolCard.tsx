@@ -14,7 +14,30 @@ interface ToolCardProps {
     onDelete: (id: string, name: string) => void;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete }) => {
+const AuthDetails: React.FC<{ tool: Tool }> = ({ tool }) => {
+    if (tool.authMethod === 'API Key' && tool.apiKeyLocation && tool.apiKeyName) {
+        return (
+            <div className="pl-6">
+                <p className="truncate text-xs text-muted-foreground">
+                    In <span className="font-semibold text-foreground capitalize">{tool.apiKeyLocation}</span> as <span className="font-semibold text-foreground">{tool.apiKeyName}</span>
+                </p>
+            </div>
+        );
+    }
+    if (tool.authMethod === 'OAuth 2.0') {
+        return (
+            <div className="pl-6">
+                <p className="truncate text-xs text-muted-foreground" title={tool.oauthScopes}>
+                    Scopes: {tool.oauthScopes || 'Not specified'}
+                </p>
+            </div>
+        );
+    }
+    return null;
+};
+
+
+const ToolCard: React.FC<ToolCardProps> = React.memo(({ tool, onDelete }) => {
     const { currentUserRole } = useWorkspace();
     const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
     const authInfo = authMethodStyles[tool.authMethod];
@@ -45,6 +68,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete }) => {
                         <authInfo.icon className="h-4 w-4 text-primary" />
                         <span>{authInfo.text}</span>
                     </div>
+                    <AuthDetails tool={tool} />
                 </div>
             </div>
             {canEdit && (
@@ -58,6 +82,6 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete }) => {
             )}
         </div>
     );
-};
+});
 
 export default ToolCard;

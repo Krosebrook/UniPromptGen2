@@ -131,6 +131,12 @@ export interface Tool {
   authMethod: AuthMethod;
   requestSchema: string; // JSON string
   responseSchema: string; // JSON string
+  apiKeyLocation?: 'header' | 'query';
+  apiKeyName?: string;
+  oauthClientId?: string;
+  oauthAuthorizationUrl?: string;
+  oauthTokenUrl?: string;
+  oauthScopes?: string;
 }
 
 export type ToolFormData = Omit<Tool, 'id' | 'workspaceId'>;

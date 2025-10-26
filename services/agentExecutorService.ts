@@ -1,15 +1,9 @@
-import type { Node, Edge, NodeRunStatus, LogEntry, ModelNodeData, ToolNodeData, KnowledgeNodeData, InputNodeData } from '../types.ts';
+import type { Node, Edge, NodeRunStatus, LogEntry, ToolNodeData, InputNodeData, ModelNodeData, KnowledgeNodeData } from '../types.ts';
 import { generateText } from './geminiService.ts';
 import { getKnowledgeSourceContent, executeTool } from './apiService.ts';
 import type { Dispatch, SetStateAction } from 'react';
 
 // Helper to find connected nodes
-const getTargetNode = (sourceNodeId: string, edges: Edge[], nodes: Node[], handle: 'data_output' | 'knowledge_input'): Node | undefined => {
-  const edge = edges.find(e => e.source === sourceNodeId && e.sourceHandle === handle);
-  if (!edge) return undefined;
-  return nodes.find(n => n.id === edge.target);
-};
-
 const getSourceNode = (targetNodeId: string, edges: Edge[], nodes: Node[], handle: 'data_input' | 'knowledge_input'): Node | undefined => {
   const edge = edges.find(e => e.target === targetNodeId && e.targetHandle === handle);
   if (!edge) return undefined;
@@ -32,30 +26,68 @@ export const executeAgent = async (
   log('Agent execution started.', 'info');
   await delay(200);
 
-  let currentNode = nodes.find(n => n.type === 'input');
-  if (!currentNode) {
+  const inputNode = nodes.find(n => n.type === 'input');
+  if (!inputNode) {
     log('Execution failed: No input node found.', 'error');
     throw new Error('No input node found.');
   }
-  
-  const nodeOutputs: Record<string, any> = {};
-  nodeOutputs[currentNode.id] = JSON.parse((currentNode.data as InputNodeData).initialValue || '{}');
 
-  const executionOrder = [currentNode];
-  let nextNode = getTargetNode(currentNode.id, edges, nodes, 'data_output');
-  while (nextNode) {
-    executionOrder.push(nextNode);
-    if (nextNode.type === 'output') break;
-    nextNode = getTargetNode(nextNode.id, edges, nodes, 'data_output');
+  // --- Topological Sort to determine execution order ---
+  const inDegree = new Map<string, number>();
+  const adjList = new Map<string, string[]>();
+
+  for (const node of nodes) {
+      inDegree.set(node.id, 0);
+      adjList.set(node.id, []);
   }
 
-  for (const node of executionOrder) {
-    currentNode = node;
+  for (const edge of edges) {
+      // We only care about data flow edges for execution order
+      if (edge.sourceHandle === 'data_output') {
+          const sourceNeighbors = adjList.get(edge.source) || [];
+          adjList.set(edge.source, [...sourceNeighbors, edge.target]);
+          inDegree.set(edge.target, (inDegree.get(edge.target) || 0) + 1);
+      }
+  }
+
+  const queue: string[] = [];
+  for (const [nodeId, degree] of inDegree.entries()) {
+      if (degree === 0) {
+          queue.push(nodeId);
+      }
+  }
+
+  const executionOrder: Node[] = [];
+  while (queue.length > 0) {
+      const nodeId = queue.shift()!;
+      const node = nodes.find(n => n.id === nodeId);
+      if (node) {
+          executionOrder.push(node);
+      }
+      
+      for (const neighborId of adjList.get(nodeId)!) {
+          inDegree.set(neighborId, (inDegree.get(neighborId) || 1) - 1);
+          if (inDegree.get(neighborId) === 0) {
+              queue.push(neighborId);
+          }
+      }
+  }
+
+  if (executionOrder.length !== nodes.length) {
+      log('Execution failed: Could not determine a valid execution order. Check for cycles or disconnected data paths.', 'error');
+      throw new Error('Could not determine valid execution order.');
+  }
+  // --- End of Topological Sort ---
+
+  const nodeOutputs: Record<string, any> = {};
+  nodeOutputs[inputNode.id] = JSON.parse((inputNode.data as InputNodeData).initialValue || '{}');
+  
+  for (const currentNode of executionOrder) {
     log(`Executing node: ${currentNode.data.label} (${currentNode.id})`, 'running');
     updateStatus(currentNode.id, 'running');
     await delay(800 + Math.random() * 500);
 
-    // Aggregate inputs from all connected source nodes
+    // Aggregate inputs from all connected source nodes for data
     const inputEdges = edges.filter(e => e.target === currentNode.id && e.targetHandle === 'data_input');
     let currentData: any = {};
     for (const edge of inputEdges) {
@@ -85,6 +117,7 @@ export const executeAgent = async (
                 break;
             
             case 'model':
+                // FIX: Cast currentNode.data to ModelNodeData to access specific properties.
                 const modelData = currentNode.data as ModelNodeData;
                 
                 // Check for knowledge input
@@ -108,6 +141,7 @@ export const executeAgent = async (
                 break;
 
             case 'knowledge':
+                // FIX: Cast currentNode.data to KnowledgeNodeData to access specific properties.
                 const knowledgeData = currentNode.data as KnowledgeNodeData;
                 log(`Accessing knowledge source: ${knowledgeData.label}`, 'info');
                 if (!knowledgeData.sourceId) throw new Error("Knowledge node is not configured.");

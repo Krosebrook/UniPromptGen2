@@ -2,6 +2,7 @@
   "name": "Universal Prompt Generator Pro",
   "description": "An enterprise-grade platform for designing, testing, and managing high-quality LLM prompts. Features include a template library, model-specific compilation, quality scoring, and an agentic workbench for complex workflows.",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "camera"
   ]
 }

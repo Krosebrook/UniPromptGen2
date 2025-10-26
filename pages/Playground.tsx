@@ -8,19 +8,26 @@ import TextToSpeech from '../components/playground/TextToSpeech.tsx';
 import Search from '../components/playground/Search.tsx';
 import ComplexReasoning from '../components/playground/ComplexReasoning.tsx';
 import LowLatencyChat from '../components/playground/LowLatencyChat.tsx';
+import FastChat from '../components/playground/FastChat.tsx';
+import ImageAnalyzer from '../components/playground/ImageAnalyzer.tsx';
+import TextToVideo from '../components/playground/TextToVideo.tsx';
+
 import {
   ChatBubbleLeftRightIcon, PhotoIcon, ScissorsIcon, VideoCameraIcon,
-  MicrophoneIcon, SpeakerWaveIcon, GlobeAltIcon, SparklesIcon, BoltIcon
+  MicrophoneIcon, SpeakerWaveIcon, GlobeAltIcon, SparklesIcon, BoltIcon, CpuChipIcon
 } from '../components/icons/Icons.tsx';
 
-type PlaygroundTab = 'chat' | 'image-generation' | 'image-editing' | 'video-generation' | 'audio-transcription' | 'text-to-speech' | 'grounded-search' | 'complex-reasoning' | 'low-latency-chat';
+type PlaygroundTab = 'fast-chat' | 'voice-chat' | 'chat' | 'image-generation' | 'image-editing' | 'image-analysis' | 'video-generation' | 'text-to-video' | 'audio-transcription' | 'text-to-speech' | 'grounded-search' | 'complex-reasoning';
 
 const TABS: { id: PlaygroundTab; label: string; icon: React.ElementType; component: React.ElementType }[] = [
-  { id: 'low-latency-chat', label: 'Live Chat', icon: BoltIcon, component: LowLatencyChat },
+  { id: 'fast-chat', label: 'Fast Chat', icon: BoltIcon, component: FastChat },
+  { id: 'voice-chat', label: 'Voice Chat', icon: MicrophoneIcon, component: LowLatencyChat },
   { id: 'chat', label: 'Chatbot', icon: ChatBubbleLeftRightIcon, component: Chatbot },
   { id: 'image-generation', label: 'Image Generation', icon: PhotoIcon, component: ImageGenerator },
   { id: 'image-editing', label: 'Image Editing', icon: ScissorsIcon, component: ImageEditor },
-  { id: 'video-generation', label: 'Video Generation', icon: VideoCameraIcon, component: VideoGenerator },
+  { id: 'image-analysis', label: 'Image Analysis', icon: CpuChipIcon, component: ImageAnalyzer },
+  { id: 'video-generation', label: 'Image-to-Video', icon: VideoCameraIcon, component: VideoGenerator },
+  { id: 'text-to-video', label: 'Text-to-Video', icon: VideoCameraIcon, component: TextToVideo },
   { id: 'audio-transcription', label: 'Audio Transcription', icon: MicrophoneIcon, component: AudioTranscriber },
   { id: 'text-to-speech', label: 'Text-to-Speech', icon: SpeakerWaveIcon, component: TextToSpeech },
   { id: 'grounded-search', label: 'Grounded Search', icon: GlobeAltIcon, component: Search },
@@ -28,7 +35,7 @@ const TABS: { id: PlaygroundTab; label: string; icon: React.ElementType; compone
 ];
 
 const Playground: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<PlaygroundTab>('low-latency-chat');
+  const [activeTab, setActiveTab] = useState<PlaygroundTab>('fast-chat');
 
   const ActiveComponent = TABS.find(tab => tab.id === activeTab)?.component;
 
