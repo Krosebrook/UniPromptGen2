@@ -1,46 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { PlusIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
 import { getKnowledgeSources, deleteKnowledgeSource, addKnowledgeSource } from '../services/apiService.ts';
-import { KnowledgeSource, KnowledgeSourceFormData } from '../types.ts';
+import { KnowledgeSourceFormData } from '../types.ts';
 import KnowledgeSourceCard from '../components/KnowledgeSourceCard.tsx';
 import CreateKnowledgeSourceModal from '../components/modals/CreateKnowledgeSourceModal.tsx';
 import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import { useLibraryData } from '../hooks/useLibraryData.ts';
 
 const KnowledgeLibrary: React.FC = () => {
   const { currentWorkspace, currentUserRole } = useWorkspace();
-  const [sources, setSources] = useState<KnowledgeSource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: sources, isLoading, error, refetch } = useLibraryData(getKnowledgeSources, 'knowledge sources');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [mutationError, setMutationError] = useState<string | null>(null);
 
   const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
-
-  const fetchSources = useCallback(async () => {
-      if (!currentWorkspace) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-          const data = await getKnowledgeSources(currentWorkspace.id);
-          setSources(data);
-      } catch(err) {
-          setError('Failed to load knowledge sources. Please try again later.');
-          console.error(err);
-      } finally {
-          setIsLoading(false);
-      }
-  }, [currentWorkspace]);
-
-  useEffect(() => {
-    fetchSources();
-  }, [fetchSources]);
 
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete the knowledge source "${name}"?`)) {
         try {
+            setMutationError(null);
             await deleteKnowledgeSource(id);
-            await fetchSources();
+            await refetch();
         } catch (err) {
-            setError(`Failed to delete "${name}".`);
+            setMutationError(`Failed to delete "${name}".`);
             console.error(err);
         }
     }
@@ -49,17 +31,18 @@ const KnowledgeLibrary: React.FC = () => {
   const handleCreate = async (sourceData: KnowledgeSourceFormData) => {
     if (!currentWorkspace) return;
     try {
+        setMutationError(null);
         await addKnowledgeSource(sourceData, currentWorkspace.id);
         setIsCreateModalOpen(false);
-        await fetchSources();
+        await refetch();
     } catch(err) {
-        setError('Failed to add the new knowledge source.');
+        setMutationError('Failed to add the new knowledge source.');
         console.error(err);
     }
   };
 
   const renderContent = () => {
-    if (isLoading || !currentWorkspace) {
+    if (isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <SpinnerIcon className="h-8 w-8 text-primary" />
@@ -114,6 +97,7 @@ const KnowledgeLibrary: React.FC = () => {
                 </button>
             )}
           </div>
+          {mutationError && <div className="text-center text-destructive bg-destructive/10 p-2 rounded-md text-sm"><p>{mutationError}</p></div>}
           {renderContent()}
         </div>
 

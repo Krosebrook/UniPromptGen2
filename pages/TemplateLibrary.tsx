@@ -1,53 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { getTemplates, deleteTemplate } from '../services/apiService.ts';
-import { PromptTemplate } from '../types.ts';
+import React from 'react';
+import { deleteTemplate, getTemplates } from '../services/apiService.ts';
 import TemplateCard from '../components/TemplateCard.tsx';
 import { MagnifyingGlassIcon, PlusIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
 import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import { useLibraryData } from '../hooks/useLibraryData.ts';
 
 const TemplateLibrary: React.FC = () => {
-  const { currentWorkspace, currentUserRole } = useWorkspace();
-  const [templates, setTemplates] = useState<PromptTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { currentUserRole } = useWorkspace();
+  const { data: templates, isLoading, error, refetch } = useLibraryData(getTemplates, 'templates');
   
   const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
-
-  const fetchTemplates = useCallback(async () => {
-    if (!currentWorkspace) return;
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await getTemplates(currentWorkspace.id);
-      setTemplates(data);
-    } catch (err) {
-      setError('Failed to load templates. Please try again later.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentWorkspace]);
-
-  useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
   
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete the template "${name}"?`)) {
         try {
             await deleteTemplate(id);
-            // Refetch templates to update the list
-            await fetchTemplates();
+            await refetch();
         } catch (err) {
-            setError(`Failed to delete template: ${name}. Please try again.`);
+            alert(`Failed to delete template: ${name}. Please try again.`);
             console.error(err);
         }
     }
   };
   
   const renderContent = () => {
-    if (isLoading || !currentWorkspace) {
+    if (isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <SpinnerIcon className="h-8 w-8 text-primary" />

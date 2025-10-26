@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   HomeIcon, ChartPieIcon, CodeBracketSquareIcon, PlayIcon, UserCircleIcon,
-  ShoppingCartIcon, BeakerIcon, TerminalIcon, CollectionIcon
+  ShoppingCartIcon, BeakerIcon, TerminalIcon, CollectionIcon, RocketLaunchIcon
 } from './icons/Icons.tsx';
 
 interface NavLinkProps {
@@ -39,6 +39,7 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { href: '#/dashboard', icon: HomeIcon, label: 'Dashboard' },
     { href: '#/templates', icon: CodeBracketSquareIcon, label: 'Template Library' },
+    { href: '#/deployments', icon: RocketLaunchIcon, label: 'Deployments' },
     { href: '#/playground', icon: PlayIcon, label: 'AI Playground' },
     { href: '#/agentic-workbench', icon: BeakerIcon, label: 'Agentic Workbench' },
     { href: '#/tool-library', icon: TerminalIcon, label: 'Tool Library' },

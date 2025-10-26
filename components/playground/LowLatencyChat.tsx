@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { decode, encode, decodeAudioData } from '../../utils/helpers.ts';
-// FIX: The StopCircleIcon is now correctly imported from Icons.tsx after being added there.
 import { MicrophoneIcon, StopCircleIcon } from '../icons/Icons.tsx';
 
 interface TranscriptionEntry {

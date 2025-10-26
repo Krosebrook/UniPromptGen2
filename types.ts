@@ -1,48 +1,32 @@
 // types.ts
-// FIX: Import CSSProperties from react to resolve namespace error.
-import type { CSSProperties } from 'react';
 
-// --- Workspace & User Types ---
+import type { Node as ReactFlowNode, Edge as ReactFlowEdge } from 'reactflow';
+
+// ===== User & Workspace =====
 export type UserRole = 'Admin' | 'Editor' | 'Viewer';
 
-export interface Workspace {
-  id: string;
-  name: string;
-  plan: 'Free' | 'Pro' | 'Enterprise';
-}
-
-export interface UserWorkspace {
-  workspaceId: string;
-  role: UserRole;
-}
-
 export interface User {
-  id:string;
+  id: string;
   name: string;
   email: string;
   title: string;
   avatarUrl: string;
   xp: number;
   level: number;
-  achievements: Achievement[];
-  certifications: Certification[];
-  workspaces: UserWorkspace[];
+  achievements: { id: string, name: string, description: string }[];
+  certifications: { id: string, name: string, issuer: string, date: string }[];
+  workspaces: { workspaceId: string, role: UserRole }[];
 }
 
-export interface Achievement {
-  id: string;
-  name: string;
-  description: string;
+export interface Workspace {
+    id: string;
+    name: string;
+    plan: 'Free' | 'Pro' | 'Enterprise';
+    memberCount: number;
 }
 
-export interface Certification {
-  id: string;
-  name: string;
-  issuer: string;
-  date: string;
-}
+// ===== Prompt Templates =====
 
-// --- Template & Evaluation Types ---
 export type RiskLevel = 'Low' | 'Medium' | 'High';
 
 export interface PromptVariable {
@@ -55,95 +39,56 @@ export interface PromptTemplateVersion {
   version: string;
   name: string;
   description: string;
-  date: string;
-  comment: string;
-  riskLevel: RiskLevel;
   content: string;
   variables: PromptVariable[];
+  riskLevel: RiskLevel;
+  date: string; // ISO string
 }
 
 export interface PromptTemplateMetrics {
   totalRuns: number;
   successfulRuns: number;
-  totalUserRating: number;
-  avgUserRating: number;
-  taskSuccessRate: number;
-  efficiencyScore: number;
-}
-
-export interface ABTestMetrics {
-    totalRuns: number;
-    taskSuccessRate: number;
-    avgUserRating: number;
+  avgLatency: number; // in ms
+  avgTokens: number;
+  avgUserRating: number; // 1-5 scale
+  taskSuccessRate: number; // 0-1
+  efficiencyScore: number; // 0-1 (cost, speed)
+  totalUserRating: number; // sum of all ratings
 }
 
 export interface ABTest {
-    id: string;
-    name: string;
-    status: 'running' | 'completed';
-    winner?: 'A' | 'B';
-    trafficSplit: number;
-    versionA: string;
-    versionB: string;
-    metricsA: ABTestMetrics;
-    metricsB: ABTestMetrics;
+  id: string;
+  name: string;
+  status: 'running' | 'paused' | 'completed';
+  versionA: string;
+  versionB: string;
+  trafficSplit: number; // percentage for version A
+  startDate: string; // ISO string
+  metricsA: { successRate: number, avgRating: number, totalRuns: number };
+  metricsB: { successRate: number, avgRating: number, totalRuns: number };
+  winner?: 'A' | 'B';
 }
-
 
 export interface PromptTemplate {
   id: string;
   workspaceId: string;
-  domain: string;
+  domain: 'Marketing' | 'Sales' | 'Support' | 'Engineering' | 'General';
+  versions: PromptTemplateVersion[];
+  activeVersion: string;
+  deployedVersion: string | null;
   qualityScore: number;
   metrics: PromptTemplateMetrics;
-  activeVersion: string;
-  versions: PromptTemplateVersion[];
-  abTests?: ABTest[];
+  abTests: ABTest[];
 }
 
-export interface Evaluation {
-  id: string;
-  templateId: string;
-  evaluator: {
-    name: string;
-    avatarUrl: string;
-  };
-  date: string;
-  score: number;
-  comment: string;
+export interface ExecutionEvent {
+    success: boolean;
+    userRating: number; // 1-5
 }
 
-// --- Tool & Knowledge Types ---
-export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
 
-export interface Tool {
-  id: string;
-  workspaceId: string;
-  name: string;
-  description: string;
-  apiEndpoint: string;
-  authMethod: AuthMethod;
-  requestSchema: string; // JSON string
-  responseSchema: string; // JSON string
-}
+// ===== AI Playground & Gemini Service =====
 
-export type ToolFormData = Omit<Tool, 'id' | 'workspaceId'>;
-
-
-export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
-
-export interface KnowledgeSource {
-  id: string;
-  workspaceId: string;
-  name: string;
-  type: KnowledgeSourceType;
-  description: string;
-  dateAdded: string;
-}
-
-export type KnowledgeSourceFormData = Omit<KnowledgeSource, 'id' | 'dateAdded' | 'workspaceId'>;
-
-// --- Service & Component Types ---
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
@@ -158,18 +103,14 @@ export interface GroundingSource {
     }
 }
 
-export interface ExecutionEvent {
-    success: boolean;
-    userRating: number; // e.g., 1-5
-}
+// ===== Agentic Workbench =====
 
-// From AgenticWorkbench and related components
 export type NodeType = 'input' | 'output' | 'model' | 'tool' | 'knowledge';
 export type NodeRunStatus = 'idle' | 'running' | 'success' | 'error';
 
 export interface BaseNodeData {
     label: string;
-    initialValue?: any;
+    initialValue?: string;
 }
 
 export interface ModelNodeData extends BaseNodeData {
@@ -183,8 +124,8 @@ export interface ToolNodeData extends BaseNodeData {
     toolId?: string;
     apiEndpoint: string;
     authMethod: AuthMethod;
-    requestSchema: string;
-    responseSchema: string;
+    requestSchema: string; // JSON string
+    responseSchema: string; // JSON string
 }
 
 export interface KnowledgeNodeData extends BaseNodeData {
@@ -193,24 +134,8 @@ export interface KnowledgeNodeData extends BaseNodeData {
 
 export type NodeData = BaseNodeData | ModelNodeData | ToolNodeData | KnowledgeNodeData;
 
-// Using ReactFlow's types as a base but defining our own for app-specific data
-export interface Node<T = NodeData> {
-    id: string;
-    position: { x: number; y: number };
-    data: T;
-    type?: NodeType;
-}
-
-export interface Edge {
-    id: string;
-    source: string;
-    target: string;
-    sourceHandle?: string | null;
-    targetHandle?: string | null;
-    animated?: boolean;
-    // FIX: Changed React.CSSProperties to CSSProperties to fix namespace error.
-    style?: CSSProperties;
-}
+export type Node = ReactFlowNode<NodeData, NodeType>;
+export type Edge = ReactFlowEdge;
 
 export interface LogEntry {
     timestamp: string;
@@ -224,4 +149,64 @@ export interface Run {
     endTime?: Date;
     status: 'running' | 'completed' | 'failed';
     logs: LogEntry[];
+}
+
+
+// ===== Tools & Knowledge =====
+
+export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
+
+export interface ToolFormData {
+    name: string;
+    description: string;
+    apiEndpoint: string;
+    authMethod: AuthMethod;
+    requestSchema: string; // JSON string
+    responseSchema: string; // JSON string
+}
+
+export interface Tool extends ToolFormData {
+    id: string;
+    workspaceId: string;
+}
+
+export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
+
+export interface KnowledgeSourceFormData {
+    name: string;
+    description: string;
+    type: KnowledgeSourceType;
+}
+
+export interface KnowledgeSource extends KnowledgeSourceFormData {
+    id: string;
+    workspaceId: string;
+    dateAdded: string; // ISO string
+    status: 'available' | 'indexing';
+}
+
+// ===== Analytics =====
+export interface AnalyticsChartData {
+    time: string;
+    calls: number;
+}
+
+export interface DashboardAnalytics {
+    totalDeployed: number;
+    totalCalls: number;
+    avgLatency: number;
+    successRate: number;
+    chartData: AnalyticsChartData[];
+    runsByTemplate: Record<string, number>;
+}
+
+export interface AnalyticEvent {
+  id: string;
+  timestamp: string; // ISO string
+  workspaceId: string;
+  templateId: string;
+  latency: number; // in ms
+  success: boolean;
+  abTestVariant?: 'A' | 'B';
+  userRating?: number; // 1-5
 }

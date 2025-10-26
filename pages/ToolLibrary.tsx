@@ -1,48 +1,28 @@
-
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { PlusIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
 import { getTools, deleteTool, addTool } from '../services/apiService.ts';
-import { Tool, ToolFormData } from '../types.ts';
+import { ToolFormData } from '../types.ts';
 import ToolCard from '../components/ToolCard.tsx';
 import CreateToolModal from '../components/modals/CreateToolModal.tsx';
 import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import { useLibraryData } from '../hooks/useLibraryData.ts';
 
 const ToolLibrary: React.FC = () => {
   const { currentWorkspace, currentUserRole } = useWorkspace();
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: tools, isLoading, error, refetch } = useLibraryData(getTools, 'tools');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [mutationError, setMutationError] = useState<string | null>(null);
 
   const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
 
-  const fetchTools = useCallback(async () => {
-      if (!currentWorkspace) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-          const data = await getTools(currentWorkspace.id);
-          setTools(data);
-      } catch(err) {
-          setError('Failed to load tools. Please try again later.');
-          console.error(err);
-      } finally {
-          setIsLoading(false);
-      }
-  }, [currentWorkspace]);
-
-  useEffect(() => {
-    fetchTools();
-  }, [fetchTools]);
-  
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete the tool "${name}"?`)) {
         try {
+            setMutationError(null);
             await deleteTool(id);
-            await fetchTools();
+            await refetch();
         } catch (err) {
-            setError(`Failed to delete tool "${name}".`);
+            setMutationError(`Failed to delete tool "${name}".`);
             console.error(err);
         }
     }
@@ -51,17 +31,18 @@ const ToolLibrary: React.FC = () => {
   const handleCreate = async (toolData: ToolFormData) => {
     if (!currentWorkspace) return;
     try {
+        setMutationError(null);
         await addTool(toolData, currentWorkspace.id);
         setIsCreateModalOpen(false);
-        await fetchTools();
+        await refetch();
     } catch (err) {
-        setError('Failed to create the new tool.');
+        setMutationError('Failed to create the new tool.');
         console.error(err);
     }
   };
   
   const renderContent = () => {
-    if (isLoading || !currentWorkspace) {
+    if (isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
           <SpinnerIcon className="h-8 w-8 text-primary" />
@@ -115,6 +96,7 @@ const ToolLibrary: React.FC = () => {
                 </button>
             )}
           </div>
+          {mutationError && <div className="text-center text-destructive bg-destructive/10 p-2 rounded-md text-sm"><p>{mutationError}</p></div>}
           {renderContent()}
         </div>
         

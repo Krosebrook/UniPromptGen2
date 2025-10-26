@@ -1,6 +1,4 @@
-// FIX: Added file extension to fix module resolution error.
 import { QUALITY_SCORE_WEIGHTS } from '../constants.ts';
-// FIX: Added file extension to fix module resolution error.
 import type { PromptTemplate, PromptTemplateMetrics, ExecutionEvent } from '../types.ts';
 
 /**

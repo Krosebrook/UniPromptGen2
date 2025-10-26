@@ -31,7 +31,6 @@ export function encode(bytes: Uint8Array): string {
 /**
  * Decodes a Base64 string into a Uint8Array.
  */
-// FIX: Renamed function to `decode` to match Gemini API documentation.
 export function decode(base64: string): Uint8Array {
   const binaryString = atob(base64);
   const len = binaryString.length;

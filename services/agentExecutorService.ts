@@ -1,173 +1,99 @@
-// services/agentExecutorService.ts
-import { Node, Edge, NodeRunStatus, LogEntry, ModelNodeData, ToolNodeData, KnowledgeNodeData } from '../types.ts';
+import type { Node, Edge, NodeRunStatus, LogEntry, ModelNodeData, ToolNodeData } from '../types.ts';
 import { generateText } from './geminiService.ts';
-import { getKnowledgeSourceContent } from './apiService.ts';
+import type { Dispatch, SetStateAction } from 'react';
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Helper to find connected nodes
+const getTargetNode = (sourceNodeId: string, edges: Edge[], nodes: Node[]): Node | undefined => {
+  const edge = edges.find(e => e.source === sourceNodeId);
+  if (!edge) return undefined;
+  return nodes.find(n => n.id === edge.target);
+};
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const executeAgent = async (
   nodes: Node[],
   edges: Edge[],
-  setStatus: (updater: (prev: Record<string, NodeRunStatus>) => Record<string, NodeRunStatus>) => void,
+  setRunStatus: Dispatch<SetStateAction<Record<string, NodeRunStatus>>>,
   log: (message: string, status: LogEntry['status']) => void
 ): Promise<void> => {
-  setStatus(() => ({}));
-  log("Starting agent execution...", 'info');
   
-  const executionOrder = topologicalSort(nodes, edges);
-  const nodeOutputs: Record<string, any> = {};
+  const updateStatus = (nodeId: string, status: NodeRunStatus) => {
+    setRunStatus(prev => ({ ...prev, [nodeId]: status }));
+  };
+  
+  log('Agent execution started.', 'info');
+  await delay(200);
 
-  if (!executionOrder) {
-    log("Error: Cycle detected in the graph. Cannot execute.", 'error');
-    throw new Error("Cycle detected in graph.");
+  // Find the input node to start execution
+  let currentNode = nodes.find(n => n.type === 'input');
+  if (!currentNode) {
+    log('Execution failed: No input node found.', 'error');
+    throw new Error('No input node found.');
   }
+  
+  let currentData: any = JSON.parse(currentNode.data.initialValue || '{}');
 
-  log(`Execution order determined: ${executionOrder.map(id => nodes.find(n => n.id === id)?.data.label || id).join(' -> ')}`, 'info');
-
-  for (const nodeId of executionOrder) {
-    const node = nodes.find(n => n.id === nodeId);
-    if (!node) continue;
-
-    setStatus(prev => ({ ...prev, [nodeId]: 'running' }));
-    log(`[${node.data.label}] - Executing...`, 'running');
+  while(currentNode) {
+    log(`Executing node: ${currentNode.data.label} (${currentNode.id})`, 'running');
+    updateStatus(currentNode.id, 'running');
+    await delay(800 + Math.random() * 500);
 
     try {
-      // Gather inputs from predecessors
-      const dataIncomingEdges = edges.filter(e => e.target === nodeId && e.targetHandle === 'data_input');
-      const knowledgeIncomingEdges = edges.filter(e => e.target === nodeId && e.targetHandle === 'knowledge_input');
-      
-      const dataInputs = dataIncomingEdges.map(e => nodeOutputs[e.source]);
-      const singleDataInput = dataInputs.length > 0 ? dataInputs[0] : null;
-      
-      let output: any;
+        switch(currentNode.type) {
+            case 'input':
+                log(`Input data: ${JSON.stringify(currentData, null, 2)}`, 'info');
+                break;
+            
+            case 'tool':
+                const toolData = currentNode.data as ToolNodeData;
+                log(`Calling tool API: ${toolData.apiEndpoint}`, 'info');
+                // Simulate API call based on input
+                if (toolData.apiEndpoint.includes('dummyjson.com/products/add')) {
+                    log(`Request Body: ${JSON.stringify(currentData, null, 2)}`, 'info');
+                    currentData = { id: Math.floor(Math.random() * 100) + 1, ...currentData };
+                    log(`Response: ${JSON.stringify(currentData, null, 2)}`, 'info');
+                } else {
+                    log('Tool execution mocked.', 'info');
+                    currentData = { success: true, from: toolData.label, input: currentData };
+                }
+                break;
+            
+            case 'model':
+                const modelData = currentNode.data as ModelNodeData;
+                const prompt = `System: ${modelData.systemInstruction}\n\nData: ${JSON.stringify(currentData, null, 2)}\n\n---\nPlease process the data.`;
+                log('Generating content with model...', 'info');
+                const result = await generateText(prompt, { model: 'gemini-2.5-flash', ...modelData });
+                log(`Model output: ${result.substring(0, 100)}...`, 'info');
+                currentData = { result };
+                break;
 
-      // Execute node logic based on type
-      switch (node.type) {
-        case 'input':
-          output = node.data.initialValue || '';
-          log(`[${node.data.label}] - Provided initial input: "${String(output).substring(0, 100)}..."`, 'info');
-          break;
-          
-        case 'model':
-          const modelData = node.data as ModelNodeData;
-          let prompt = singleDataInput;
-          if (knowledgeIncomingEdges.length > 0) {
-              const knowledgeSourceId = knowledgeIncomingEdges[0].source;
-              const knowledgeContent = nodeOutputs[knowledgeSourceId];
-              prompt = `CONTEXT:\n${knowledgeContent}\n\n---\n\nTASK:\n${singleDataInput}`;
-              log(`[${node.data.label}] - Using knowledge from node ID ${knowledgeSourceId}.`, 'info');
-          }
-          
-          log(`[${node.data.label}] - Sending prompt to Gemini API...`, 'info');
-          output = await generateText(prompt, {
-              systemInstruction: modelData.systemInstruction,
-              temperature: modelData.temperature,
-              topP: modelData.topP,
-              topK: modelData.topK,
-          });
-          log(`[${node.data.label}] - Received response: "${output.substring(0, 100)}..."`, 'info');
-          break;
-          
-        case 'tool':
-          const toolData = node.data as ToolNodeData;
-          log(`[${toolData.label}] - Preparing to call API endpoint: ${toolData.apiEndpoint}`, 'info');
-          
-          // Simple assumption: If input is a string, we use it as the body.
-          // In a real scenario, this would involve more complex schema mapping.
-          const body = typeof singleDataInput === 'string' ? singleDataInput : JSON.stringify(singleDataInput);
+            case 'knowledge':
+                log(`Accessing knowledge source: ${currentNode.data.label}`, 'info');
+                // In a real scenario, this would fetch data and inject it into context.
+                // For the mock, we just pass through.
+                break;
 
-          const response = await fetch(toolData.apiEndpoint, {
-            method: 'POST', // Assuming POST for this tool example
-            headers: { 'Content-Type': 'application/json' },
-            body: body,
-          });
-
-          if (!response.ok) {
-            throw new Error(`API call failed with status ${response.status}: ${await response.text()}`);
-          }
-          
-          output = await response.json();
-          log(`[${toolData.label}] - API call successful. Response: ${JSON.stringify(output).substring(0, 100)}...`, 'info');
-          break;
-          
-        case 'knowledge':
-          const knowledgeData = node.data as KnowledgeNodeData;
-          if (!knowledgeData.sourceId) throw new Error("Knowledge source not selected.");
-          log(`[${knowledgeData.label}] - Fetching content for source ID ${knowledgeData.sourceId}`, 'info');
-          output = await getKnowledgeSourceContent(knowledgeData.sourceId);
-          break;
-
-        case 'output':
-          log(`[${node.data.label}] - Received final output: ${JSON.stringify(singleDataInput)}`, 'info');
-          output = singleDataInput;
-          break;
-          
-        default:
-          output = singleDataInput;
-      }
-      
-      nodeOutputs[nodeId] = output;
-      setStatus(prev => ({ ...prev, [nodeId]: 'success' }));
-      log(`[${node.data.label}] - Execution successful.`, 'success');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      setStatus(prev => ({ ...prev, [nodeId]: 'error' }));
-      log(`[${node.data.label}] - Execution failed: ${errorMessage}`, 'error');
-      log("Execution halted due to error.", 'error');
-      throw error; // Propagate error to stop execution
-    }
-  }
-  log("Agent execution finished successfully.", 'success');
-};
-
-// Simple topological sort to determine execution order
-const topologicalSort = (nodes: Node[], edges: Edge[]): string[] | null => {
-    const sorted: string[] = [];
-    const inDegree: Record<string, number> = {};
-    const adjList: Record<string, string[]> = {};
-
-    for (const node of nodes) {
-        inDegree[node.id] = 0;
-        adjList[node.id] = [];
-    }
-
-    for (const edge of edges) {
-        // Only consider data flow edges for topological sort
-        if (edge.targetHandle !== 'knowledge_input') {
-            adjList[edge.source] = adjList[edge.source] || [];
-            adjList[edge.source].push(edge.target);
-            inDegree[edge.target] = (inDegree[edge.target] || 0) + 1;
+            case 'output':
+                log(`Final output: ${JSON.stringify(currentData, null, 2)}`, 'success');
+                break;
         }
-    }
 
-    const queue = nodes.filter(node => inDegree[node.id] === 0).map(node => node.id);
-
-    while (queue.length > 0) {
-        const u = queue.shift()!;
-        sorted.push(u);
-
-        for (const v of adjList[u] || []) {
-            inDegree[v]--;
-            if (inDegree[v] === 0) {
-                queue.push(v);
-            }
-        }
-    }
-    
-    // Check if there are nodes not included in the sort (part of a cycle or disconnected)
-    const sortedSet = new Set(sorted);
-    const allNodeIds = new Set(nodes.map(n => n.id));
-    if (sortedSet.size !== allNodeIds.size) {
-        // This is a simple check. For a more robust solution, you'd find the actual cycle.
-        // For now, if sizes don't match, we assume a cycle or disconnected data path.
-        const nonSortedNodes = [...allNodeIds].filter(id => !sortedSet.has(id));
+        updateStatus(currentNode.id, 'success');
+        log(`Node ${currentNode.data.label} completed successfully.`, 'success');
         
-        // Let's refine this: only nodes with in-degrees > 0 at the end are in cycles.
-        const nodesInCycle = Object.keys(inDegree).filter(id => inDegree[id] > 0);
-        if (nodesInCycle.length > 0) {
-           return null; // Cycle detected
-        }
+        // Move to the next node
+        currentNode = getTargetNode(currentNode.id, edges, nodes);
+
+    } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        log(`Error at node ${currentNode.data.label}: ${errorMessage}`, 'error');
+        updateStatus(currentNode.id, 'error');
+        throw e;
     }
 
-    return sorted;
+    await delay(300);
+  }
+
+  log('Agent execution finished.', 'success');
 };
