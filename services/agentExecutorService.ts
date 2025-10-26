@@ -39,7 +39,6 @@ export const executeAgent = async (
   }
   
   const nodeOutputs: Record<string, any> = {};
-  // FIX: Cast currentNode.data to InputNodeData to access initialValue.
   nodeOutputs[currentNode.id] = JSON.parse((currentNode.data as InputNodeData).initialValue || '{}');
 
   const executionOrder = [currentNode];
@@ -109,7 +108,6 @@ export const executeAgent = async (
                 break;
 
             case 'knowledge':
-                // FIX: Cast currentNode.data to KnowledgeNodeData to access its properties.
                 const knowledgeData = currentNode.data as KnowledgeNodeData;
                 log(`Accessing knowledge source: ${knowledgeData.label}`, 'info');
                 if (!knowledgeData.sourceId) throw new Error("Knowledge node is not configured.");

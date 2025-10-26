@@ -165,14 +165,27 @@ export const declareABTestWinner = async (testId: string, winner: 'A' | 'B'): Pr
     if (!test) throw new Error("A/B Test not found");
     
     test.status = 'completed';
-    // This is a simplified results object. A real system would calculate confidence.
-    test.results = test.results || { versionA: { ...template.metrics }, versionB: { ...template.metrics }, confidence: 0.99, winner: 'inconclusive' };
-    test.results.winner = winner === 'A' ? 'versionA' : 'versionB';
-
-    // Promote the winner
+    
+    const winnerVariant = winner === 'A' ? 'versionA' : 'versionB';
     const winningVersion = winner === 'A' ? test.versionA : test.versionB;
+
+    // Ensure results object exists and set the winner
+    if (!test.results) {
+        const zeroMetrics = { totalRuns: 0, successfulRuns: 0, avgUserRating: 0, taskSuccessRate: 0, efficiencyScore: 0, totalUserRating: 0 };
+        test.results = { 
+            versionA: zeroMetrics, 
+            versionB: zeroMetrics,
+            confidence: 0, 
+            winner: winnerVariant
+        };
+    } else {
+        test.results.winner = winnerVariant;
+    }
+
+    // Promote the winner to be the new active version
     template.activeVersion = winningVersion;
 };
+
 
 // --- Analytics, Billing & Production Simulation ---
 export const runDeployedTemplate = async (templateId: string, variables: Record<string, any>): Promise<any> => {
@@ -285,17 +298,25 @@ export const getABTestAnalytics = async (testId: string): Promise<{
     versionB: { runs: number; successRate: number; avgRating: number };
 }> => {
     await delay(400);
-    const events = analyticsDB.filter(e => e.abTestVariant && e.templateId === testId.split('-test-')[0]);
+    const templateId = testId.split('-test-')[0];
+    const template = MOCK_TEMPLATES.find(t => t.id === templateId);
+    if (!template) return { versionA: { runs: 0, successRate: 0, avgRating: 0 }, versionB: { runs: 0, successRate: 0, avgRating: 0 }};
     
-    const variantAEvents = events.filter(e => e.abTestVariant === 'A');
-    const variantBEvents = events.filter(e => e.abTestVariant === 'B');
+    const test = template.abTests.find(t => t.id === testId);
+    if (!test) return { versionA: { runs: 0, successRate: 0, avgRating: 0 }, versionB: { runs: 0, successRate: 0, avgRating: 0 }};
+
+    const events = analyticsDB.filter(e => e.templateId === templateId);
+    
+    const variantAEvents = events.filter(e => e.abTestVariant === 'A' && e.version === test.versionA);
+    const variantBEvents = events.filter(e => e.abTestVariant === 'B' && e.version === test.versionB);
 
     const calculateMetrics = (arr: AnalyticEvent[]) => {
         if (arr.length === 0) return { runs: 0, successRate: 0, avgRating: 0 };
+        const ratedEvents = arr.filter(e => e.userRating !== undefined);
         return {
             runs: arr.length,
             successRate: arr.filter(e => e.success).length / arr.length,
-            avgRating: arr.reduce((sum, e) => sum + (e.userRating || 0), 0) / arr.length,
+            avgRating: ratedEvents.length > 0 ? ratedEvents.reduce((sum, e) => sum + (e.userRating!), 0) / ratedEvents.length : 0,
         }
     };
 
