@@ -1,6 +1,10 @@
+
+
+
 import React, { useState } from 'react';
 import { generateImage } from '../../services/geminiService.ts';
-import { PhotoIcon } from '../icons/Icons.tsx';
+// Fix: Module '"../icons/Icons.tsx"' has no exported member 'PhotoIcon'.
+import { SparklesIcon } from '../icons/Icons.tsx';
 
 const aspectRatios = ["1:1", "3:4", "4:3", "9:16", "16:9"];
 
@@ -57,7 +61,7 @@ const ImageGenerator: React.FC = () => {
           disabled={isLoading || !prompt.trim()}
           className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
         >
-          <PhotoIcon className="h-5 w-5 mr-2" />
+          <SparklesIcon className="h-5 w-5 mr-2" />
           {isLoading ? 'Generating...' : 'Generate Image'}
         </button>
       </div>
@@ -80,7 +84,7 @@ const ImageGenerator: React.FC = () => {
         )}
         {!isLoading && !generatedImage && !error && (
             <div className="text-center text-muted-foreground">
-                <PhotoIcon className="h-12 w-12 mx-auto mb-2"/>
+                <SparklesIcon className="h-12 w-12 mx-auto mb-2"/>
                 <p>Your generated image will appear here.</p>
             </div>
         )}

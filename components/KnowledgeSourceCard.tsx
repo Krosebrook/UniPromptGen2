@@ -1,55 +1,50 @@
 import React from 'react';
-import { KnowledgeSource, KnowledgeSourceType } from '../types.ts';
-import { TrashIcon } from './icons/Icons.tsx';
-import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
-
-const typeStyles: Record<KnowledgeSourceType, { icon: string, color: string }> = {
-    'PDF': { icon: '📄', color: 'text-red-400' },
-    'Website': { icon: '🌐', color: 'text-blue-400' },
-    'Text': { icon: '📝', color: 'text-gray-400' },
-    'API': { icon: '🔗', color: 'text-green-400' },
-};
+import { KnowledgeSource } from '../types.ts';
+import { CollectionIcon, CheckCircleIcon, SpinnerIcon } from './icons/Icons.tsx';
 
 interface KnowledgeSourceCardProps {
-    source: KnowledgeSource;
-    onDelete: (id: string, name: string) => void;
+  source: KnowledgeSource;
+  canEdit: boolean;
+  onDragStart: (e: React.DragEvent, item: KnowledgeSource) => void;
+  onContextMenu: (e: React.MouseEvent, item: KnowledgeSource) => void;
 }
 
-const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({ source, onDelete }) => {
-    const { currentUserRole } = useWorkspace();
-    const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
-    const style = typeStyles[source.type];
-    
-    const handleDelete = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onDelete(source.id, source.name);
-    };
+const statusInfo = {
+    Ready: { icon: CheckCircleIcon, color: 'text-success', label: 'Ready' },
+    Indexing: { icon: SpinnerIcon, color: 'text-primary', label: 'Indexing' },
+    Pending: { icon: SpinnerIcon, color: 'text-muted-foreground', label: 'Pending' },
+    Error: { icon: CheckCircleIcon, color: 'text-destructive', label: 'Error' },
+};
 
-    return (
-        <div className="bg-card shadow-card rounded-lg p-5 flex flex-col h-full relative group">
-            <div className="flex items-start gap-4">
-                 <div className={`text-2xl ${style.color}`}>{style.icon}</div>
-                 <div className="flex-1">
-                    <h3 className="font-bold text-foreground">{source.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{source.description}</p>
-                 </div>
+const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({ source, canEdit, onDragStart, onContextMenu }) => {
+    const StatusIcon = statusInfo[source.status].icon;
+    const statusColor = statusInfo[source.status].color;
+
+  return (
+    <div
+      draggable={canEdit}
+      onDragStart={(e) => onDragStart(e, source)}
+      onContextMenu={(e) => onContextMenu(e, source)}
+      className={`bg-card shadow-card rounded-lg p-4 flex flex-col justify-between h-full group transition-shadow hover:shadow-lg ${canEdit ? 'cursor-grab' : ''}`}
+    >
+        <div>
+            <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-secondary rounded-md">
+                    <CollectionIcon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground">{source.name}</h3>
             </div>
-             <div className="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex justify-between items-center">
-                <span className="font-semibold px-2 py-0.5 bg-secondary rounded">{source.type}</span>
-                <span>Added on {new Date(source.dateAdded).toLocaleDateString()}</span>
-            </div>
-            {canEdit && (
-                <button
-                    onClick={handleDelete}
-                    className="absolute top-2 right-2 p-1.5 bg-card/50 text-muted-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive transition-opacity"
-                    aria-label="Delete knowledge source"
-                >
-                    <TrashIcon className="h-4 w-4" />
-                </button>
-            )}
+            <p className="text-sm text-muted-foreground line-clamp-3">{source.description}</p>
         </div>
-    );
+        <div className="text-xs text-muted-foreground mt-3 flex justify-between items-center">
+            <span>Type: {source.type}</span>
+            <div className={`flex items-center gap-1 font-semibold ${statusColor}`}>
+                <StatusIcon className={`h-4 w-4 ${source.status === 'Indexing' ? 'animate-spin' : ''}`} />
+                <span>{source.status}</span>
+            </div>
+        </div>
+    </div>
+  );
 };
 
 export default KnowledgeSourceCard;

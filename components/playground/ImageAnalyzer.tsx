@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { analyzeImage } from '../../services/geminiService.ts';
 import { fileToBase64 } from '../../utils/helpers.ts';
-import { SparklesIcon, UploadIcon, PhotoIcon } from '../icons/Icons.tsx';
+// Fix: Module '"../icons/Icons.tsx"' has no exported member 'PhotoIcon'.
+import { SparklesIcon, UploadIcon } from '../icons/Icons.tsx';
 
 const ImageAnalyzer: React.FC = () => {
   const [prompt, setPrompt] = useState('Describe what is in this image in detail.');
@@ -47,7 +48,7 @@ const ImageAnalyzer: React.FC = () => {
                         <img src={image.url} className="max-h-full max-w-full object-contain rounded-md" />
                     ) : (
                         <div className="text-center text-muted-foreground">
-                            <PhotoIcon className="h-12 w-12 mx-auto mb-2"/>
+                            <SparklesIcon className="h-12 w-12 mx-auto mb-2"/>
                             <p>Upload an image to analyze.</p>
                         </div>
                     )}

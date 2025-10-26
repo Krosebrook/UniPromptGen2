@@ -1,6 +1,9 @@
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, { ReactFlowProvider } from 'reactflow';
 import 'reactflow/dist/style.css';
+// Fix: Corrected import paths to be relative.
 import { Node, Edge, NodeType, NodeRunStatus, LogEntry, Run, ModelNodeData, ToolNodeData, InputNodeData, KnowledgeNodeData, AgentGraph } from '../types.ts';
 import { executeAgent } from '../services/agentExecutorService.ts';
 import { getAgentGraphs, saveAgentGraph } from '../services/apiService.ts';
@@ -16,12 +19,19 @@ import SaveAgentModal from '../components/workbench/SaveAgentModal.tsx';
 
 const initialNodes: Node[] = [
   { id: '1', type: 'input', position: { x: 50, y: 200 }, data: { label: 'Start', initialValue: '{\n  "topic": "the future of AI"\n}' } as InputNodeData },
+  { id: '3', type: 'model', position: { x: 400, y: 200 }, data: { label: 'Model', promptTemplate: 'You are a helpful assistant. Write about {{topic}}.', temperature: 0.7, topK: 40, topP: 0.95 } as ModelNodeData },
   { id: '2', type: 'output', position: { x: 800, y: 200 }, data: { label: 'End' } },
 ];
 
+const initialEdges: Edge[] = [
+    { id: 'e1-3', source: '1', target: '3', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+    { id: 'e3-2', source: '3', target: '2', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+];
+
+
 const AgenticWorkbench: React.FC = () => {
     const [nodes, setNodes] = useState<Node[]>(initialNodes);
-    const [edges, setEdges] = useState<Edge[]>([]);
+    const [edges, setEdges] = useState<Edge[]>(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [agentName, setAgentName] = useState('New Untitled Agent');
     const [currentAgent, setCurrentAgent] = useState<AgentGraph | null>(null);
@@ -48,7 +58,7 @@ const AgenticWorkbench: React.FC = () => {
     const handleNewAgent = () => {
         setCurrentAgent(null);
         setNodes(initialNodes);
-        setEdges([]);
+        setEdges(initialEdges);
         setAgentName('New Untitled Agent');
         setSelectedNode(null);
     };
@@ -117,7 +127,8 @@ const AgenticWorkbench: React.FC = () => {
         } else {
             // Update existing agent
             if (!currentWorkspace) return;
-            const updatedAgent = await saveAgentGraph({ ...currentAgent, name: agentName, nodes, edges }, currentWorkspace.id);
+            const agentDataToSave = { ...currentAgent, name: agentName, nodes, edges };
+            const updatedAgent = await saveAgentGraph(agentDataToSave, currentWorkspace.id);
             setCurrentAgent(updatedAgent);
             await fetchSavedAgents(); // Refresh list
         }

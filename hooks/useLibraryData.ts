@@ -1,10 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import { MOCK_LOGGED_IN_USER } from '../constants.ts';
 
-export function useLibraryData<T>(
-  fetchFunction: (workspaceId: string) => Promise<T[]>,
-  entityName: string // e.g., 'templates', 'tools'
-) {
+type FetchFunction<T> = (workspaceId: string, folderId: string | null, userId: string) => Promise<T[]>;
+
+export const useLibraryData = <T,>(
+  fetchFunction: FetchFunction<T>,
+  dataType: string,
+  folderId: string | null
+) => {
   const { currentWorkspace } = useWorkspace();
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -12,28 +16,30 @@ export function useLibraryData<T>(
 
   const fetchData = useCallback(async () => {
     if (!currentWorkspace) {
-      // Set loading to false and clear data if there's no workspace
-      setData([]);
       setIsLoading(false);
       return;
-    };
+    }
 
     setIsLoading(true);
     setError(null);
     try {
-      const result = await fetchFunction(currentWorkspace.id);
+      const result = await fetchFunction(currentWorkspace.id, folderId, MOCK_LOGGED_IN_USER.id);
       setData(result);
-    } catch (err) {
-      setError(`Failed to load ${entityName}. Please try again later.`);
-      console.error(err);
+    } catch (e) {
+      console.error(`Failed to fetch ${dataType}:`, e);
+      setError(`Could not load ${dataType}. Please try again.`);
     } finally {
       setIsLoading(false);
     }
-  }, [currentWorkspace, fetchFunction, entityName]);
+  }, [currentWorkspace, fetchFunction, dataType, folderId]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  return { data, isLoading, error, refetch: fetchData };
-}
+  const refreshData = useCallback(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, isLoading, error, refreshData, setData };
+};

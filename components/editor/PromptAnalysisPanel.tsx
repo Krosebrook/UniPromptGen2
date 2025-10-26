@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnalysisResult, AnalysisWarning } from '../../services/promptAnalysisService.ts';
-import { SparklesIcon, InformationCircleIcon } from '../icons/Icons.tsx';
+// Fix: Module '"../icons/Icons.tsx"' has no exported member 'InformationCircleIcon'.
+import { SparklesIcon, BellIcon } from '../icons/Icons.tsx';
 
 interface PromptAnalysisPanelProps {
     analysis: AnalysisResult;
@@ -9,7 +10,7 @@ interface PromptAnalysisPanelProps {
 const WarningItem: React.FC<{ warning: AnalysisWarning }> = ({ warning }) => {
     return (
         <div className="flex items-start gap-2 p-2 bg-secondary rounded-md">
-            <InformationCircleIcon className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+            <BellIcon className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
             <p className="text-sm text-muted-foreground">{warning.message}</p>
         </div>
     );

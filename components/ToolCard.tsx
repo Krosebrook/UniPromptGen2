@@ -1,87 +1,37 @@
 import React from 'react';
-import { TerminalIcon, KeyIcon, TrashIcon } from './icons/Icons.tsx';
-import { Tool, AuthMethod } from '../types.ts';
-import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
-
-const authMethodStyles: Record<AuthMethod, { icon: React.ElementType, text: string }> = {
-    'None': { icon: () => <span className="w-4 h-4" />, text: 'No Auth' },
-    'API Key': { icon: KeyIcon, text: 'API Key' },
-    'OAuth 2.0': { icon: KeyIcon, text: 'OAuth 2.0' },
-};
+import { Tool } from '../types.ts';
+import { WrenchScrewdriverIcon, KeyIcon } from './icons/Icons.tsx';
 
 interface ToolCardProps {
-    tool: Tool;
-    onDelete: (id: string, name: string) => void;
+  tool: Tool;
+  canEdit: boolean;
+  onDragStart: (e: React.DragEvent, item: Tool) => void;
+  onContextMenu: (e: React.MouseEvent, item: Tool) => void;
 }
 
-const AuthDetails: React.FC<{ tool: Tool }> = ({ tool }) => {
-    if (tool.authMethod === 'API Key' && tool.apiKeyLocation && tool.apiKeyName) {
-        return (
-            <div className="pl-6">
-                <p className="truncate text-xs text-muted-foreground">
-                    In <span className="font-semibold text-foreground capitalize">{tool.apiKeyLocation}</span> as <span className="font-semibold text-foreground">{tool.apiKeyName}</span>
-                </p>
-            </div>
-        );
-    }
-    if (tool.authMethod === 'OAuth 2.0') {
-        return (
-            <div className="pl-6">
-                <p className="truncate text-xs text-muted-foreground" title={tool.oauthScopes}>
-                    Scopes: {tool.oauthScopes || 'Not specified'}
-                </p>
-            </div>
-        );
-    }
-    return null;
-};
-
-
-const ToolCard: React.FC<ToolCardProps> = React.memo(({ tool, onDelete }) => {
-    const { currentUserRole } = useWorkspace();
-    const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
-    const authInfo = authMethodStyles[tool.authMethod];
-    
-    const handleDelete = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onDelete(tool.id, tool.name);
-    };
-
-    return (
-        <div className="bg-card shadow-card rounded-lg p-5 flex flex-col h-full relative group">
-            <div className="flex items-start gap-4">
+const ToolCard: React.FC<ToolCardProps> = ({ tool, canEdit, onDragStart, onContextMenu }) => {
+  return (
+    <div
+      draggable={canEdit}
+      onDragStart={(e) => onDragStart(e, tool)}
+      onContextMenu={(e) => onContextMenu(e, tool)}
+      className={`bg-card shadow-card rounded-lg p-4 flex flex-col justify-between h-full group transition-shadow hover:shadow-lg ${canEdit ? 'cursor-grab' : ''}`}
+    >
+        <div>
+            <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-secondary rounded-md">
-                    <TerminalIcon className="h-6 w-6 text-primary" />
+                    <WrenchScrewdriverIcon className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                    <h3 className="font-bold text-foreground">{tool.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{tool.description}</p>
-                </div>
+                <h3 className="font-bold text-foreground">{tool.name}</h3>
             </div>
-            <div className="mt-4 pt-3 border-t border-border flex-grow flex flex-col justify-end">
-                <div className="text-xs text-muted-foreground space-y-2">
-                    <p className="font-mono bg-input px-2 py-1 rounded truncate" title={tool.apiEndpoint}>
-                        {tool.apiEndpoint}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <authInfo.icon className="h-4 w-4 text-primary" />
-                        <span>{authInfo.text}</span>
-                    </div>
-                    <AuthDetails tool={tool} />
-                </div>
-            </div>
-            {canEdit && (
-                <button
-                    onClick={handleDelete}
-                    className="absolute top-2 right-2 p-1.5 bg-card/50 text-muted-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/20 hover:text-destructive transition-opacity"
-                    aria-label="Delete tool"
-                >
-                    <TrashIcon className="h-4 w-4" />
-                </button>
-            )}
+            <p className="text-sm text-muted-foreground line-clamp-3">{tool.description}</p>
         </div>
-    );
-});
+        <div className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
+            <KeyIcon className="h-4 w-4" />
+            <span>{tool.authMethod}</span>
+        </div>
+    </div>
+  );
+};
 
 export default ToolCard;

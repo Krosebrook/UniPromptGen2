@@ -1,5 +1,8 @@
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import { sendMessage, startChat } from '../../services/geminiService.ts';
+// Fix: Corrected import paths to be relative.
 import type { ChatMessage } from '../../types.ts';
 import { PaperAirplaneIcon, UserCircleIcon, SparklesIcon } from '../icons/Icons.tsx';
 

@@ -1,140 +1,183 @@
 // mock-data.ts
-// FIX: Added AnalyticEvent to imports
-import { PromptTemplate, User, Workspace, Tool, KnowledgeSource, ABTest, AgentGraph, AnalyticEvent } from './types.ts';
-import { MOCK_LOGGED_IN_USER, MOCK_USERS } from './constants.ts';
 
-// FIX: Added MOCK_INITIAL_ANALYTICS to provide data for the analyticsDB.
-export const MOCK_INITIAL_ANALYTICS: AnalyticEvent[] = [
+import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, Folder } from './types.ts';
+import { MOCK_USERS } from './constants.ts';
+
+const MAIN_USER_ID = 'user-001';
+
+export const MOCK_FOLDERS: Folder[] = [
+    // Fix: Added missing `folderId` property to conform to the updated Folder type.
+    { id: 'folder-temp-1', name: 'Marketing Prompts', type: 'template', itemCount: 2, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
+    // Fix: Added missing `folderId` property to conform to the updated Folder type.
+    { id: 'folder-temp-2', name: 'Support Prompts', type: 'template', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
+    // Fix: Added missing `folderId` property to conform to the updated Folder type.
+    { id: 'folder-tool-1', name: 'Internal APIs', type: 'tool', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [{ userId: 'user-002', role: 'Viewer'}], folderId: null },
+    // Fix: Added missing `folderId` property to conform to the updated Folder type.
+    { id: 'folder-ks-1', name: 'Q4 Financials', type: 'knowledge', itemCount: 1, createdAt: new Date().toISOString(), ownerId: 'user-002', permissions: [{ userId: MAIN_USER_ID, role: 'Editor'}], folderId: null },
+];
+
+export const MOCK_TEMPLATES: PromptTemplate[] = [
   {
-    templateId: 'tmpl-1',
-    workspaceId: 'ws-001',
-    version: '1.0',
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    latency: 310,
-    success: true,
-    userRating: 5,
+    id: 'template-001',
+    folderId: 'folder-temp-1',
+    domain: 'Marketing',
+    qualityScore: 92,
+    versions: [
+      { version: '1.0', name: 'Standard Ad Copy', description: "Generates ad copy for social media.", content: 'Generate ad copy for a {{product}} targeting {{audience}}.', variables: [{ name: 'product', type: 'string' }, { name: 'audience', type: 'string' }], date: '2023-10-01', authorId: 'user-001' },
+      { version: '1.1', name: 'Ad Copy with Emojis', description: "Adds emojis for more engagement.", content: 'Generate an engaging ad copy with emojis for a {{product}} targeting {{audience}}.', variables: [{ name: 'product', type: 'string' }, { name: 'audience', type: 'string' }], date: '2023-10-15', authorId: 'user-002' },
+    ],
+    activeVersion: '1.1',
+    deployedVersion: '1.1',
+    metrics: { totalRuns: 1500, successfulRuns: 1450, avgUserRating: 4.5, totalUserRating: 6750, taskSuccessRate: 0.96, efficiencyScore: 0.88 },
+    createdBy: 'user-001',
+    createdAt: '2023-10-01',
+    updatedAt: '2023-10-15',
+    ownerId: MAIN_USER_ID,
+    permissions: [],
+    // Fix: Added missing `name` property.
+    name: 'Ad Copy with Emojis',
   },
   {
-    templateId: 'tmpl-2',
-    workspaceId: 'ws-001',
-    version: '2.0',
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    latency: 450,
-    success: true,
-    userRating: 4,
+    id: 'template-002',
+    folderId: 'folder-temp-2',
+    domain: 'Support',
+    qualityScore: 88,
+    versions: [
+      { version: '1.0', name: 'Customer Support Response', description: "Drafts a response to a customer query.", content: 'Draft a polite response to a customer about their issue: {{issue_summary}}.', variables: [{ name: 'issue_summary', type: 'string' }], date: '2023-09-20', authorId: 'user-001' },
+    ],
+    activeVersion: '1.0',
+    deployedVersion: null,
+    metrics: { totalRuns: 800, successfulRuns: 760, avgUserRating: 4.2, totalUserRating: 3360, taskSuccessRate: 0.95, efficiencyScore: 0.92 },
+    createdBy: 'user-001',
+    createdAt: '2023-09-20',
+    updatedAt: '2023-09-20',
+    ownerId: MAIN_USER_ID,
+    permissions: [{ userId: 'user-002', role: 'Editor' }],
+    // Fix: Added missing `name` property.
+    name: 'Customer Support Response',
   },
   {
-    templateId: 'tmpl-1',
-    workspaceId: 'ws-001',
-    version: '1.0',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-    latency: 280,
-    success: false,
-    userRating: 2,
+    id: 'template-003',
+    folderId: null, // In root
+    domain: 'Engineering',
+    qualityScore: 95,
+    versions: [
+      { version: '1.0', name: 'Generate Unit Tests', description: "Generates unit tests for a given function.", content: 'Write a comprehensive suite of unit tests for the following {{language}} function:\n\n```\n{{code_block}}\n```', variables: [{ name: 'language', type: 'string' }, { name: 'code_block', type: 'string' }], date: '2023-11-05', authorId: 'user-003' },
+    ],
+    activeVersion: '1.0',
+    deployedVersion: '1.0',
+    metrics: { totalRuns: 300, successfulRuns: 295, avgUserRating: 4.8, totalUserRating: 1440, taskSuccessRate: 0.98, efficiencyScore: 0.95 },
+    createdBy: 'user-003',
+    createdAt: '2023-11-05',
+    updatedAt: '2023-11-05',
+    ownerId: 'user-003',
+    permissions: [{ userId: MAIN_USER_ID, role: 'Viewer' }],
+    // Fix: Added missing `name` property.
+    name: 'Generate Unit Tests',
   },
-  {
-    templateId: 'tmpl-1',
-    workspaceId: 'ws-001',
-    version: '1.0',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
-    latency: 330,
-    success: true,
-    userRating: 4,
-    abTestVariant: 'A',
-  },
-  {
-    templateId: 'tmpl-1',
-    workspaceId: 'ws-001',
-    version: '1.1',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
-    latency: 350,
-    success: true,
-    userRating: 5,
-    abTestVariant: 'B',
+   {
+    id: 'template-004',
+    folderId: 'folder-temp-1',
+    domain: 'Marketing',
+    qualityScore: 85,
+    versions: [
+      { version: '1.0', name: 'Blog Post Idea Generator', description: "Generates blog post ideas.", content: 'Generate 5 blog post ideas about {{topic}}.', variables: [{ name: 'topic', type: 'string' }], date: '2023-11-10', authorId: 'user-002' },
+    ],
+    activeVersion: '1.0',
+    deployedVersion: null,
+    metrics: { totalRuns: 250, successfulRuns: 220, avgUserRating: 4.1, totalUserRating: 1025, taskSuccessRate: 0.88, efficiencyScore: 0.85 },
+    createdBy: 'user-002',
+    createdAt: '2023-11-10',
+    updatedAt: '2023-11-10',
+    ownerId: 'user-002',
+    permissions: [],
+    // Fix: Added missing `name` property.
+    name: 'Blog Post Idea Generator',
   },
 ];
 
-export const MOCK_WORKSPACES: Workspace[] = [
-    { id: 'ws-001', name: 'Product Team', plan: 'Pro' },
-    { id: 'ws-002', name: 'Marketing Dept.', plan: 'Pro' },
-    { id: 'ws-003', name: 'R&D Sandbox', plan: 'Free' },
+export const MOCK_TOOLS: Tool[] = [
+  {
+    id: 'tool-001',
+    folderId: 'folder-tool-1',
+    name: 'Get Weather Data',
+    description: 'Fetches the current weather for a given location.',
+    apiEndpoint: 'https://api.weather.com/v1/current',
+    authMethod: 'API Key',
+    requestSchema: '{ "location": "string" }',
+    responseSchema: '{ "temperature": "number", "conditions": "string" }',
+    createdBy: 'user-001',
+    createdAt: '2023-10-05',
+    updatedAt: '2023-10-05',
+    ownerId: MAIN_USER_ID,
+    permissions: [],
+  },
+   {
+    id: 'tool-002',
+    folderId: null,
+    name: 'CRM User Lookup',
+    description: 'Finds user details in the company CRM.',
+    apiEndpoint: 'https://internal.mycompany.com/api/crm/users',
+    authMethod: 'OAuth 2.0',
+    requestSchema: '{ "email": "string" }',
+    responseSchema: '{ "userId": "string", "name": "string", "signupDate": "string" }',
+    createdBy: 'user-003',
+    createdAt: '2023-11-01',
+    updatedAt: '2023-11-01',
+    ownerId: 'user-003',
+    permissions: [],
+  }
 ];
 
-
-export let MOCK_TEMPLATES: PromptTemplate[] = [
+export const MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     {
-        id: 'tmpl-1',
-        workspaceId: 'ws-001',
-        domain: 'Customer Support',
-        qualityScore: 92.5,
-        activeVersion: '1.1',
-        deployedVersion: '1.0',
-        versions: [
-            { version: '1.0', name: 'Customer Support Initial Response', description: 'Generates a polite and helpful initial response to a customer support query.', content: 'Hello {{customer_name}},\n\nThank you for reaching out to us about {{query_topic}}. We understand your concern and are here to help. Our team is looking into it, and we will get back to you shortly.\n\nBest,\nThe Support Team', variables: [{ name: 'customer_name', type: 'string' }, { name: 'query_topic', type: 'string' }], riskLevel: 'Low', date: '2023-10-01T10:00:00Z' },
-            { version: '1.1', name: 'Customer Support Response v1.1', description: 'An updated version with a more empathetic tone.', content: 'Hi {{customer_name}},\n\nWe\'re so sorry to hear you\'re having trouble with {{query_topic}}. That sounds frustrating, and we want to get this sorted out for you right away. Our team is on the case and we will provide an update as soon as possible.\n\nSincerely,\nThe Support Team', variables: [{ name: 'customer_name', type: 'string' }, { name: 'query_topic', type: 'string' }], riskLevel: 'Low', date: '2023-11-05T14:30:00Z' },
-        ],
-        metrics: { totalRuns: 10520, successfulRuns: 10250, avgUserRating: 4.6, taskSuccessRate: 0.974, efficiencyScore: 0.92, totalUserRating: 48392 },
-        abTests: [],
+        id: 'ks-001',
+        folderId: 'folder-ks-1',
+        name: 'Q4 2023 Financial Report',
+        description: 'The complete financial report for the fourth quarter of 2023.',
+        type: 'PDF',
+        status: 'Ready',
+        createdBy: 'user-002',
+        createdAt: '2023-11-01',
+        updatedAt: '2023-11-02',
+        ownerId: 'user-002',
+        permissions: [],
     },
     {
-        id: 'tmpl-2',
-        workspaceId: 'ws-001',
-        domain: 'Marketing',
-        qualityScore: 85.0,
-        activeVersion: '2.0',
-        deployedVersion: '2.0',
-        versions: [
-            { version: '2.0', name: 'Product Description Generator', description: 'Creates a compelling product description from a list of features.', content: 'Generate a short, exciting marketing description for a product named "{{product_name}}".\n\nFeatures:\n- {{feature_1}}\n- {{feature_2}}\n- {{feature_3}}\n\nTone: {{tone}}', variables: [{ name: 'product_name', type: 'string' }, { name: 'feature_1', type: 'string' }, { name: 'feature_2', type: 'string' }, { name: 'feature_3', type: 'string' }, { name: 'tone', type: 'string', defaultValue: 'Exciting' }], riskLevel: 'Medium', date: '2023-09-15T11:00:00Z' }
-        ],
-        metrics: { totalRuns: 512, successfulRuns: 460, avgUserRating: 4.1, taskSuccessRate: 0.898, efficiencyScore: 0.88, totalUserRating: 2099.2 },
-        abTests: [],
-    },
-    {
-        id: 'tmpl-3',
-        workspaceId: 'ws-002',
-        domain: 'Social Media',
-        qualityScore: 78.2,
-        activeVersion: '1.0',
-        deployedVersion: null,
-        versions: [
-            { version: '1.0', name: 'Twitter Post Creator', description: 'Generates a tweet based on a given topic.', content: 'Write a tweet about {{topic}}. Include the hashtag #{{hashtag}}. Keep it under 280 characters.', variables: [{ name: 'topic', type: 'string' }, { name: 'hashtag', type: 'string' }], riskLevel: 'Low', date: '2023-11-20T18:00:00Z' }
-        ],
-        metrics: { totalRuns: 95, successfulRuns: 80, avgUserRating: 3.9, taskSuccessRate: 0.842, efficiencyScore: 0.81, totalUserRating: 370.5 },
-        abTests: [],
-    },
-];
-
-
-export let MOCK_TOOLS: Tool[] = [
-    { id: 'tool-1', workspaceId: 'ws-001', name: 'Get Current Weather', description: 'Fetches the current weather for a given location.', apiEndpoint: 'https://api.weather.com/v1/current', authMethod: 'API Key', requestSchema: '{"location": "string"}', responseSchema: '{"temp_c": "number", "condition": "string"}', apiKeyLocation: 'header', apiKeyName: 'X-Weather-API-Key' },
-    { id: 'tool-2', workspaceId: 'ws-001', name: 'Create Product', description: 'Adds a new product to the database.', apiEndpoint: 'https://dummyjson.com/products/add', authMethod: 'None', requestSchema: '{"title": "string"}', responseSchema: '{"id": "number", "title": "string"}' },
-    { id: 'tool-3', workspaceId: 'ws-002', name: 'Google Calendar API', description: 'Interacts with Google Calendar.', apiEndpoint: 'https://www.googleapis.com/calendar/v3', authMethod: 'OAuth 2.0', requestSchema: '{...}', responseSchema: '{...}', oauthClientId: '123456789-abc.apps.googleusercontent.com', oauthAuthorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth', oauthTokenUrl: 'https://oauth2.googleapis.com/token', oauthScopes: 'https://www.googleapis.com/auth/calendar.readonly' },
-];
-
-export let MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
-    { id: 'ks-1', workspaceId: 'ws-001', name: 'Internal API Docs', description: 'PDF documentation for our internal APIs.', type: 'PDF', dateAdded: '2023-10-10T10:00:00Z' },
-    { id: 'ks-2', workspaceId: 'ws-001', name: 'Company Style Guide', description: 'Website with brand and tone guidelines.', type: 'Website', dateAdded: '2023-09-01T12:00:00Z' },
-    { id: 'ks-3', workspaceId: 'ws-002', name: 'Marketing Swipe File', description: 'A plain text file with marketing copy examples.', type: 'Text', dateAdded: '2023-11-15T15:00:00Z' },
-];
-
-export const MOCK_AB_TESTS: ABTest[] = [
-    {
-        id: 'tmpl-1-test-1',
-        name: 'Greeting Tone Test',
-        versionA: '1.0',
-        versionB: '1.1',
-        trafficSplit: 50,
-        status: 'running',
-        results: {
-            versionA: { totalRuns: 512, successfulRuns: 480, avgUserRating: 4.2, taskSuccessRate: 0.9375, efficiencyScore: 0.85, totalUserRating: 2150.4 },
-            versionB: { totalRuns: 498, successfulRuns: 475, avgUserRating: 4.4, taskSuccessRate: 0.9538, efficiencyScore: 0.86, totalUserRating: 2191.2 },
-            confidence: 0.98,
-            winner: 'versionB',
-        }
+        id: 'ks-002',
+        folderId: null,
+        name: 'Onboarding Documentation',
+        description: 'Public documentation for new employee onboarding.',
+        type: 'Website',
+        status: 'Ready',
+        createdBy: MAIN_USER_ID,
+        createdAt: '2023-10-20',
+        updatedAt: '2023-10-28',
+        ownerId: MAIN_USER_ID,
+        permissions: [],
     }
 ];
 
-export let MOCK_AGENT_GRAPHS: AgentGraph[] = [];
+export const MOCK_AGENTS: AgentGraph[] = [
+    {
+        id: 'agent-001',
+        name: 'Customer Support Triage Agent',
+        description: 'An agent that analyzes a customer support ticket, gets user details from the CRM, and drafts a response.',
+        nodes: [],
+        edges: [],
+    }
+];
 
-// Add the mock users from constants to this file for a single source of truth
-export { MOCK_LOGGED_IN_USER, MOCK_USERS };
+export const MOCK_WORKSPACES: Workspace[] = [
+    { id: 'ws-001', name: 'Main Production', plan: 'Enterprise', memberIds: ['user-001', 'user-002', 'user-003', 'user-004'] },
+    { id: 'ws-002', name: 'Marketing Team', plan: 'Pro', memberIds: ['user-001', 'user-002', 'user-004'] },
+    { id: 'ws-003', name: 'Personal Dev', plan: 'Free', memberIds: ['user-001', 'user-003'] },
+];
+
+export const MOCK_ANALYTICS_DB = {
+    // ...
+};
+
+export const MOCK_AB_TESTS = [
+    // ...
+];

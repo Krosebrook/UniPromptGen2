@@ -1,8 +1,13 @@
+
+
+
 import React, { useState, useEffect } from 'react';
+// Fix: Corrected import paths to be relative.
 import { ToolNodeData, AuthMethod, Tool } from '../../types.ts';
 import { getTools } from '../../services/apiService.ts';
 import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
 import PresetToolConfig from './PresetToolConfig.tsx';
+import { MOCK_LOGGED_IN_USER } from '../../constants.ts';
 
 interface ToolNodeConfigProps {
   data: ToolNodeData;
@@ -15,7 +20,8 @@ const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
   
   useEffect(() => {
     if (currentWorkspace) {
-        getTools(currentWorkspace.id).then(setAvailableTools);
+        // Fix: Expected 3 arguments, but got 2.
+        getTools(currentWorkspace.id, null, MOCK_LOGGED_IN_USER.id).then(setAvailableTools);
     }
   }, [currentWorkspace]);
 
@@ -71,7 +77,7 @@ const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
 
       <ConfigInput
         label="API Endpoint"
-        value={data.apiEndpoint}
+        value={data.apiEndpoint || ''}
         onChange={(val) => onUpdate({ apiEndpoint: val })}
         placeholder="https://example.com/api/v1"
         disabled={isLinkedToTool}

@@ -1,4 +1,7 @@
+
+
 import React from 'react';
+// Fix: Corrected import path to be relative.
 import { ModelNodeData } from '../../types.ts';
 
 interface ModelNodeConfigProps {

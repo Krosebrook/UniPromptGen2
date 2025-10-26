@@ -1,5 +1,6 @@
 // constants.ts
 
+// Fix: Corrected import path to be relative.
 import type { User } from './types.ts';
 
 export const MOCK_LOGGED_IN_USER: User = {

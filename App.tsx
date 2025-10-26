@@ -1,4 +1,7 @@
+
+
 import React, { useState, useEffect } from 'react';
+// Fix: Corrected import paths to be relative.
 import Layout from './components/Layout.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import TemplateLibrary from './pages/TemplateLibrary.tsx';

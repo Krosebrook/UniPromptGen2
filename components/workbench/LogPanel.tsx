@@ -1,7 +1,12 @@
 
+
+
+
 import React, { useRef, useEffect } from 'react';
+// Fix: Corrected import paths to be relative.
 import { LogEntry } from '../../types.ts';
-import { InformationCircleIcon, CheckCircleIcon, XCircleIcon, SpinnerIcon } from '../icons/Icons.tsx';
+// Fix: Module '"../icons/Icons.tsx"' has no exported member 'InformationCircleIcon'.
+import { BellIcon, CheckCircleIcon, XCircleIcon, SpinnerIcon } from '../icons/Icons.tsx';
 
 interface LogPanelProps {
   logs: LogEntry[];
@@ -9,7 +14,7 @@ interface LogPanelProps {
 
 const getLogIcon = (status: LogEntry['status']) => {
     switch(status) {
-        case 'info': return <InformationCircleIcon className="h-4 w-4 text-info" />;
+        case 'info': return <BellIcon className="h-4 w-4 text-info" />;
         case 'success': return <CheckCircleIcon className="h-4 w-4 text-success" />;
         case 'error': return <XCircleIcon className="h-4 w-4 text-destructive" />;
         case 'running': return <SpinnerIcon className="h-4 w-4 text-primary" />;

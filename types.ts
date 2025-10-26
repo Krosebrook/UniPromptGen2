@@ -1,11 +1,26 @@
 // types.ts
 import React from 'react';
 
-// Basic Types
 export type UserRole = 'Admin' | 'Editor' | 'Viewer';
-export type RiskLevel = 'Low' | 'Medium' | 'High';
 
-// User and Workspace
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+}
+
+export interface UserWorkspace {
+  workspaceId: string;
+  role: UserRole;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -14,34 +29,34 @@ export interface User {
   avatarUrl: string;
   xp: number;
   level: number;
-  achievements: { id: string; name: string; description: string }[];
-  certifications: { id: string; name: string; issuer: string; date: string }[];
-  workspaces: { workspaceId: string; role: UserRole }[];
+  achievements: Achievement[];
+  certifications: Certification[];
+  workspaces: UserWorkspace[];
 }
 
 export interface Workspace {
-  id: string;
-  name: string;
-  plan: 'Free' | 'Pro' | 'Enterprise';
+    id: string;
+    name: string;
+    plan: 'Free' | 'Pro' | 'Enterprise';
+    memberIds: string[];
 }
 
-// Chat
 export interface ChatMessage {
-    id:string;
-    role: 'user' | 'model';
-    text: string;
-    timestamp: Date;
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: Date;
 }
 
-// Grounding
 export interface GroundingSource {
     web?: {
         uri: string;
         title: string;
-    };
+    }
 }
 
-// Prompt Templates
+// --- Prompt Template Types ---
+
 export interface PromptVariable {
   name: string;
   type: 'string' | 'number' | 'boolean';
@@ -54,181 +69,208 @@ export interface PromptTemplateVersion {
   description: string;
   content: string;
   variables: PromptVariable[];
-  riskLevel: RiskLevel;
   date: string;
+  authorId: string;
 }
 
 export interface PromptTemplateMetrics {
   totalRuns: number;
   successfulRuns: number;
   avgUserRating: number;
-  totalUserRating: number; // to calculate avg
+  totalUserRating: number;
   taskSuccessRate: number;
   efficiencyScore: number;
 }
 
+export type PermissionRole = 'Editor' | 'Viewer';
+
+export interface Permission {
+    userId: string;
+    role: PermissionRole;
+}
+
 export interface PromptTemplate {
   id: string;
-  workspaceId: string;
+  folderId: string | null;
   domain: string;
   qualityScore: number;
+  versions: PromptTemplateVersion[];
   activeVersion: string;
   deployedVersion: string | null;
-  versions: PromptTemplateVersion[];
   metrics: PromptTemplateMetrics;
-  abTests: ABTest[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  ownerId: string;
+  permissions: Permission[];
+  name: string; // Added name for LibraryItem compatibility
 }
 
 export interface ExecutionEvent {
     success: boolean;
-    userRating: number; // e.g., 1-5
+    userRating: number; // 1-5
 }
 
-// A/B Testing
-export interface ABTest {
-  id: string;
-  name: string;
-  versionA: string;
-  versionB:string;
-  trafficSplit: number;
-  status: 'running' | 'completed';
-  results?: {
-    versionA: PromptTemplateMetrics;
-    versionB: PromptTemplateMetrics;
-    confidence: number;
-    winner: 'versionA' | 'versionB' | 'inconclusive';
-  };
-}
-
-// Analytics
-export interface AnalyticsChartData {
-    time: string;
-    calls: number;
-}
-
-// FIX: Added AnalyticEvent type to be used by apiService and mock-data.
-export interface AnalyticEvent {
-    templateId: string;
-    workspaceId: string;
-    version: string;
-    timestamp: string;
-    latency: number;
-    success: boolean;
-    userRating?: number;
-    abTestVariant?: 'A' | 'B';
-}
-
-
-// Tools
-export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
-
-export interface Tool {
-  id: string;
-  workspaceId: string;
-  name: string;
-  description: string;
-  apiEndpoint: string;
-  authMethod: AuthMethod;
-  requestSchema: string; // JSON string
-  responseSchema: string; // JSON string
-  apiKeyLocation?: 'header' | 'query';
-  apiKeyName?: string;
-  oauthClientId?: string;
-  oauthAuthorizationUrl?: string;
-  oauthTokenUrl?: string;
-  oauthScopes?: string;
-}
-
-export type ToolFormData = Omit<Tool, 'id' | 'workspaceId'>;
-
-
-// Knowledge Sources
-export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
-
-export interface KnowledgeSource {
-  id: string;
-  workspaceId: string;
-  name: string;
-  description: string;
-  type: KnowledgeSourceType;
-  dateAdded: string;
-}
-
-export type KnowledgeSourceFormData = Omit<KnowledgeSource, 'id' | 'workspaceId' | 'dateAdded'>;
-
-// Agentic Workbench
+// --- Agentic Workbench Types ---
 export type NodeType = 'input' | 'output' | 'model' | 'tool' | 'knowledge';
 export type NodeRunStatus = 'idle' | 'running' | 'success' | 'error';
 
-export interface BaseNodeData {
+export interface InputNodeData {
+  label: string;
+  initialValue: string; // JSON string
+}
+
+export interface ModelNodeData {
+  label: string;
+  promptTemplate: string;
+  temperature: number;
+  topK: number;
+  topP: number;
+}
+
+export interface ToolNodeData {
     label: string;
-}
-
-export interface InputNodeData extends BaseNodeData {
-    initialValue: string; // JSON string
-}
-
-export interface ModelNodeData extends BaseNodeData {
-    promptTemplate: string;
-    temperature: number;
-    topP: number;
-    topK: number;
-}
-
-export interface ToolNodeData extends BaseNodeData {
-    // For library tools or manual config
+    // For library tools
     toolId?: string;
-    apiEndpoint: string;
-    authMethod: AuthMethod;
-    requestSchema: string;
-    responseSchema: string;
-    
-    // For pre-configured nodes
+    apiEndpoint?: string;
+    authMethod?: AuthMethod;
+    requestSchema?: string; // JSON string
+    responseSchema?: string; // JSON string
+    // For preset tools
     subType?: 'HttpRequest' | 'SendEmail' | 'ReadGoogleSheet' | 'AppendGoogleSheet' | 'ExecuteCode' | 'TransformJson' | 'Wait';
     settings?: any;
 }
 
-export interface KnowledgeNodeData extends BaseNodeData {
-    sourceId: string | null;
+export interface KnowledgeNodeData {
+  label: string;
+  sourceId: string | null;
+}
+
+export interface OutputNodeData {
+  label: string;
 }
 
 export interface Node {
-    id: string;
-    type: NodeType;
-    position: { x: number; y: number };
-    data: BaseNodeData | InputNodeData | ModelNodeData | ToolNodeData | KnowledgeNodeData;
+  id: string;
+  type: NodeType;
+  position: { x: number; y: number };
+  data: InputNodeData | ModelNodeData | ToolNodeData | KnowledgeNodeData | OutputNodeData | { label: string };
 }
 
 export interface Edge {
-    id: string;
-    source: string;
-    target: string;
-    sourceHandle?: string | null;
-    targetHandle?: string | null;
-    animated?: boolean;
-    style?: React.CSSProperties;
-}
-
-export interface LogEntry {
-    timestamp: string;
-    message: string;
-    status: 'info' | 'success' | 'error' | 'running';
-}
-
-export interface Run {
-    id: string;
-    startTime: Date;
-    status: 'running' | 'completed' | 'failed';
-    logs: LogEntry[];
-    nodeOutputs: Record<string, any>;
-    finalOutput: any;
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+  animated?: boolean;
+  style?: React.CSSProperties;
 }
 
 export interface AgentGraph {
     id: string;
-    workspaceId: string;
     name: string;
     description: string;
     nodes: Node[];
     edges: Edge[];
 }
+
+export interface LogEntry {
+  timestamp: string;
+  message: string;
+  status: 'info' | 'success' | 'error' | 'running';
+}
+
+export interface Run {
+  id: string;
+  startTime: Date;
+  status: 'running' | 'completed' | 'failed';
+  logs: LogEntry[];
+  nodeOutputs: Record<string, any>;
+  finalOutput: any | null;
+}
+
+// --- Tool Library Types ---
+export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
+
+export interface Tool {
+    id: string;
+    folderId: string | null;
+    name: string;
+    description: string;
+    apiEndpoint: string;
+    authMethod: AuthMethod;
+    requestSchema: string; // JSON
+    responseSchema: string; // JSON
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    ownerId: string;
+    permissions: Permission[];
+}
+
+export interface ToolFormData extends Omit<Tool, 'id' | 'folderId' | 'createdBy' | 'createdAt' | 'updatedAt' | 'ownerId' | 'permissions'> {
+    apiKeyLocation?: 'header' | 'query';
+    apiKeyName?: string;
+    oauthClientId?: string;
+    oauthAuthorizationUrl?: string;
+    oauthTokenUrl?: string;
+    oauthScopes?: string;
+}
+
+// --- Knowledge Library Types ---
+export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
+
+export interface KnowledgeSource {
+    id: string;
+    folderId: string | null;
+    name: string;
+    description: string;
+    type: KnowledgeSourceType;
+    status: 'Pending' | 'Indexing' | 'Ready' | 'Error';
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+    ownerId: string;
+    permissions: Permission[];
+}
+
+export interface KnowledgeSourceFormData extends Omit<KnowledgeSource, 'id' | 'folderId' | 'status' | 'createdBy' | 'createdAt' | 'updatedAt' | 'ownerId' | 'permissions'> {}
+
+// --- Analytics ---
+export interface AnalyticsChartData {
+    time: string;
+    calls: number;
+}
+
+// --- A/B Testing ---
+export interface ABTest {
+    id: string;
+    templateId: string;
+    name: string;
+    status: 'running' | 'completed';
+    versionA: string;
+    versionB: string;
+    trafficSplit: number; // Percentage for version A
+    results?: {
+        winner: 'versionA' | 'versionB';
+        reason: string;
+    }
+}
+
+// --- Library ---
+export type LibraryType = 'template' | 'tool' | 'knowledge' | 'evaluation';
+
+export interface Folder {
+    id: string;
+    name: string;
+    type: 'template' | 'tool' | 'knowledge' | 'evaluation';
+    itemCount: number;
+    createdAt: string;
+    ownerId: string;
+    permissions: Permission[];
+    // Fix: Changed folderId type from `null` to `string | null` to support nesting and conform to LibraryItem.
+    folderId: string | null;
+}
+
+export type LibraryItem = PromptTemplate | Tool | KnowledgeSource | Folder;

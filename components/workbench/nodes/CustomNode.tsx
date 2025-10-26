@@ -1,6 +1,9 @@
+
+
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 // Corrected import path for types from ../../ to ../../../
+// Fix: Corrected import paths to be relative.
 import { NodeRunStatus } from '../../../types.ts';
 import { SpinnerIcon, CheckCircleIcon, XCircleIcon } from '../../icons/Icons.tsx';
 

@@ -1,112 +1,26 @@
-import React, { useState } from 'react';
-import { PlusIcon, SpinnerIcon } from '../components/icons/Icons.tsx';
-import { getTools, deleteTool, addTool } from '../services/apiService.ts';
-import { ToolFormData } from '../types.ts';
+import React from 'react';
+import { getTools, createFolder } from '../services/apiService.ts';
+import LibraryShell from '../components/library/LibraryShell.tsx';
 import ToolCard from '../components/ToolCard.tsx';
-import CreateToolModal from '../components/modals/CreateToolModal.tsx';
-import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
-import { useLibraryData } from '../hooks/useLibraryData.ts';
+import { Tool } from '../types.ts';
 
 const ToolLibrary: React.FC = () => {
-  const { currentWorkspace, currentUserRole } = useWorkspace();
-  const { data: tools, isLoading, error, refetch } = useLibraryData(getTools, 'tools');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [mutationError, setMutationError] = useState<string | null>(null);
-
-  const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
-
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete the tool "${name}"?`)) {
-        try {
-            setMutationError(null);
-            await deleteTool(id);
-            await refetch();
-        } catch (err) {
-            setMutationError(`Failed to delete tool "${name}".`);
-            console.error(err);
-        }
-    }
-  };
-
-  const handleCreate = async (toolData: ToolFormData) => {
-    if (!currentWorkspace) return;
-    try {
-        setMutationError(null);
-        await addTool(toolData, currentWorkspace.id);
-        setIsCreateModalOpen(false);
-        await refetch();
-    } catch (err) {
-        setMutationError('Failed to create the new tool.');
-        console.error(err);
-    }
-  };
-  
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <SpinnerIcon className="h-8 w-8 text-primary" />
-          <span className="ml-2 text-muted-foreground">Loading Tools...</span>
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="text-center text-destructive bg-destructive/10 p-4 rounded-md">
-          <p className="font-semibold">An Error Occurred</p>
-          <p>{error}</p>
-        </div>
-      );
-    }
-    
-    if (tools.length === 0) {
-        return (
-            <div className="text-center py-16 text-muted-foreground">
-                <p>No tools found in this workspace.</p>
-                {canEdit && <p className="text-sm">Click "Register New Tool" to get started.</p>}
-            </div>
-        );
-    }
-    
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tools.map(tool => (
-                <ToolCard key={tool.id} tool={tool} onDelete={handleDelete} />
-            ))}
-        </div>
-    );
-  };
-
   return (
-    <>
-        <div className="space-y-6">
-           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Tool Library</h1>
-              <p className="text-muted-foreground">Register, secure, and manage external tools and APIs for your agents.</p>
-            </div>
-            {canEdit && (
-              <button 
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-              >
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  Register New Tool
-                </button>
-            )}
-          </div>
-          {mutationError && <div className="text-center text-destructive bg-destructive/10 p-2 rounded-md text-sm"><p>{mutationError}</p></div>}
-          {renderContent()}
-        </div>
-        
-        {isCreateModalOpen && (
-            <CreateToolModal 
-                onClose={() => setIsCreateModalOpen(false)}
-                onSave={handleCreate}
-            />
-        )}
-    </>
+    <LibraryShell
+      libraryType="tool"
+      title="Tool Library"
+      description="Browse and manage tools for your agents."
+      fetchDataFunction={getTools}
+      createFolderFunction={(name, workspaceId) => createFolder(name, 'tool', workspaceId)}
+      renderItem={(item, canEdit, onDragStart, onContextMenu) => (
+        <ToolCard
+          tool={item as Tool}
+          canEdit={canEdit}
+          onDragStart={onDragStart}
+          onContextMenu={onContextMenu}
+        />
+      )}
+    />
   );
 };
 

@@ -1,5 +1,8 @@
+
+
 import React from 'react';
 // FIX: Imported the `Node` type to resolve a conflict with the built-in DOM `Node` type.
+// Fix: Corrected import paths to be relative.
 import { Node, NodeType, ToolNodeData, InputNodeData, ModelNodeData, KnowledgeNodeData } from '../../types.ts';
 import { 
     CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon,

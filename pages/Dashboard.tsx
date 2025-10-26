@@ -1,6 +1,10 @@
+
+
+
 import React, { useState, useEffect } from 'react';
 import {
   RocketLaunchIcon, ClockIcon, CheckCircleIcon, CodeBracketSquareIcon, SpinnerIcon
+// Fix: Corrected import paths to be relative.
 } from '../components/icons/Icons.tsx';
 import { getAnalytics, getDeployedTemplates } from '../services/apiService.ts';
 import { PromptTemplate, AnalyticsChartData } from '../types.ts';
@@ -14,6 +18,7 @@ import {
   Tooltip,
   Area,
 } from 'recharts';
+import { MOCK_LOGGED_IN_USER } from '../constants.ts';
 
 interface DashboardStats {
   totalDeployed: number;
@@ -56,7 +61,8 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
         try {
             const analytics = await getAnalytics(currentWorkspace.id, timeRange);
-            const templates = await getDeployedTemplates(currentWorkspace.id);
+            // Fix: Expected 2 arguments, but got 1.
+            const templates = await getDeployedTemplates(currentWorkspace.id, MOCK_LOGGED_IN_USER.id);
             
             setStats({
                 totalDeployed: analytics.totalDeployed,

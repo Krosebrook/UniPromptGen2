@@ -1,4 +1,7 @@
+
+
 import React from 'react';
+// Fix: Corrected import path to be relative.
 import { ChartPieIcon, CodeBracketSquareIcon, BeakerIcon, ChartBarIcon, QuoteIcon } from '../components/icons/Icons.tsx';
 
 interface LandingPageProps {

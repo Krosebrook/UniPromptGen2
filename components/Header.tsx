@@ -1,4 +1,7 @@
+
+
 import React, { useState } from 'react';
+// Fix: Corrected import paths to be relative.
 import { User } from '../types.ts';
 import { MagnifyingGlassIcon, BellIcon, CogIcon, ChevronDownIcon } from './icons/Icons.tsx';
 import WorkspaceSwitcher from './WorkspaceSwitcher.tsx';

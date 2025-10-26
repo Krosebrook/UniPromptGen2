@@ -1,7 +1,12 @@
+
+
+
 import React, { useState, useEffect } from 'react';
+// Fix: Corrected import paths to be relative.
 import { KnowledgeNodeData, KnowledgeSource } from '../../types.ts';
 import { getKnowledgeSources } from '../../services/apiService.ts';
 import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
+import { MOCK_LOGGED_IN_USER } from '../../constants.ts';
 
 interface KnowledgeNodeConfigProps {
   data: KnowledgeNodeData;
@@ -14,7 +19,8 @@ const KnowledgeNodeConfig: React.FC<KnowledgeNodeConfigProps> = ({ data, onUpdat
   
   useEffect(() => {
     if (currentWorkspace) {
-        getKnowledgeSources(currentWorkspace.id).then(setAvailableSources);
+        // Fix: Expected 3 arguments, but got 2.
+        getKnowledgeSources(currentWorkspace.id, null, MOCK_LOGGED_IN_USER.id).then(setAvailableSources);
     }
   }, [currentWorkspace]);
 
@@ -36,7 +42,7 @@ const KnowledgeNodeConfig: React.FC<KnowledgeNodeConfigProps> = ({ data, onUpdat
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="knowledge-source" className="block text-sm font-medium text-foreground mb-1">Knowledge Source</label>
+        <label htmlFor="knowledge-source" className="block text-sm font-medium text-foreground mb-1">Select Knowledge Source</label>
         <select
           id="knowledge-source"
           value={data.sourceId || ''}
@@ -44,15 +50,8 @@ const KnowledgeNodeConfig: React.FC<KnowledgeNodeConfigProps> = ({ data, onUpdat
           className="w-full p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
         >
           <option value="">-- Select a Source --</option>
-          {availableSources.map(source => (
-            <option key={source.id} value={source.id}>
-              {source.name} ({source.type})
-            </option>
-          ))}
+          {availableSources.map(source => <option key={source.id} value={source.id}>{source.name}</option>)}
         </select>
-        <p className="text-xs text-muted-foreground mt-1">
-            Select a document or data source from the library to ground the model.
-        </p>
       </div>
     </div>
   );

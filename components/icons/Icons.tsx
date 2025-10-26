@@ -1,352 +1,73 @@
+
 import React from 'react';
 
-export type IconProps = React.SVGProps<SVGSVGElement>;
-
-export const HomeIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+const createIcon = (d: string) => (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d={d} clipRule="evenodd" />
     </svg>
 );
 
-export const ChartPieIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+export const HomeIcon = createIcon("M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z");
+export const ChartPieIcon = createIcon("M10 3.5a1.5 1.5 0 011.5 1.5v4.562l3.66 2.113a1.5 1.5 0 01-1.5 2.598L10 12.438V16.5a1.5 1.5 0 01-3 0V8a1.5 1.5 0 011.5-1.5zM9 8v4.438l-3.66 2.113a1.5 1.5 0 11-1.5-2.598L7.5 9.838V6.5A1.5 1.5 0 019 8zM15 6.5a1.5 1.5 0 011.5 1.5v1.338l-3.66 2.113a1.5 1.5 0 11-1.5-2.598L15 6.838V6.5z");
+export const CodeBracketSquareIcon = createIcon("M9 4.75A.75.75 0 019.75 4h4.5a.75.75 0 010 1.5h-4.5A.75.75 0 019 4.75zm0 10.5a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z");
+export const PlayIcon = createIcon("M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z");
+export const UserCircleIcon = createIcon("M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z");
+export const ShoppingCartIcon = createIcon("M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c.51 0 .962-.328 1.125-.821l2.841-6.818A.75.75 0 0016.5 9H5.625m3.75 6a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm6.75 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z");
+export const BeakerIcon = createIcon("M9.623 3.32a1.5 1.5 0 012.754 0l4.31 7.466a1.5 1.5 0 01-1.377 2.214H4.693a1.5 1.5 0 01-1.377-2.214l4.31-7.466zM10.5 14.25a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0v-1.5z");
+export const TerminalIcon = createIcon("M6.4 6.4a.75.75 0 00-1.06 1.06l2.5 2.5-2.5 2.5a.75.75 0 001.06 1.06L10 11.06l2.56 2.56a.75.75 0 101.06-1.06l-2.5-2.5 2.5-2.5a.75.75 0 10-1.06-1.06L11.06 10 8.5 7.44A.75.75 0 006.4 6.4z");
+export const CollectionIcon = createIcon("M2 5.5A2.5 2.5 0 014.5 3h11A2.5 2.5 0 0118 5.5v2.879a.75.75 0 01-.22.53l-3.36 3.36a.75.75 0 01-.53.22H5.5A2.5 2.5 0 013 9.621V5.5zM4.5 5a.5.5 0 00-.5.5v4.121a.5.5 0 00.5.5h8.379a.25.25 0 00.176-.073l3.36-3.36A.25.25 0 0016.5 8.38V5.5a.5.5 0 00-.5-.5h-11z");
+export const RocketLaunchIcon = createIcon("M15.11 3.447a1.5 1.5 0 00-2.122-2.122L5.447 8.865a1.5 1.5 0 00-.432 1.018V13.5a.75.75 0 00.75.75h3.617a1.5 1.5 0 001.018-.432l7.46-7.46zM12 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM5.25 15.75H3a.75.75 0 010-1.5h2.25a.75.75 0 010 1.5zM4.5 12a.75.75 0 00-.75-.75H1.5a.75.75 0 000 1.5h2.25A.75.75 0 004.5 12zM7.5 18a.75.75 0 00-.75-.75H4.5a.75.75 0 000 1.5h2.25A.75.75 0 007.5 18z");
+export const MagnifyingGlassIcon = createIcon("M8.5 3a5.5 5.5 0 103.453 9.593l3.886 3.887a.75.75 0 101.06-1.06l-3.887-3.886A5.5 5.5 0 008.5 3zm-4 5.5a4 4 0 118 0 4 4 0 01-8 0z");
+export const BellIcon = createIcon("M10 2a.75.75 0 01.75.75v.25a.75.75 0 01-1.5 0V2.75A.75.75 0 0110 2zM10 18a2.25 2.25 0 01-2.25-2.25h4.5A2.25 2.25 0 0110 18zM15.5 13.5v-3a5.5 5.5 0 00-11 0v3l-1.148 2.296A.75.75 0 004 16.5h12a.75.75 0 00.648-.704L15.5 13.5z");
+export const CogIcon = createIcon("M10 6.375a3.625 3.625 0 100 7.25 3.625 3.625 0 000-7.25zM8.25 10a1.75 1.75 0 113.5 0 1.75 1.75 0 01-3.5 0zM17.152 7.622a.75.75 0 00-1.3-.722l-.74 1.282a4.832 4.832 0 00-1.423-.824l-.27-1.48a.75.75 0 00-1.464-.268l-.66 3.63a.75.75 0 00.36 1.01l1.396.64a.75.75 0 00.992-.36l.27-1.481a3.32 3.32 0 011.838 1.071l.74 1.282a.75.75 0 001.3-.722l-.27-1.48a4.833 4.833 0 000-2.844l.27-1.481zM2.848 12.378a.75.75 0 001.3.722l.74-1.282a4.833 4.833 0 001.423.824l.27 1.48a.75.75 0 001.464.268l.66-3.63a.75.75 0 00-.36-1.01l-1.396-.64a.75.75 0 00-.992.36l-.27 1.481a3.32 3.32 0 01-1.838-1.071l-.74-1.282a.75.75 0 00-1.3.722l.27 1.48a4.833 4.833 0 000 2.844l-.27 1.481z");
+export const ChevronDownIcon = createIcon("M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z");
+export const ClockIcon = createIcon("M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z");
+export const CheckCircleIcon = createIcon("M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z");
+export const SpinnerIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="animate-spin" {...props}>
+        <path d="M10 3.5a.75.75 0 01.75.75V6a.75.75 0 01-1.5 0V4.25A.75.75 0 0110 3.5zM10 16.5a.75.75 0 01-.75-.75V14a.75.75 0 011.5 0v1.75a.75.75 0 01-.75.75zM4.25 10a.75.75 0 01-.75.75H2a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75zM15.75 10a.75.75 0 01.75.75H18a.75.75 0 010-1.5h-1.5a.75.75 0 01-.75.75zM6.012 6.012a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM13.988 13.988a.75.75 0 010-1.06l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 01-1.06 0zM6.012 13.988a.75.75 0 011.06 0l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM13.988 6.012a.75.75 0 01-1.06 0l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06z" />
     </svg>
 );
+export const StarIcon = createIcon("M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z");
+export const SparklesIcon = createIcon("M10 2.5a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2.5zM15.06 4.94a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM4.94 15.06a.75.75 0 010-1.06l1.06-1.06a.75.75 0 111.06 1.06l-1.06 1.06a.75.75 0 01-1.06 0zM17.5 10a.75.75 0 01.75.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM2.5 10a.75.75 0 01.75.75h1.5a.75.75 0 010 1.5H3.25a.75.75 0 01-.75-.75zM10 17.5a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5a.75.75 0 01-.75.75z");
+export const ChartBarIcon = createIcon("M3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1-5a1 1 0 011-1h5a1 1 0 110 2H5a1 1 0 01-1-1zm-1 10a1 1 0 011-1h9a1 1 0 110 2H4a1 1 0 01-1-1z");
+export const ScissorsIcon = createIcon("M14.75 5.25a.75.75 0 01.75-.75h2a.75.75 0 010 1.5h-2a.75.75 0 01-.75-.75zm-3 0a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5a.75.75 0 01-.75-.75zm-4 0a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5A.75.75 0 017.75 5.25zm-3 0a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5A.75.75 0 014.75 5.25zm0 9a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5a.75.75 0 01-.75-.75zm3 0a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5a.75.75 0 01-.75-.75zm3 0a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5a.75.75 0 01-.75-.75zm3 0a.75.75 0 01.75-.75h2a.75.75 0 010 1.5h-2a.75.75 0 01-.75-.75zM10 10a2 2 0 11-4 0 2 2 0 014 0zm0 0a2 2 0 104 0 2 2 0 00-4 0z");
+export const VideoCameraIcon = createIcon("M10 4.5a.75.75 0 00-1.5 0v1.128l-2.433-1.28a.75.75 0 00-1.067.632v8.04a.75.75 0 001.067.632l2.433-1.28V15.5a.75.75 0 001.5 0V4.5zM12.5 8a.75.75 0 000 1.5h3.75a.75.75 0 000-1.5H12.5z");
+export const MicrophoneIcon = createIcon("M7 10a3 3 0 016 0v1a3 3 0 11-6 0v-1zm3-8a4 4 0 00-4 4v1a4 4 0 008 0v-1a4 4 0 00-4-4zM2.75 11a.75.75 0 00-1.5 0v1.25a6.5 6.5 0 0013.5 0V11a.75.75 0 00-1.5 0v1.25a5 5 0 01-10.5 0V11z");
+export const SpeakerWaveIcon = createIcon("M12.33 3.32a.75.75 0 00-1.06 0L6.5 8.09a.75.75 0 000 1.06l4.77 4.77a.75.75 0 001.06-1.06L8.09 10l3.18-3.18a.75.75 0 000-1.06l-.94-.94zM15 8.5a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zm-3 0a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5a.75.75 0 01-.75-.75z");
+export const GlobeAltIcon = createIcon("M10 18a8 8 0 100-16 8 8 0 000 16zM2.05 10a7.95 7.95 0 0115.9 0H2.05zm.35-6.65a8 8 0 00-1.28 5.15h1.75a6.5 6.5 0 011.03-4.22L2.4 3.35zM4.9 2.4a8 8 0 00-1.55.95l1.43 1.43c.5-.32 1.05-.57 1.62-.75L4.9 2.4zm8.67 13.2a8 8 0 001.55-.95l-1.43-1.43a6.52 6.52 0 01-1.62.75l1.5 1.63zm3.03-3.85a8 8 0 001.28-5.15h-1.75a6.5 6.5 0 01-1.03 4.22l1.5 1.93z");
+export const BoltIcon = createIcon("M3.75 12h12.5a.75.75 0 010 1.5H3.75a.75.75 0 010-1.5zM10 2.25a.75.75 0 00-1.5 0v4.036L6.22 3.96a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 10-1.06-1.06L10 6.286V2.25z");
+export const CpuChipIcon = createIcon("M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 1.5a.5.5 0 01.5-.5h9a.5.5 0 01.5.5v9a.5.5 0 01-.5.5h-9a.5.5 0 01-.5-.5v-9zM2 7.5a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v5a.5.5 0 01-.5.5h-1a.5.5 0 01-.5-.5v-5zm14 0a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v5a.5.5 0 01-.5.5h-1a.5.5 0 01-.5-.5v-5zM7.5 2a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zm5 0a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zM7.5 18a.5.5 0 01.5-.5h1a.5.5 0 010 1h-1a.5.5 0 01-.5-.5zm5 0a.5.5 0 01.5-.5h1a.5.5 0 010 1h-1a.5.5 0 01-.5-.5z");
+export const PaperAirplaneIcon = createIcon("M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z");
+export const UploadIcon = createIcon("M3 10a.75.75 0 01.75.75v3.5a.75.75 0 001.5 0v-3.5A.75.75 0 016 10a.75.75 0 01.75-.75h7.5A.75.75 0 0115 10a.75.75 0 01.75.75v3.5a.75.75 0 001.5 0v-3.5A2.25 2.25 0 0015 8.5h-7.5A2.25 2.25 0 003 10.75v3.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25v-3.5a.75.75 0 011.5 0v3.5A3.75 3.75 0 0115.75 18h-10.5A3.75 3.75 0 011.5 14.25v-3.5A.75.75 0 013 10zm7-5.25a.75.75 0 00-1.5 0v6.5a.75.75 0 001.5 0v-6.5zM10 2.5a.75.75 0 01.53.22l2.5 2.5a.75.75 0 01-1.06 1.06L10.75 5.06V11a.75.75 0 01-1.5 0V5.06L7.03 6.28a.75.75 0 01-1.06-1.06l2.5-2.5a.75.75 0 01.53-.22z");
+export const KeyIcon = createIcon("M15.75 5.25a3.75 3.75 0 00-7.38-.727l-5.443 5.443a3.75 3.75 0 105.304 5.304l5.443-5.443a3.75 3.75 0 001.076-6.577zm-5.304 9.196a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182z");
+export const StopCircleIcon = createIcon("M10 18a8 8 0 100-16 8 8 0 000 16zM7 7a1 1 0 00-1 1v4a1 1 0 001 1h6a1 1 0 001-1V8a1 1 0 00-1-1H7z");
+export const QuoteIcon = createIcon("M10.75 4.75a.75.75 0 00-1.5 0v4.5h-1.5a.75.75 0 000 1.5h2.25a.75.75 0 00.75-.75v-5.25zM4.75 4.75a.75.75 0 00-1.5 0v4.5h-1.5a.75.75 0 000 1.5h2.25a.75.75 0 00.75-.75v-5.25z");
+export const PlusIcon = createIcon("M10 4a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 0110 4z");
+export const XCircleIcon = createIcon("M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z");
+export const TrophyIcon = createIcon("M15 4.5a3 3 0 11-6 0 3 3 0 016 0zM15.75 6.75a.75.75 0 00-1.5 0v.586a.75.75 0 01-1.5 0V6.75a.75.75 0 00-1.5 0v.586a.75.75 0 01-1.5 0V6.75a.75.75 0 00-1.5 0v.586a.75.75 0 01-1.5 0V6.75a.75.75 0 00-1.5 0v5.596a1.5 1.5 0 001.5 1.5h10.5a1.5 1.5 0 001.5-1.5V6.75z");
+export const WrenchScrewdriverIcon = createIcon("M15.06 4.94a.75.75 0 00-1.06-1.06L8.354 9.525a.75.75 0 000 1.06l.94.94a.75.75 0 001.06 0l5.656-5.657zM3.447 13.061a.75.75 0 010-1.06l3.535-3.536a.75.75 0 011.06 1.06L4.506 14.12a.75.75 0 01-1.06 0l-.001-.001z");
+export const ArrowRightStartOnRectangleIcon = createIcon("M12 3.75a.75.75 0 01.75.75v11a.75.75 0 01-1.5 0v-11a.75.75 0 01.75-.75zM8.25 10a.75.75 0 010-1.5h7.5a.75.75 0 010 1.5h-7.5zM2.25 5.25a.75.75 0 01.75-.75H7.5a.75.75 0 010 1.5H3a.75.75 0 01-.75-.75zm0 9a.75.75 0 01.75-.75H7.5a.75.75 0 010 1.5H3a.75.75 0 01-.75-.75z");
+export const ArrowLeftEndOnRectangleIcon = createIcon("M8 3.75a.75.75 0 00-1.5 0v11a.75.75 0 001.5 0v-11zM11.75 10a.75.75 0 000-1.5H4.25a.75.75 0 000 1.5h7.5zM17.75 5.25a.75.75 0 00-.75-.75H12.5a.75.75 0 000 1.5h4.5a.75.75 0 00.75-.75zm0 9a.75.75 0 00-.75-.75H12.5a.75.75 0 000 1.5h4.5a.75.75 0 00.75-.75z");
+export const ShareIcon = createIcon("M10 18a8 8 0 100-16 8 8 0 000 16zm3.25-10.75a.75.75 0 00-1.5 0v3.086l-4.22-4.22a.75.75 0 10-1.06 1.06l4.22 4.22H7.5a.75.75 0 000 1.5h5.25a.75.75 0 00.75-.75V7.25z");
+export const EnvelopeIcon = createIcon("M2.25 5.25h15.5a.75.75 0 01.75.75v8.5a.75.75 0 01-.75.75H2.25a.75.75 0 01-.75-.75V6a.75.75 0 01.75-.75zM3 7.5v6h14v-6L10 11.25 3 7.5z");
+export const TableCellsIcon = createIcon("M4.5 3A1.5 1.5 0 003 4.5v11A1.5 1.5 0 004.5 17h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0015.5 3h-11zM4.5 4.5h3v4h-3v-4zm0 5.5h3v4h-3v-4zM9 4.5h3v4H9v-4zm0 5.5h3v4H9v-4zm4.5-5.5h2v4h-2v-4zm0 5.5h2v4h-2v-4z");
+export const CodeBracketIcon = createIcon("M8.25 4.5a.75.75 0 00-1.5 0v11a.75.75 0 001.5 0v-11zM4.5 8.25a.75.75 0 000 1.5h11a.75.75 0 000-1.5h-11z");
+export const ArrowsPointingOutIcon = createIcon("M3.75 3.75a.75.75 0 000 1.5h1.5V6a.75.75 0 001.5 0V3.75h-3zm-1.5 11a.75.75 0 011.5 0V13.5h1.5a.75.75 0 010 1.5H3.75v-3zm12.5-1.5a.75.75 0 00-1.5 0v1.5h-1.5a.75.75 0 000 1.5H16.25v-3zm-1.5-11a.75.75 0 010-1.5h3v3a.75.75 0 01-1.5 0V5.25h-1.5z");
+export const PauseIcon = createIcon("M5.25 4.5a.75.75 0 00-1.5 0v11a.75.75 0 001.5 0v-11zm11 0a.75.75 0 00-1.5 0v11a.75.75 0 001.5 0v-11z");
+export const ArrowUturnLeftIcon = createIcon("M9 3.75a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM5.25 4.5a.75.75 0 000 1.5h3a.75.75 0 00.75-.75V4.5a.75.75 0 00-.75-.75h-3zM14.75 9.75a.75.75 0 01-.75.75H4.5a.75.75 0 010-1.5h9.5a.75.75 0 01.75.75z");
+export const ArrowUturnRightIcon = createIcon("M11 3.75a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0v-1.5zM14.75 4.5a.75.75 0 010 1.5h-3a.75.75 0 01-.75-.75V4.5a.75.75 0 01.75-.75h3zM5.25 9.75a.75.75 0 00.75.75h9.5a.75.75 0 000-1.5H6a.75.75 0 00-.75.75z");
+export const Bars3Icon = createIcon("M3.75 6.75h12.5a.75.75 0 010 1.5H3.75a.75.75 0 010-1.5zm0 5h12.5a.75.75 0 010 1.5H3.75a.75.75 0 010-1.5z");
+export const UserGroupIcon = createIcon("M10 11a3 3 0 100-6 3 3 0 000 6zM4.625 15.125a.75.75 0 011.06-1.06l1.25 1.25a.75.75 0 01-1.06 1.06l-1.25-1.25zm10.75 0a.75.75 0 01-1.06-1.06l-1.25 1.25a.75.75 0 011.06 1.06l1.25-1.25zM15 11a3 3 0 100-6 3 3 0 000 6zM5 11a3 3 0 100-6 3 3 0 000 6z");
+export const ScaleIcon = createIcon("M10 2a.75.75 0 01.75.75v14.5a.75.75 0 01-1.5 0V2.75A.75.75 0 0110 2zM3.25 8.25a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H4a.75.75 0 01-.75-.75z");
+export const CreditCardIcon = createIcon("M3.75 4.5A1.5 1.5 0 002.25 6v8A1.5 1.5 0 003.75 15.5h12.5A1.5 1.5 0 0017.75 14V6A1.5 1.5 0 0016.25 4.5H3.75zM3.75 6H16.25v2.25H3.75V6zM13.5 12a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z");
+export const DocumentPlusIcon = createIcon("M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm3.75 9.75a.75.75 0 01-1.5 0V9.5H6a.75.75 0 010-1.5h2.25V5.75a.75.75 0 011.5 0v2.25H12a.75.75 0 010 1.5h-2.25V11.75z");
+export const FolderOpenIcon = createIcon("M6.25 4.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5zM2.5 5.5A2.5 2.5 0 015 3h3.086a2 2 0 011.414.586L12.586 7H15a2 2 0 012 2v4.5a2.5 2.5 0 01-2.5 2.5h-10A2.5 2.5 0 012.5 13.5v-8zM5 4.5a.5.5 0 00-.5.5v8.5a.5.5 0 00.5.5h10a.5.5 0 00.5-.5V9a.5.5 0 00-.5-.5h-2.914a2 2 0 01-1.414-.586L8.086 5H5z");
+export const DocumentCheckIcon = createIcon("M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2.25 7.5a.75.75 0 00-1.5 0v.09L6 9.34a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 00-1.06-1.06L8.25 9.59V9.5z");
+export const FolderIcon = createIcon("M2 5.5A2.5 2.5 0 014.5 3h3.586a1.5 1.5 0 011.06.44l.879.879A1.5 1.5 0 0011.086 5H15.5A2.5 2.5 0 0118 7.5v5A2.5 2.5 0 0115.5 15H4.5A2.5 2.5 0 012 12.5v-7z");
+export const FolderPlusIcon = createIcon("M3.75 5.25A2.25 2.25 0 001.5 7.5v5A2.25 2.25 0 003.75 14.75h12.5A2.25 2.25 0 0018.5 12.5v-5A2.25 2.25 0 0016.25 5.25H9.31l-1.44-1.44A.75.75 0 007.25 3H3.75zm-1.5 2.25a.75.75 0 01.75-.75h3.5a.75.75 0 01.53.22l1.44 1.44a.75.75 0 00.53.22h6.97a.75.75 0 01.75.75v5a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75v-5z");
+export const ArrowRightIcon = createIcon("M4.75 10a.75.75 0 01.75-.75h8.5a.75.75 0 010 1.5h-8.5A.75.75 0 014.75 10zm4.28-4.28a.75.75 0 011.06 1.06L7.81 10l2.28 2.22a.75.75 0 11-1.06 1.06l-2.75-2.75a.75.75 0 010-1.06l2.75-2.75z");
+export const PencilIcon = createIcon("M17.25 4.25a2.25 2.25 0 00-3.182 0L6.44 11.879A3.75 3.75 0 005.25 14.25v.75h.75c.98 0 1.905-.395 2.576-1.066l7.625-7.625a2.25 2.25 0 000-3.182zM4.5 16.5a.75.75 0 000 1.5h11a.75.75 0 000-1.5h-11z");
+export const TrashIcon = createIcon("M5.75 5.75a.75.75 0 01.75-.75h7a.75.75 0 010 1.5h-7a.75.75 0 01-.75-.75zM3 8.25a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75zM7.5 10a.75.75 0 00-1.5 0v5a.75.75 0 001.5 0v-5zm3.5 0a.75.75 0 00-1.5 0v5a.75.75 0 001.5 0v-5zm3.5 0a.75.75 0 00-1.5 0v5a.75.75 0 001.5 0v-5z");
 
-export const CodeBracketSquareIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
-    </svg>
-);
-
-export const PlayIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347c.75.413.75 1.559 0 1.972l-11.54 6.347c-.75.413-1.667-.13-1.667-.986V5.653Z" />
-    </svg>
-);
-
-export const UserCircleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    </svg>
-);
-
-export const ShoppingCartIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c.51 0 .962-.343 1.087-.835l1.823-6.831a.75.75 0 0 0-.67-1.038H6.75l-.225-.842a.75.75 0 0 0-.732-.563H3.375M16.5 18.75h.008v.008h-.008v-.008Z" />
-    </svg>
-);
-
-export const BeakerIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c.239.053.48.11.72.181a12.015 12.015 0 0 1 5.344 1.834m-5.344-1.834a12.004 12.004 0 0 0-5.344 1.834m5.344-1.834L10.5 3m-2.25 0L7.5 3m2.25 0-2.25 0M9.75 16.5v4.875c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V16.5m-4.5 0h4.5M5.003 14.5a2.25 2.25 0 0 1-.659-1.591V8.25c0-.934.359-1.815.992-2.483a12.003 12.003 0 0 1 6.313 0c.633.668.992 1.549.992 2.483v4.659a2.25 2.25 0 0 1-.659 1.591l-3.341 3.34z" />
-    </svg>
-);
-
-export const TerminalIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-export const CollectionIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
-    </svg>
-);
-
-export const RocketLaunchIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.82m5.84-2.56a14.98 14.98 0 0 0-5.84-2.56m0 0a14.98 14.98 0 0 0-5.84 2.56m5.84-2.56V4.72a2.25 2.25 0 0 1 2.25-2.25h1.5a2.25 2.25 0 0 1 2.25 2.25v2.25m-7.5 0h7.5M12 14.37a6 6 0 0 0-5.84 7.38v-4.82m5.84-2.56a14.98 14.98 0 0 1 5.84 2.56M12 14.37a14.98 14.98 0 0 1-5.84 2.56m0 0a14.98 14.98 0 0 1-5.84-2.56m5.84 2.56v4.82" />
-    </svg>
-);
-
-export const MagnifyingGlassIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-    </svg>
-);
-
-export const PlusIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-    </svg>
-);
-
-export const SpinnerIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`animate-spin ${props.className || ''}`} {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-4.991-2.691V5.25a3.375 3.375 0 00-3.375-3.375h-1.5a3.375 3.375 0 00-3.375 3.375v3.172m2.1-1.707l-2.1 2.1m2.1-2.1l2.1 2.1m0 0l2.1 2.1m-4.2-4.2l-2.1-2.1m-2.1 2.1l2.1-2.1m6.3 6.3l-2.1-2.1m-4.2 0l2.1 2.1m0 0l2.1-2.1" />
-    </svg>
-);
-
-export const TrashIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-    </svg>
-);
-
-export const CodeBracketIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25" />
-    </svg>
-);
-
-export const BellIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-    </svg>
-);
-
-export const CogIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m18 0h-1.5m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m18 0h-1.5m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m18 0h-1.5m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m18 0h-1.5" />
-    </svg>
-);
-
-export const ChevronDownIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-    </svg>
-);
-
-export const ClockIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-);
-
-export const CheckCircleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-);
-
-export const StarIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.479.038.673.646.314.94l-4.04 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.04-3.602a.563.563 0 0 1 .314-.94l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
-    </svg>
-);
-
-export const SparklesIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
-    </svg>
-);
-
-export const ChartBarIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-    </svg>
-);
-
-export const ChatBubbleLeftRightIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.722.347c-1.047.098-2.022.483-2.845 1.075a4.5 4.5 0 0 1-5.452 0c-.823-.592-1.798-.977-2.845-1.075l-3.722-.347A2.25 2.25 0 0 1 3 14.885v-4.286c0-.97.616-1.813 1.5-2.097m16.5 0a2.25 2.25 0 0 0-1.5-2.097L18 6.011a2.25 2.25 0 0 0-2.248 2.057 4.5 4.5 0 0 1-5.452 0A2.25 2.25 0 0 0 8.053 6.011L6 6.414a2.25 2.25 0 0 0-1.5 2.097m16.5 0-3.25-1.625a2.25 2.25 0 0 0-2.248 2.057 4.5 4.5 0 0 1-5.452 0A2.25 2.25 0 0 0 8.053 6.011L6 6.414m12.953 2.1-3.25 1.625a2.25 2.25 0 0 1-2.248-2.057 4.5 4.5 0 0 0-5.452 0A2.25 2.25 0 0 1 5.047 8.511L3 6.886" />
-    </svg>
-);
-
-export const PhotoIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-    </svg>
-);
-
-export const ScissorsIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.843 16.579a3 3 0 0 0 4.314 0l1.233-1.233a1.5 1.5 0 0 1 2.122 0l2.09 2.091a3 3 0 0 0 4.242 0l-3.32-3.32a3 3 0 0 0-4.243 0l-1.233 1.233-2.121-2.121a3 3 0 0 0-4.242 0L2.25 15.375a3 3 0 0 0 0 4.242l3.32 3.32a3 3 0 0 0 4.242 0l-2.09-2.09a1.5 1.5 0 0 1 0-2.122L7.843 16.58Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.09 7.411a3.001 3.001 0 0 0-4.243 0L2.527 10.73a3 3 0 0 0 0 4.242l3.32 3.32a3 3 0 0 0 4.242 0l3.18-3.18a1.5 1.5 0 0 1 2.122 0l2.09 2.09a3 3 0 0 0 4.242 0l-3.32-3.32a3 3 0 0 0-4.243 0L12 11.621l-1.91-1.91Z" />
-    </svg>
-);
-
-export const VideoCameraIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 13.5 5.25h-9a2.25 2.25 0 0 0-2.25 2.25v9A2.25 2.25 0 0 0 4.5 18.75Z" />
-    </svg>
-);
-
-export const MicrophoneIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 0 1 6 0v8.25a3 3 0 0 1-3 3Z" />
-    </svg>
-);
-
-export const SpeakerWaveIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-    </svg>
-);
-
-export const GlobeAltIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c.506 0 1.006-.024 1.5-.068M12 21c-.506 0-1.006-.024-1.5-.068m12.06-6.353c.002-.005.002-.01.002-.014M3.93 14.647c-.002-.005-.002-.01-.002-.014m16.14 0a8.96 8.96 0 0 0-16.14 0m16.14 0a8.96 8.96 0 0 1-16.14 0" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18m8.716-6.747a9.004 9.004 0 0 0-17.432 0" />
-    </svg>
-);
-
-export const BoltIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-    </svg>
-);
-
-export const PaperAirplaneIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-    </svg>
-);
-
-export const UploadIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-    </svg>
-);
-
-export const KeyIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.998-.563 1.563-.43A6.002 6.002 0 0 1 15.75 5.25Z" />
-    </svg>
-);
-
-export const StopCircleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9.563C9 9.253 9.253 9 9.563 9h4.874c.31 0 .563.253.563.563v4.874c0 .31-.253.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z" />
-    </svg>
-);
-
-export const QuoteIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" strokeWidth={0} stroke="currentColor" {...props}>
-        <path d="M10.75 4.75a2.5 2.5 0 00-2.5 2.5v3.5a2.5 2.5 0 002.5 2.5h2.5v-2.5H9.5v-1h3.75V6.25a1.5 1.5 0 011.5-1.5h.5a.75.75 0 000-1.5h-.5a3 3 0 00-3-3h-2.5zM18.25 4.75a2.5 2.5 0 00-2.5 2.5v3.5a2.5 2.5 0 002.5 2.5h2.5v-2.5h-1.25v-1h3.75V6.25a1.5 1.5 0 011.5-1.5h.5a.75.75 0 000-1.5h-.5a3 3 0 00-3-3h-2.5z" />
-    </svg>
-);
-
-export const XCircleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-);
-
-export const TrophyIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9a9.004 9.004 0 0 1-8.38-5.962 9.004 9.004 0 0 1 16.76 0A9.004 9.004 0 0 1 16.5 18.75Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 12.75V3M12 12.75c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5ZM12 12.75v6.75m0 0a2.25 2.25 0 0 1-2.25 2.25h-1.5a2.25 2.25 0 0 1-2.25-2.25M12 19.5a2.25 2.25 0 0 0 2.25 2.25h1.5a2.25 2.25 0 0 0 2.25-2.25" />
-    </svg>
-);
-
-export const ArrowUturnLeftIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-    </svg>
-);
-
-export const ArrowUturnRightIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m15 15 6-6m0 0-6-6m6 6H9a6 6 0 0 0 0 12h3" />
-    </svg>
-);
-
-export const CpuChipIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 21v-1.5M15.75 3v1.5M12 4.5v-1.5m0 18v-1.5M15.75 21v-1.5m-6-15H12m0 0v1.5m0-1.5v-1.5m-3.75 0H12m0 0v1.5m0-1.5v-1.5m3.75 0H12m0 0v1.5m0-1.5v-1.5m0 9h.008v.008H12v-.008Zm0 3h.008v.008H12v-.008Zm0 3h.008v.008H12v-.008Zm-3-6h.008v.008H9v-.008Zm0 3h.008v.008H9v-.008Zm0 3h.008v.008H9v-.008Zm3-6h.008v.008H12v-.008Zm0 3h.008v.008H12v-.008Zm0 3h.008v.008H12v-.008Zm3-6h.008v.008H15v-.008Zm0 3h.008v.008H15v-.008Zm0 3h.008v.008H15v-.008Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 1.5H3v1.5m6 0V3m6 0V1.5m-6 0h6m6 1.5h1.5V3m0 18v-1.5h-1.5m0 0h-1.5m-6 0h-1.5m1.5 0v1.5m-1.5 0H3v-1.5m6 0v1.5m6 0v1.5m-6 0h6m-6-18h6" />
-    </svg>
-);
-
-export const WrenchScrewdriverIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m-7.14 5.448a3 3 0 0 0-4.682-2.72M12 18.72a3 3 0 0 0-3.741-.479m3.741 0a3 3 0 0 0 3.741-.479M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 4.5a3.375 3.375 0 0 0-3.375-3.375h-.375a3.375 3.375 0 0 0-3.375 3.375M9 12a3.375 3.375 0 0 0 3.375-3.375M15 12a3.375 3.375 0 0 0-3.375-3.375M15 12a3.375 3.375 0 0 0 3.375 3.375h.375a3.375 3.375 0 0 0 3.375-3.375" />
-    </svg>
-);
-
-export const ArrowRightStartOnRectangleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-    </svg>
-);
-
-export const ArrowLeftEndOnRectangleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
-    </svg>
-);
-
-export const InformationCircleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.353-.354M9 11.25l4.5-4.5m0 0a9 9 0 1 1-9 9m9-9A9 9 0 0 1 21 12a9 9 0 0 1-9 9" />
-    </svg>
-);
-
-export const UserGroupIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m-7.14 5.448a3 3 0 0 0-4.682-2.72M12 18.72a3 3 0 0 0-3.741-.479m3.741 0a3 3 0 0 0 3.741-.479M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    </svg>
-);
-
-export const ScaleIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-19.5 0c.99-.203 1.99-.377 3-.52M6.75 7.5h10.5a2.25 2.25 0 0 1 2.25 2.25v3.75a2.25 2.25 0 0 1-2.25 2.25H6.75a2.25 2.25 0 0 1-2.25-2.25v-3.75a2.25 2.25 0 0 1 2.25-2.25Z" />
-    </svg>
-);
-
-export const CreditCardIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-    </svg>
-);
-
-export const DocumentPlusIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-    </svg>
-);
-
-export const FolderOpenIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-    </svg>
-);
-
-export const DocumentCheckIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-    </svg>
-);
-
-export const Bars3Icon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-    </svg>
-);
-
-export const ShareIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-    </svg>
-);
-
-export const EnvelopeIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-    </svg>
-);
-
-export const TableCellsIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h17.25c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h.009v.008h-.009v-.008Zm17.25 0h.009v.008h-.009v-.008Zm-17.25 0H3.11m17.665 0h-2.829m-12.005 0H9.04M4.5 7.5h15m-15 0a1.125 1.125 0 0 1-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h15c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-15 0H3.11m15.775 0h-2.829m-12.005 0H9.04" />
-    </svg>
-);
-
-export const ArrowsPointingOutIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-    </svg>
-);
-
-export const PauseIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
-    </svg>
-);
+export default { HomeIcon, ChartPieIcon, CodeBracketSquareIcon, PlayIcon, UserCircleIcon, ShoppingCartIcon, BeakerIcon, TerminalIcon, CollectionIcon, RocketLaunchIcon, MagnifyingGlassIcon, BellIcon, CogIcon, ChevronDownIcon, ClockIcon, CheckCircleIcon, SpinnerIcon, StarIcon, SparklesIcon, ChartBarIcon, ScissorsIcon, VideoCameraIcon, MicrophoneIcon, SpeakerWaveIcon, GlobeAltIcon, BoltIcon, CpuChipIcon, PaperAirplaneIcon, UploadIcon, KeyIcon, StopCircleIcon, QuoteIcon, PlusIcon, XCircleIcon, TrophyIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon, ShareIcon, EnvelopeIcon, TableCellsIcon, CodeBracketIcon, ArrowsPointingOutIcon, PauseIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon, Bars3Icon, UserGroupIcon, ScaleIcon, CreditCardIcon, DocumentPlusIcon, FolderOpenIcon, DocumentCheckIcon, FolderIcon, FolderPlusIcon, ArrowRightIcon, PencilIcon, TrashIcon };

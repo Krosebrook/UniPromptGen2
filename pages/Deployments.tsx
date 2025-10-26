@@ -5,7 +5,8 @@ import { SpinnerIcon, RocketLaunchIcon } from '../components/icons/Icons.tsx';
 import DeploymentCard from '../components/DeploymentCard.tsx';
 
 const Deployments: React.FC = () => {
-  const { data: templates, isLoading, error } = useLibraryData(getDeployedTemplates, 'deployed templates');
+  // FIX: Added null as the third argument to useLibraryData to match its function signature.
+  const { data: templates, isLoading, error } = useLibraryData(getDeployedTemplates, 'deployed templates', null);
 
   const renderContent = () => {
     if (isLoading) {

@@ -1,4 +1,7 @@
+
+
 import React from 'react';
+// Fix: Corrected import paths to be relative.
 import { Node, ModelNodeData, ToolNodeData, KnowledgeNodeData } from '../../types.ts';
 import { CogIcon } from '../icons/Icons.tsx';
 import ModelNodeConfig from './ModelNodeConfig.tsx';
