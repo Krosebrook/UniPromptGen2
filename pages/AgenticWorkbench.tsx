@@ -15,7 +15,7 @@ import RunHistoryPanel from '../components/workbench/RunHistoryPanel.tsx';
 import SaveAgentModal from '../components/workbench/SaveAgentModal.tsx';
 
 const initialNodes: Node[] = [
-  { id: '1', type: 'input', position: { x: 50, y: 200 }, data: { label: 'Start', initialValue: '{}' } as InputNodeData },
+  { id: '1', type: 'input', position: { x: 50, y: 200 }, data: { label: 'Start', initialValue: '{\n  "topic": "the future of AI"\n}' } as InputNodeData },
   { id: '2', type: 'output', position: { x: 800, y: 200 }, data: { label: 'End' } },
 ];
 
@@ -74,22 +74,13 @@ const AgenticWorkbench: React.FC = () => {
         }
     }, [selectedNode]);
     
-    const addNode = (type: NodeType) => {
+    const addNode = (preset: { type: NodeType; data: Node['data'] }) => {
         const newNodeId = `node_${Date.now()}`;
-        let data: Node['data'];
-        switch(type) {
-            case 'input': data = { label: 'Input', initialValue: '{}' } as InputNodeData; break;
-            case 'output': data = { label: 'Output' }; break;
-            case 'model': data = { label: 'Model Node', systemInstruction: 'You are a helpful assistant.', temperature: 0.7, topK: 40, topP: 0.95 } as ModelNodeData; break;
-            case 'tool': data = { label: 'Tool Node', apiEndpoint: '', authMethod: 'None', requestSchema: '{}', responseSchema: '{}' } as ToolNodeData; break;
-            case 'knowledge': data = { label: 'Knowledge Node', sourceId: null } as KnowledgeNodeData; break;
-            default: data = { label: 'New Node' };
-        }
         const newNode: Node = {
             id: newNodeId,
-            type,
+            type: preset.type,
             position: { x: Math.random() * 400, y: Math.random() * 400 },
-            data,
+            data: preset.data,
         };
         setNodes((nds) => nds.concat(newNode));
     };
@@ -105,7 +96,7 @@ const AgenticWorkbench: React.FC = () => {
             nodeOutputs: {},
             finalOutput: null
         };
-        setRuns(prev => [...prev, newRun]);
+        setRuns(prev => [newRun, ...prev]);
         setSelectedRun(newRun);
         setRunStatus({});
 
@@ -143,6 +134,7 @@ const AgenticWorkbench: React.FC = () => {
     };
 
     const logsForSelectedRun = selectedRun ? selectedRun.logs : [];
+    const isRunning = selectedRun?.status === 'running';
 
     return (
         <ReactFlowProvider>
@@ -155,6 +147,7 @@ const AgenticWorkbench: React.FC = () => {
                     onSave={handleSave}
                     onNew={handleNewAgent}
                     onLoad={handleLoadAgent}
+                    isRunning={isRunning}
                 />
                 <div className="flex-1 flex gap-4 min-h-0">
                     <WorkbenchSidebar addNode={addNode} />

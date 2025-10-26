@@ -37,16 +37,16 @@ const ModelNodeConfig: React.FC<ModelNodeConfigProps> = ({ data, onUpdate }) => 
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="system-instruction" className="block text-sm font-medium text-foreground">System Instruction</label>
+        <label htmlFor="prompt-template" className="block text-sm font-medium text-foreground">Prompt Template</label>
         <textarea
-          id="system-instruction"
-          value={data.systemInstruction}
-          onChange={(e) => onUpdate({ systemInstruction: e.target.value })}
+          id="prompt-template"
+          value={data.promptTemplate}
+          onChange={(e) => onUpdate({ promptTemplate: e.target.value })}
           rows={4}
           className="w-full mt-1 p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none resize-y"
-          placeholder="e.g., You are a helpful AI assistant."
+          placeholder={'e.g., Summarize the following text: {{text_from_previous_node}}'}
         />
-        <p className="text-xs text-muted-foreground mt-1">Sets the context and personality for the model.</p>
+        <p className="text-xs text-muted-foreground mt-1">{'Use `{{variable}}` to insert data from connected nodes. The variable name must match a key in the output JSON of a parent node.'}</p>
       </div>
       <ConfigSlider
         label="Temperature"

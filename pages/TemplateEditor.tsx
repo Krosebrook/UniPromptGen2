@@ -17,8 +17,8 @@ const NEW_TEMPLATE_VERSION: PromptTemplateVersion = {
   version: '1.0',
   name: 'New Untitled Template',
   description: 'A brief description of what this template does.',
-  content: 'Your prompt content goes here. Use {{variable_name}} for variables.',
-  variables: [{ name: 'variable_name', type: 'string', defaultValue: '' }],
+  content: 'Please provide context about {{query}}.',
+  variables: [{ name: 'query', type: 'string', defaultValue: '' }],
   riskLevel: 'Low',
   date: new Date().toISOString(),
 };
@@ -112,6 +112,15 @@ const TemplateEditor: React.FC<{ templateId?: string }> = ({ templateId }) => {
   const removeVariable = (index: number) => {
     if (currentVersion) {
       const newVariables = currentVersion.variables.filter((_, i) => i !== index);
+      setCurrentVersion({ ...currentVersion, variables: newVariables });
+    }
+  };
+
+  const handleVariableReorder = (dragIndex: number, hoverIndex: number) => {
+    if (currentVersion) {
+      const newVariables = [...currentVersion.variables];
+      const [draggedItem] = newVariables.splice(dragIndex, 1);
+      newVariables.splice(hoverIndex, 0, draggedItem);
       setCurrentVersion({ ...currentVersion, variables: newVariables });
     }
   };
@@ -280,6 +289,7 @@ const TemplateEditor: React.FC<{ templateId?: string }> = ({ templateId }) => {
             onVariableChange={handleVariableChange}
             onAddVariable={addVariable}
             onRemoveVariable={removeVariable}
+            onVariableReorder={handleVariableReorder}
           />
           {analysisResult && <PromptAnalysisPanel analysis={analysisResult} />}
           {template && canEdit && (

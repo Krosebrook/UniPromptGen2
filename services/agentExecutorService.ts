@@ -102,22 +102,55 @@ export const executeAgent = async (
                 log(`Input data: ${JSON.stringify(nodeOutputs[currentNode.id], null, 2)}`, 'info');
                 break;
             
-            case 'tool':
+            case 'tool': {
                 const toolData = currentNode.data as ToolNodeData;
-                if (!toolData.toolId) {
-                    throw new Error("Tool Node is not configured with a tool from the library.");
+                let toolResult: any;
+
+                if (toolData.subType) {
+                    // Handle pre-configured tool nodes
+                    log(`Executing preset tool: ${toolData.subType}`, 'info');
+                    log(`Settings: ${JSON.stringify(toolData.settings, null, 2)}`, 'info');
+                    log(`Input data: ${JSON.stringify(currentData, null, 2)}`, 'info');
+                    
+                    switch (toolData.subType) {
+                        case 'Wait':
+                            const duration = toolData.settings.duration || 1;
+                            const unit = toolData.settings.unit || 'seconds';
+                            const ms = duration * (unit === 'seconds' ? 1000 : 60000);
+                            log(`Waiting for ${duration} ${unit}...`, 'info');
+                            await delay(ms);
+                            toolResult = { success: true, waited: `${duration} ${unit}` };
+                            break;
+                        case 'ExecuteCode':
+                            log(`(Mock) Executing JS code...`, 'info');
+                            toolResult = { success: true, message: "Mock code execution successful.", output: { result: "hello from mock code" } };
+                            break;
+                        case 'HttpRequest':
+                             log(`(Mock) Making HTTP ${toolData.settings.method} request to ${toolData.settings.url}...`, 'info');
+                             toolResult = { success: true, status: 200, data: { message: `Mock response from ${toolData.settings.url}` } };
+                             break;
+                        default:
+                            log(`Mock execution for ${toolData.subType}.`, 'info');
+                            toolResult = { success: true, message: `Mock response from ${toolData.label}`, received_input: currentData };
+                    }
+                    nodeOutputs[currentNode.id] = toolResult;
+                } else {
+                    // Handle library/manual tools (existing logic)
+                    if (!toolData.toolId) {
+                        throw new Error("Tool Node is not configured. Link a tool from the library or choose a preset.");
+                    }
+                    log(`Calling tool from library: ${toolData.label}`, 'info');
+                    log(`Request Data: ${JSON.stringify(currentData, null, 2)}`, 'info');
+                    
+                    toolResult = await executeTool(toolData.toolId, currentData);
+                    
+                    log(`Tool Response: ${JSON.stringify(toolResult, null, 2)}`, 'info');
+                    nodeOutputs[currentNode.id] = toolResult;
                 }
-                log(`Calling tool: ${toolData.label}`, 'info');
-                log(`Request Data: ${JSON.stringify(currentData, null, 2)}`, 'info');
-                
-                const toolResult = await executeTool(toolData.toolId, currentData);
-                
-                log(`Tool Response: ${JSON.stringify(toolResult, null, 2)}`, 'info');
-                nodeOutputs[currentNode.id] = toolResult;
                 break;
+            }
             
-            case 'model':
-                // FIX: Cast currentNode.data to ModelNodeData to access specific properties.
+            case 'model': {
                 const modelData = currentNode.data as ModelNodeData;
                 
                 // Check for knowledge input
@@ -127,10 +160,37 @@ export const executeAgent = async (
                     knowledgeContent = nodeOutputs[knowledgeNode.id] as string;
                 }
                 
-                const prompt = `${knowledgeContent ? `CONTEXT:\n${knowledgeContent}\n\n---\n\n` : ''}TASK: ${modelData.systemInstruction}\n\nINPUT DATA:\n${JSON.stringify(currentData, null, 2)}`;
+                let promptTemplate = modelData.promptTemplate;
+
+                // Substitute variables from input data
+                for (const key in currentData) {
+                    const value = currentData[key];
+                    const replacement = (typeof value === 'object' && value !== null) 
+                        ? JSON.stringify(value, null, 2) 
+                        : String(value);
+                    
+                    const regex = new RegExp(`{{${key}}}`, 'g');
+                    promptTemplate = promptTemplate.replace(regex, replacement);
+                }
                 
+                const remainingPlaceholders = promptTemplate.match(/{{([a-zA-Z_][a-zA-Z0-9_]*)}}/g);
+                if (remainingPlaceholders) {
+                    log(`Warning: The following variables were not filled: ${remainingPlaceholders.join(', ')}. Ensure parent nodes provide these outputs.`, 'info');
+                }
+
+                const finalPrompt = knowledgeContent 
+                    ? `CONTEXT:\n${knowledgeContent}\n\n---\n\n${promptTemplate}`
+                    : promptTemplate;
+
                 log('Generating content with model...', 'info');
-                const result = await generateText(prompt, { model: 'gemini-2.5-flash', ...modelData });
+                const modelConfig = {
+                    model: 'gemini-2.5-flash' as const,
+                    temperature: modelData.temperature,
+                    topP: modelData.topP,
+                    topK: modelData.topK
+                };
+                const result = await generateText(finalPrompt, modelConfig);
+
                 log(`Model output: ${result.substring(0, 100)}...`, 'info');
                 try {
                     // Try to parse as JSON if possible
@@ -139,6 +199,7 @@ export const executeAgent = async (
                     nodeOutputs[currentNode.id] = { result };
                 }
                 break;
+            }
 
             case 'knowledge':
                 // FIX: Cast currentNode.data to KnowledgeNodeData to access specific properties.

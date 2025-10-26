@@ -27,7 +27,7 @@ export interface Workspace {
 
 // Chat
 export interface ChatMessage {
-    id: string;
+    id:string;
     role: 'user' | 'model';
     text: string;
     timestamp: Date;
@@ -169,18 +169,23 @@ export interface InputNodeData extends BaseNodeData {
 }
 
 export interface ModelNodeData extends BaseNodeData {
-    systemInstruction: string;
+    promptTemplate: string;
     temperature: number;
     topP: number;
     topK: number;
 }
 
 export interface ToolNodeData extends BaseNodeData {
+    // For library tools or manual config
     toolId?: string;
     apiEndpoint: string;
     authMethod: AuthMethod;
     requestSchema: string;
     responseSchema: string;
+    
+    // For pre-configured nodes
+    subType?: 'HttpRequest' | 'SendEmail' | 'ReadGoogleSheet' | 'AppendGoogleSheet' | 'ExecuteCode' | 'TransformJson' | 'Wait';
+    settings?: any;
 }
 
 export interface KnowledgeNodeData extends BaseNodeData {
