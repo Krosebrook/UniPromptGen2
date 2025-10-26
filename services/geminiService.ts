@@ -30,6 +30,39 @@ export const sendMessage = async (message: string): Promise<ChatMessage> => {
     };
 };
 
+export const generateText = async (
+    prompt: string,
+    config: {
+        model?: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+        systemInstruction?: string;
+        temperature?: number;
+        topP?: number;
+        topK?: number;
+    } = {}
+): Promise<string> => {
+    const {
+        model = 'gemini-2.5-flash',
+        systemInstruction,
+        temperature,
+        topP,
+        topK
+    } = config;
+
+    const response = await ai.models.generateContent({
+        model: model,
+        contents: prompt,
+        config: {
+            systemInstruction,
+            temperature,
+            topP,
+            topK,
+        },
+    });
+
+    return response.text;
+};
+
+
 export const generateImage = async (prompt: string, aspectRatio: string): Promise<string> => {
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',

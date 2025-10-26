@@ -105,3 +105,20 @@ export const deleteKnowledgeSource = async (id: string): Promise<void> => {
     await delay(500);
     knowledgeSourcesDB = knowledgeSourcesDB.filter(ks => ks.id !== id);
 };
+
+export const getKnowledgeSourceContent = async (id: string): Promise<string> => {
+    await delay(150);
+    const source = knowledgeSourcesDB.find(ks => ks.id === id);
+    if (!source) {
+        return "Knowledge source not found.";
+    }
+    // In a real app, this would fetch and parse the actual document.
+    // Here we just return some mock content based on the source name.
+    if (source.name.includes("Financial Report")) {
+        return "Q3 Financial Report Summary: Revenue is up 20% year-over-year. Net profit is $5.2 million. Projections for Q4 are optimistic, with an expected growth of 15% in the software division.";
+    }
+    if (source.name.includes("Onboarding")) {
+        return "Company Onboarding Guide: All new employees must complete the security training within their first week. The dress code is business casual. The company VPN can be accessed at vpn.example.com.";
+    }
+    return `This is the placeholder content for the document titled "${source.name}".`;
+};

@@ -1,5 +1,7 @@
 // services/agentExecutorService.ts
-import { Node, Edge, NodeRunStatus, LogEntry, ModelNodeData, ToolNodeData } from '../types.ts';
+import { Node, Edge, NodeRunStatus, LogEntry, ModelNodeData, ToolNodeData, KnowledgeNodeData } from '../types.ts';
+import { generateText } from './geminiService.ts';
+import { getKnowledgeSourceContent } from './apiService.ts';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -31,11 +33,11 @@ export const executeAgent = async (
 
     try {
       // Gather inputs from predecessors
-      const incomingEdges = edges.filter(e => e.target === nodeId && e.targetHandle === 'data_input');
-      const inputs = incomingEdges.map(e => nodeOutputs[e.source]);
-      const singleInput = inputs.length > 0 ? inputs[0] : null;
-
-      await sleep(500 + Math.random() * 500); // Simulate network latency/work
+      const dataIncomingEdges = edges.filter(e => e.target === nodeId && e.targetHandle === 'data_input');
+      const knowledgeIncomingEdges = edges.filter(e => e.target === nodeId && e.targetHandle === 'knowledge_input');
+      
+      const dataInputs = dataIncomingEdges.map(e => nodeOutputs[e.source]);
+      const singleDataInput = dataInputs.length > 0 ? dataInputs[0] : null;
       
       let output: any;
 
@@ -43,37 +45,65 @@ export const executeAgent = async (
       switch (node.type) {
         case 'input':
           output = node.data.initialValue || '';
-          log(`[${node.data.label}] - Provided initial input: "${output}"`, 'info');
+          log(`[${node.data.label}] - Provided initial input: "${output.substring(0, 100)}..."`, 'info');
           break;
+          
         case 'model':
           const modelData = node.data as ModelNodeData;
-          output = `Extracted city: 'Berlin' from input '${singleInput}' with system instruction '${modelData.systemInstruction.substring(0,20)}...'`;
+          let prompt = singleDataInput;
+          if (knowledgeIncomingEdges.length > 0) {
+              const knowledgeSourceId = knowledgeIncomingEdges[0].source;
+              const knowledgeContent = nodeOutputs[knowledgeSourceId];
+              prompt = `CONTEXT:\n${knowledgeContent}\n\n---\n\nTASK:\n${singleDataInput}`;
+              log(`[${node.data.label}] - Using knowledge from node ID ${knowledgeSourceId}.`, 'info');
+          }
+          
+          log(`[${node.data.label}] - Sending prompt to Gemini API...`, 'info');
+          output = await generateText(prompt, {
+              systemInstruction: modelData.systemInstruction,
+              temperature: modelData.temperature,
+              topP: modelData.topP,
+              topK: modelData.topK,
+          });
+          log(`[${node.data.label}] - Received response: "${output.substring(0, 100)}..."`, 'info');
           break;
+          
         case 'tool':
           const toolData = node.data as ToolNodeData;
-          let requestBody = toolData.requestSchema;
-          // Simple template replacement
-          const matches = requestBody.match(/{{(.*?)}}/g);
-          if (matches) {
-            for(const match of matches) {
-                const [nodeId, key] = match.replace(/{{|}}/g, '').split('.');
-                const predecessorNode = nodes.find(n => n.id === nodeId);
-                if (predecessorNode) {
-                    const valueToInject = nodeOutputs[nodeId];
-                    log(`[${toolData.label}] - Injecting output from '${predecessorNode.data.label}' into request.`, 'info');
-                    requestBody = requestBody.replace(match, valueToInject.split("'")[1] || valueToInject);
-                }
-            }
+          log(`[${toolData.label}] - Preparing to call API endpoint: ${toolData.apiEndpoint}`, 'info');
+          
+          // Simple assumption: If input is a string, we use it as the body.
+          // In a real scenario, this would involve more complex schema mapping.
+          const body = typeof singleDataInput === 'string' ? singleDataInput : JSON.stringify(singleDataInput);
+
+          const response = await fetch(toolData.apiEndpoint, {
+            method: 'POST', // Assuming POST for this tool example
+            headers: { 'Content-Type': 'application/json' },
+            body: body,
+          });
+
+          if (!response.ok) {
+            throw new Error(`API call failed with status ${response.status}: ${await response.text()}`);
           }
-          output = { temperature: "18.3" }; // Mocked response
-          log(`[${toolData.label}] - Executed with request: ${requestBody}. Got response: ${JSON.stringify(output)}`, 'info');
+          
+          output = await response.json();
+          log(`[${toolData.label}] - API call successful. Response: ${JSON.stringify(output).substring(0, 100)}...`, 'info');
           break;
+          
+        case 'knowledge':
+          const knowledgeData = node.data as KnowledgeNodeData;
+          if (!knowledgeData.sourceId) throw new Error("Knowledge source not selected.");
+          log(`[${knowledgeData.label}] - Fetching content for source ID ${knowledgeData.sourceId}`, 'info');
+          output = await getKnowledgeSourceContent(knowledgeData.sourceId);
+          break;
+
         case 'output':
-          log(`[${node.data.label}] - Received final output: ${JSON.stringify(singleInput)}`, 'info');
-          output = singleInput;
+          log(`[${node.data.label}] - Received final output: ${JSON.stringify(singleDataInput)}`, 'info');
+          output = singleDataInput;
           break;
+          
         default:
-          output = singleInput;
+          output = singleDataInput;
       }
       
       nodeOutputs[nodeId] = output;

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import NodeBasedEditor from '../components/workbench/NodeBasedEditor.tsx';
 import WorkbenchSidebar from '../components/workbench/WorkbenchSidebar.tsx';
@@ -10,16 +11,39 @@ import type { Node, Edge, NodeType, NodeRunStatus, Run, LogEntry, BaseNodeData, 
 import { PlayIcon, StopCircleIcon } from '../components/icons/Icons.tsx';
 
 const initialNodes: Node[] = [
-  { id: 'input-1', type: 'input', position: { x: 50, y: 150 }, data: { label: 'User Query', initialValue: "What's the weather in Berlin?" } },
-  { id: 'model-1', type: 'model', position: { x: 300, y: 150 }, data: { label: 'Extract City', systemInstruction: 'You are an expert at extracting city names from text.', temperature: 0.5, topP: 1, topK: 50 } as ModelNodeData },
-  { id: 'tool-1', type: 'tool', position: { x: 550, y: 150 }, data: { label: 'Get Weather Data', toolId: 'tool-001', apiEndpoint: 'https://api.open-meteo.com/v1/forecast', authMethod: 'None', requestSchema: '{"latitude":52.52,"longitude":13.41,"current_weather":true}', responseSchema: '{}' } as ToolNodeData },
-  { id: 'output-1', type: 'output', position: { x: 800, y: 150 }, data: { label: 'Final Answer' } },
+  { 
+    id: 'input-1', 
+    type: 'input', 
+    position: { x: 50, y: 200 }, 
+    data: { 
+      label: 'Product Data', 
+      initialValue: JSON.stringify({ title: "Amazing New Pen", description: "A pen that writes in the color of your thoughts.", price: 13.99 }, null, 2) 
+    } 
+  },
+  { 
+    id: 'tool-1', 
+    type: 'tool', 
+    position: { x: 350, y: 200 }, 
+    data: { 
+      label: 'Add Product API', 
+      toolId: 'tool-002', 
+      apiEndpoint: 'https://dummyjson.com/products/add', 
+      authMethod: 'None', 
+      requestSchema: '{"title":"string", "description":"string", "price": "number"}', 
+      responseSchema: '{"id":"number", "title":"string"}' 
+    } as ToolNodeData 
+  },
+  { 
+    id: 'output-1', 
+    type: 'output', 
+    position: { x: 650, y: 200 }, 
+    data: { label: 'API Response' } 
+  },
 ];
 
 const initialEdges: Edge[] = [
-  { id: 'e1-2', source: 'input-1', target: 'model-1', animated: true, style: { strokeWidth: 2 } },
-  { id: 'e2-3', source: 'model-1', target: 'tool-1', animated: true, style: { strokeWidth: 2 } },
-  { id: 'e3-4', source: 'tool-1', target: 'output-1', animated: true, style: { strokeWidth: 2 } },
+  { id: 'e1-2', source: 'input-1', target: 'tool-1', animated: true, style: { strokeWidth: 2 } },
+  { id: 'e2-3', source: 'tool-1', target: 'output-1', animated: true, style: { strokeWidth: 2 } },
 ];
 
 
@@ -105,6 +129,7 @@ const AgenticWorkbench: React.FC = () => {
         setRuns(prev => prev.map(r => r.id === runId ? { ...r, status: 'completed', endTime: new Date() } : r));
     } catch (error) {
         console.error("Agent execution failed:", error);
+        logToRun(error instanceof Error ? error.message : String(error), 'error');
         setRuns(prev => prev.map(r => r.id === runId ? { ...r, status: 'failed', endTime: new Date() } : r));
     } finally {
         setIsAgentRunning(false);
