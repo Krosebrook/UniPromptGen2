@@ -11,19 +11,21 @@ import ToolLibrary from './pages/ToolLibrary.tsx';
 import KnowledgeLibrary from './pages/KnowledgeLibrary.tsx';
 import LandingPage from './pages/LandingPage.tsx';
 import Deployments from './pages/Deployments.tsx';
-import { MOCK_USER } from './constants.ts';
+import Settings from './pages/Settings.tsx';
+import { MOCK_LOGGED_IN_USER } from './constants.ts';
 import { WorkspaceProvider } from './contexts/WorkspaceContext.tsx';
 
 const routeConfig: Record<string, React.FC<any>> = {
   '/dashboard': Dashboard,
   '/templates': TemplateLibrary,
   '/playground': Playground,
-  '/profile': (props) => <Profile {...props} user={MOCK_USER} />,
+  '/profile': (props) => <Profile {...props} user={MOCK_LOGGED_IN_USER} />,
   '/marketplace': Marketplace,
   '/agentic-workbench': AgenticWorkbench,
   '/tool-library': ToolLibrary,
   '/knowledge-library': KnowledgeLibrary,
   '/deployments': Deployments,
+  '/settings': Settings,
 };
 
 
@@ -65,8 +67,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <WorkspaceProvider user={MOCK_USER}>
-      <Layout user={MOCK_USER}>{renderPage()}</Layout>
+    <WorkspaceProvider user={MOCK_LOGGED_IN_USER}>
+      <Layout user={MOCK_LOGGED_IN_USER}>{renderPage()}</Layout>
     </WorkspaceProvider>
   );
 };

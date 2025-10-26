@@ -1,10 +1,11 @@
 // types.ts
+import React from 'react';
 
-import type { Node as ReactFlowNode, Edge as ReactFlowEdge } from 'reactflow';
-
-// ===== User & Workspace =====
+// Basic Types
 export type UserRole = 'Admin' | 'Editor' | 'Viewer';
+export type RiskLevel = 'Low' | 'Medium' | 'High';
 
+// User and Workspace
 export interface User {
   id: string;
   name: string;
@@ -13,22 +14,34 @@ export interface User {
   avatarUrl: string;
   xp: number;
   level: number;
-  achievements: { id: string, name: string, description: string }[];
-  certifications: { id: string, name: string, issuer: string, date: string }[];
-  workspaces: { workspaceId: string, role: UserRole }[];
+  achievements: { id: string; name: string; description: string }[];
+  certifications: { id: string; name: string; issuer: string; date: string }[];
+  workspaces: { workspaceId: string; role: UserRole }[];
 }
 
 export interface Workspace {
-    id: string;
-    name: string;
-    plan: 'Free' | 'Pro' | 'Enterprise';
-    memberCount: number;
+  id: string;
+  name: string;
+  plan: 'Free' | 'Pro' | 'Enterprise';
 }
 
-// ===== Prompt Templates =====
+// Chat
+export interface ChatMessage {
+    id: string;
+    role: 'user' | 'model';
+    text: string;
+    timestamp: Date;
+}
 
-export type RiskLevel = 'Low' | 'Medium' | 'High';
+// Grounding
+export interface GroundingSource {
+    web?: {
+        uri: string;
+        title: string;
+    };
+}
 
+// Prompt Templates
 export interface PromptVariable {
   name: string;
   type: 'string' | 'number' | 'boolean';
@@ -42,75 +55,99 @@ export interface PromptTemplateVersion {
   content: string;
   variables: PromptVariable[];
   riskLevel: RiskLevel;
-  date: string; // ISO string
+  date: string;
 }
 
 export interface PromptTemplateMetrics {
   totalRuns: number;
   successfulRuns: number;
-  avgLatency: number; // in ms
-  avgTokens: number;
-  avgUserRating: number; // 1-5 scale
-  taskSuccessRate: number; // 0-1
-  efficiencyScore: number; // 0-1 (cost, speed)
-  totalUserRating: number; // sum of all ratings
-}
-
-export interface ABTest {
-  id: string;
-  name: string;
-  status: 'running' | 'paused' | 'completed';
-  versionA: string;
-  versionB: string;
-  trafficSplit: number; // percentage for version A
-  startDate: string; // ISO string
-  metricsA: { successRate: number, avgRating: number, totalRuns: number };
-  metricsB: { successRate: number, avgRating: number, totalRuns: number };
-  winner?: 'A' | 'B';
+  avgUserRating: number;
+  totalUserRating: number; // to calculate avg
+  taskSuccessRate: number;
+  efficiencyScore: number;
 }
 
 export interface PromptTemplate {
   id: string;
   workspaceId: string;
-  domain: 'Marketing' | 'Sales' | 'Support' | 'Engineering' | 'General';
-  versions: PromptTemplateVersion[];
+  domain: string;
+  qualityScore: number;
   activeVersion: string;
   deployedVersion: string | null;
-  qualityScore: number;
+  versions: PromptTemplateVersion[];
   metrics: PromptTemplateMetrics;
   abTests: ABTest[];
 }
 
 export interface ExecutionEvent {
     success: boolean;
-    userRating: number; // 1-5
+    userRating: number; // e.g., 1-5
 }
 
-
-// ===== AI Playground & Gemini Service =====
-
-export interface ChatMessage {
+// A/B Testing
+export interface ABTest {
   id: string;
-  role: 'user' | 'model';
-  text: string;
-  timestamp: Date;
+  name: string;
+  versionA: string;
+  versionB:string;
+  trafficSplit: number;
+  status: 'running' | 'completed';
+  results?: {
+    versionA: PromptTemplateMetrics;
+    versionB: PromptTemplateMetrics;
+    confidence: number;
+    winner: 'versionA' | 'versionB' | 'inconclusive';
+  };
 }
 
-export interface GroundingSource {
-    web?: {
-        uri: string;
-        title: string;
-    }
+// Analytics
+export interface AnalyticsChartData {
+    time: string;
+    calls: number;
 }
 
-// ===== Agentic Workbench =====
 
+// Tools
+export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
+
+export interface Tool {
+  id: string;
+  workspaceId: string;
+  name: string;
+  description: string;
+  apiEndpoint: string;
+  authMethod: AuthMethod;
+  requestSchema: string; // JSON string
+  responseSchema: string; // JSON string
+}
+
+export type ToolFormData = Omit<Tool, 'id' | 'workspaceId'>;
+
+
+// Knowledge Sources
+export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
+
+export interface KnowledgeSource {
+  id: string;
+  workspaceId: string;
+  name: string;
+  description: string;
+  type: KnowledgeSourceType;
+  dateAdded: string;
+}
+
+export type KnowledgeSourceFormData = Omit<KnowledgeSource, 'id' | 'workspaceId' | 'dateAdded'>;
+
+// Agentic Workbench
 export type NodeType = 'input' | 'output' | 'model' | 'tool' | 'knowledge';
 export type NodeRunStatus = 'idle' | 'running' | 'success' | 'error';
 
 export interface BaseNodeData {
     label: string;
-    initialValue?: string;
+}
+
+export interface InputNodeData extends BaseNodeData {
+    initialValue: string; // JSON string
 }
 
 export interface ModelNodeData extends BaseNodeData {
@@ -124,18 +161,30 @@ export interface ToolNodeData extends BaseNodeData {
     toolId?: string;
     apiEndpoint: string;
     authMethod: AuthMethod;
-    requestSchema: string; // JSON string
-    responseSchema: string; // JSON string
+    requestSchema: string;
+    responseSchema: string;
 }
 
 export interface KnowledgeNodeData extends BaseNodeData {
     sourceId: string | null;
 }
 
-export type NodeData = BaseNodeData | ModelNodeData | ToolNodeData | KnowledgeNodeData;
+export interface Node {
+    id: string;
+    type: NodeType;
+    position: { x: number; y: number };
+    data: BaseNodeData | InputNodeData | ModelNodeData | ToolNodeData | KnowledgeNodeData;
+}
 
-export type Node = ReactFlowNode<NodeData, NodeType>;
-export type Edge = ReactFlowEdge;
+export interface Edge {
+    id: string;
+    source: string;
+    target: string;
+    sourceHandle?: string | null;
+    targetHandle?: string | null;
+    animated?: boolean;
+    style?: React.CSSProperties;
+}
 
 export interface LogEntry {
     timestamp: string;
@@ -146,67 +195,17 @@ export interface LogEntry {
 export interface Run {
     id: string;
     startTime: Date;
-    endTime?: Date;
     status: 'running' | 'completed' | 'failed';
     logs: LogEntry[];
+    nodeOutputs: Record<string, any>;
+    finalOutput: any;
 }
 
-
-// ===== Tools & Knowledge =====
-
-export type AuthMethod = 'None' | 'API Key' | 'OAuth 2.0';
-
-export interface ToolFormData {
-    name: string;
-    description: string;
-    apiEndpoint: string;
-    authMethod: AuthMethod;
-    requestSchema: string; // JSON string
-    responseSchema: string; // JSON string
-}
-
-export interface Tool extends ToolFormData {
+export interface AgentGraph {
     id: string;
     workspaceId: string;
-}
-
-export type KnowledgeSourceType = 'PDF' | 'Website' | 'Text' | 'API';
-
-export interface KnowledgeSourceFormData {
     name: string;
     description: string;
-    type: KnowledgeSourceType;
-}
-
-export interface KnowledgeSource extends KnowledgeSourceFormData {
-    id: string;
-    workspaceId: string;
-    dateAdded: string; // ISO string
-    status: 'available' | 'indexing';
-}
-
-// ===== Analytics =====
-export interface AnalyticsChartData {
-    time: string;
-    calls: number;
-}
-
-export interface DashboardAnalytics {
-    totalDeployed: number;
-    totalCalls: number;
-    avgLatency: number;
-    successRate: number;
-    chartData: AnalyticsChartData[];
-    runsByTemplate: Record<string, number>;
-}
-
-export interface AnalyticEvent {
-  id: string;
-  timestamp: string; // ISO string
-  workspaceId: string;
-  templateId: string;
-  latency: number; // in ms
-  success: boolean;
-  abTestVariant?: 'A' | 'B';
-  userRating?: number; // 1-5
+    nodes: Node[];
+    edges: Edge[];
 }

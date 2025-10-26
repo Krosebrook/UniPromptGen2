@@ -1,260 +1,225 @@
 // services/apiService.ts
-
-import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_WORKSPACES, MOCK_INITIAL_ANALYTICS } from '../mock-data.ts';
-import type { PromptTemplate, Tool, KnowledgeSource, Workspace, ToolFormData, KnowledgeSourceFormData, DashboardAnalytics, AnalyticEvent, ABTest } from '../types.ts';
+import { MOCK_TEMPLATES, MOCK_USERS, MOCK_WORKSPACES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AB_TESTS, MOCK_AGENT_GRAPHS } from '../mock-data.ts';
+import { PromptTemplate, User, Workspace, Tool, ToolFormData, KnowledgeSource, KnowledgeSourceFormData, AnalyticsChartData, ABTest, AgentGraph, UserRole } from '../types.ts';
 import { ingestExecutionEvent } from './qualityService.ts';
 
 // Simulate network latency
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-let templates: PromptTemplate[] = JSON.parse(JSON.stringify(MOCK_TEMPLATES));
-let tools: Tool[] = JSON.parse(JSON.stringify(MOCK_TOOLS));
-let knowledgeSources: KnowledgeSource[] = JSON.parse(JSON.stringify(MOCK_KNOWLEDGE_SOURCES));
-let analyticsDB: AnalyticEvent[] = JSON.parse(JSON.stringify(MOCK_INITIAL_ANALYTICS));
-
-
-// ===== Templates =====
+// --- Templates ---
 export const getTemplates = async (workspaceId: string): Promise<PromptTemplate[]> => {
     await delay(500);
-    return templates.filter(t => t.workspaceId === workspaceId);
+    return MOCK_TEMPLATES.filter(t => t.workspaceId === workspaceId);
+}
+
+export const getDeployedTemplates = async (workspaceId: string): Promise<PromptTemplate[]> => {
+    await delay(500);
+    return MOCK_TEMPLATES.filter(t => t.workspaceId === workspaceId && t.deployedVersion);
 };
 
 export const getTemplateById = async (id: string): Promise<PromptTemplate | undefined> => {
     await delay(300);
-    return templates.find(t => t.id === id);
-};
+    return MOCK_TEMPLATES.find(t => t.id === id);
+}
 
-export const deleteTemplate = async (id: string): Promise<void> => {
-    await delay(500);
-    templates = templates.filter(t => t.id !== id);
-};
-
-export const saveTemplate = async (updatedTemplate: PromptTemplate): Promise<PromptTemplate> => {
+export const saveTemplate = async (template: PromptTemplate): Promise<PromptTemplate> => {
     await delay(700);
-    const index = templates.findIndex(t => t.id === updatedTemplate.id);
-    if (index !== -1) {
-        const event = { success: Math.random() > 0.1, userRating: Math.floor(Math.random() * 2) + 4 };
-        const withNewMetrics = ingestExecutionEvent(updatedTemplate, event);
-        templates[index] = withNewMetrics;
-        return withNewMetrics;
+    if (template.id) { // Update
+        const index = MOCK_TEMPLATES.findIndex(t => t.id === template.id);
+        if (index > -1) {
+            MOCK_TEMPLATES[index] = template;
+            return template;
+        }
     }
-    throw new Error("Template not found");
-};
-
-export const addTemplate = async (templateData: Omit<PromptTemplate, 'id' | 'qualityScore' | 'metrics' | 'abTests'>, workspaceId: string): Promise<PromptTemplate> => {
-    await delay(700);
-    const newTemplate: PromptTemplate = {
-        ...templateData,
-        id: `tmpl-${Date.now()}`,
-        workspaceId,
-        qualityScore: 75,
-        metrics: { totalRuns: 0, successfulRuns: 0, avgLatency: 0, avgTokens: 0, avgUserRating: 0, taskSuccessRate: 0, efficiencyScore: 0.8, totalUserRating: 0 },
-        abTests: [],
-    };
-    templates.push(newTemplate);
+    // Create
+    const newTemplate = { ...template, id: `tmpl-${Date.now()}` };
+    MOCK_TEMPLATES.push(newTemplate);
     return newTemplate;
 };
 
-export const deployVersion = async (templateId: string, version: string): Promise<PromptTemplate> => {
-    await delay(1000);
-    const template = await getTemplateById(templateId);
+export const deleteTemplate = async (id: string): Promise<void> => {
+    await delay(400);
+    const index = MOCK_TEMPLATES.findIndex(t => t.id === id);
+    if (index > -1) {
+        MOCK_TEMPLATES.splice(index, 1);
+    }
+};
+
+export const deployTemplateVersion = async (templateId: string, version: string): Promise<PromptTemplate> => {
+    await delay(800);
+    const template = MOCK_TEMPLATES.find(t => t.id === templateId);
     if (!template) throw new Error("Template not found");
     template.deployedVersion = version;
-    return await saveTemplate(template);
+    
+    // Simulate some event ingestion for quality score updates
+    const updatedTemplate = ingestExecutionEvent(template, { success: true, userRating: 4.5 });
+    
+    return updatedTemplate;
 };
 
 
-// ===== Tools =====
+// --- Users & Workspaces ---
+export const getUsersForWorkspace = async (workspaceId: string): Promise<User[]> => {
+    await delay(300);
+    return MOCK_USERS.filter(u => u.workspaces.some(ws => ws.workspaceId === workspaceId));
+};
+
+export const getWorkspacesByIds = async (ids: string[]): Promise<Workspace[]> => {
+    await delay(200);
+    return MOCK_WORKSPACES.filter(ws => ids.includes(ws.id));
+};
+
+// --- Tools ---
 export const getTools = async (workspaceId: string): Promise<Tool[]> => {
-    await delay(500);
-    return tools.filter(t => t.workspaceId === workspaceId);
-};
-
-export const deleteTool = async (id: string): Promise<void> => {
-    await delay(500);
-    tools = tools.filter(t => t.id !== id);
+    await delay(300);
+    return MOCK_TOOLS.filter(t => t.workspaceId === workspaceId);
 };
 
 export const addTool = async (toolData: ToolFormData, workspaceId: string): Promise<Tool> => {
-    await delay(600);
-    const newTool: Tool = { ...toolData, id: `tool-${Date.now()}`, workspaceId };
-    tools.push(newTool);
+    await delay(400);
+    const newTool: Tool = {
+        ...toolData,
+        id: `tool-${Date.now()}`,
+        workspaceId,
+    };
+    MOCK_TOOLS.push(newTool);
     return newTool;
 };
 
-export const executeTool = async(toolId: string, inputData: any): Promise<any> => {
-    await delay(800);
-    const tool = tools.find(t => t.id === toolId);
-    if (!tool) throw new Error("Tool not found");
-
-    console.log(`[Backend Proxy] Executing tool: ${tool.name}`);
-    console.log(`[Backend Proxy] Securely injecting credentials for auth method: ${tool.authMethod}`);
-    console.log(`[Backend Proxy] Making fetch call to: ${tool.apiEndpoint}`);
-    
-    // This is where a real backend would make the call using stored secrets.
-    // We will simulate the call here.
-    try {
-        const response = await fetch(tool.apiEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(inputData),
-        });
-        if (!response.ok) {
-            throw new Error(`API call failed with status: ${response.status}`);
-        }
-        return await response.json();
-    } catch(e) {
-        console.error(`[Backend Proxy] Error executing tool ${tool.name}:`, e);
-        throw e;
+export const deleteTool = async (id: string): Promise<void> => {
+    await delay(400);
+    const index = MOCK_TOOLS.findIndex(t => t.id === id);
+    if (index > -1) {
+        MOCK_TOOLS.splice(index, 1);
     }
 };
 
-// ===== Knowledge Sources =====
+// --- Knowledge Sources ---
 export const getKnowledgeSources = async (workspaceId: string): Promise<KnowledgeSource[]> => {
-    await delay(500);
-    return knowledgeSources.filter(ks => ks.workspaceId === workspaceId);
-};
-
-export const getKnowledgeSourceContent = async (sourceId: string): Promise<string> => {
-    await delay(150);
-    const source = knowledgeSources.find(s => s.id === sourceId);
-    if (!source) return "Knowledge source not found.";
-    return `Content from ${source.name}: This document outlines the key strategies...`;
-};
-
-
-export const deleteKnowledgeSource = async (id: string): Promise<void> => {
-    await delay(500);
-    knowledgeSources = knowledgeSources.filter(ks => ks.id !== id);
+    await delay(300);
+    return MOCK_KNOWLEDGE_SOURCES.filter(ks => ks.workspaceId === workspaceId);
 };
 
 export const addKnowledgeSource = async (sourceData: KnowledgeSourceFormData, workspaceId: string): Promise<KnowledgeSource> => {
-    await delay(600);
-    const newSource: KnowledgeSource = { ...sourceData, id: `ks-${Date.now()}`, workspaceId, dateAdded: new Date().toISOString(), status: 'available' };
-    knowledgeSources.push(newSource);
+    await delay(400);
+    const newSource: KnowledgeSource = {
+        ...sourceData,
+        id: `ks-${Date.now()}`,
+        workspaceId,
+        dateAdded: new Date().toISOString(),
+    };
+    MOCK_KNOWLEDGE_SOURCES.push(newSource);
     return newSource;
 };
 
-// ===== Workspaces =====
-export const getWorkspacesByIds = async (ids: string[]): Promise<Workspace[]> => {
-    await delay(200);
-    return MOCK_WORKSPACES.filter(w => ids.includes(w.id));
+export const deleteKnowledgeSource = async (id: string): Promise<void> => {
+    await delay(400);
+    const index = MOCK_KNOWLEDGE_SOURCES.findIndex(ks => ks.id === id);
+    if (index > -1) {
+        MOCK_KNOWLEDGE_SOURCES.splice(index, 1);
+    }
 };
 
-// ===== Deployment & Analytics =====
-export const runDeployedTemplate = async (templateId: string): Promise<void> => {
-    await delay(200);
-    const template = await getTemplateById(templateId);
-    if (!template || !template.deployedVersion) throw new Error("Deployed template not found");
-    
-    const event: AnalyticEvent = {
-        id: `evt-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        workspaceId: template.workspaceId,
-        templateId: template.id,
-        latency: Math.floor(Math.random() * 500) + 200, // 200-700ms
-        success: Math.random() < 0.98, // 98% success rate
+// --- A/B Testing ---
+export const getABTestsForTemplate = async (templateId: string): Promise<ABTest[]> => {
+    await delay(250);
+    return MOCK_AB_TESTS.filter(t => t.id.startsWith(templateId));
+};
+
+export const createABTest = async (templateId: string, testData: Partial<ABTest>): Promise<ABTest> => {
+    await delay(500);
+    const newTest: ABTest = {
+        id: `${templateId}-test-${Date.now()}`,
+        name: testData.name!,
+        versionA: testData.versionA!,
+        versionB: testData.versionB!,
+        trafficSplit: testData.trafficSplit!,
+        status: 'running',
     };
-    analyticsDB.push(event);
+    MOCK_AB_TESTS.push(newTest);
+    return newTest;
 };
 
-
-export const getDeployedTemplates = async (workspaceId: string): Promise<PromptTemplate[]> => {
+export const declareABTestWinner = async (testId: string, winner: 'A' | 'B'): Promise<void> => {
     await delay(600);
-    return templates.filter(t => t.workspaceId === workspaceId && t.deployedVersion !== null);
+    const test = MOCK_AB_TESTS.find(t => t.id === testId);
+    if (!test) throw new Error("A/B Test not found");
+    
+    test.status = 'completed';
+    // Here you would also update the activeVersion of the template, etc.
 };
 
-export const getAnalytics = async (workspaceId: string, days: number): Promise<DashboardAnalytics> => {
+// --- Analytics & Billing ---
+export const getAnalytics = async (workspaceId: string, days: number): Promise<{
+    totalDeployed: number,
+    totalCalls: number,
+    avgLatency: number,
+    successRate: number,
+    chartData: AnalyticsChartData[],
+    runsByTemplate: Record<string, number>
+}> => {
     await delay(800);
+    const templates = MOCK_TEMPLATES.filter(t => t.workspaceId === workspaceId && t.deployedVersion);
+    const usageSeed = workspaceId.charCodeAt(3) || 1;
     
-    const now = new Date();
-    const startTime = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    
-    const relevantEvents = analyticsDB.filter(event => 
-        event.workspaceId === workspaceId && new Date(event.timestamp) >= startTime
-    );
-
-    const totalCalls = relevantEvents.length;
-    const successfulCalls = relevantEvents.filter(e => e.success).length;
-    const avgLatency = totalCalls > 0 ? relevantEvents.reduce((sum, e) => sum + e.latency, 0) / totalCalls : 0;
-    const successRate = totalCalls > 0 ? successfulCalls / totalCalls : 0;
-
-    const runsByTemplate = relevantEvents.reduce((acc, event) => {
-        acc[event.templateId] = (acc[event.templateId] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-
-    // Generate chart data
-    const chartData: { time: string; calls: number }[] = [];
-    if (days === 1) { // Group by hour for 24h view
-        for (let i = 0; i < 24; i++) {
-            const hourStart = new Date(now.getTime() - (23 - i) * 60 * 60 * 1000);
-            hourStart.setMinutes(0, 0, 0);
-            const calls = relevantEvents.filter(e => {
-                const eventHour = new Date(e.timestamp);
-                eventHour.setMinutes(0,0,0);
-                return eventHour.getTime() === hourStart.getTime();
-            }).length;
-            chartData.push({ time: `${hourStart.getHours()}:00`, calls });
-        }
-    } else { // Group by day for 7d/30d view
-        for (let i = 0; i < days; i++) {
-            const dayStart = new Date(now.getTime() - (days - 1 - i) * 24 * 60 * 60 * 1000);
-            dayStart.setHours(0, 0, 0, 0);
-            const calls = relevantEvents.filter(e => new Date(e.timestamp).toDateString() === dayStart.toDateString()).length;
-            chartData.push({ time: dayStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), calls });
-        }
+    const chartData: AnalyticsChartData[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        chartData.push({
+            time: days > 1 ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric'}) : date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit'}),
+            calls: (usageSeed * 100) + Math.floor(Math.random() * (200 + i * 50)),
+        });
     }
 
-    const deployed = await getDeployedTemplates(workspaceId);
-
+    const runsByTemplate: Record<string, number> = {};
+    templates.forEach(t => {
+        runsByTemplate[t.id] = (t.id.charCodeAt(5) || 1) * 100 + Math.floor(Math.random() * 500);
+    });
+    
     return {
-        totalDeployed: deployed.length,
-        totalCalls,
-        avgLatency,
-        successRate,
+        totalDeployed: templates.length,
+        totalCalls: chartData.reduce((acc, cur) => acc + cur.calls, 0),
+        avgLatency: 250 + usageSeed * 5,
+        successRate: 0.95 - (usageSeed / 1000),
         chartData,
-        runsByTemplate
-    };
+        runsByTemplate,
+    }
 };
 
-// ===== A/B Testing =====
-export const getABTestAnalytics = async (testId: string): Promise<{
-    metricsA: ABTest['metricsA'],
-    metricsB: ABTest['metricsB']
-}> => {
+
+export const getBillingUsage = async (workspaceId: string): Promise<{ apiCalls: number }> => {
+    await delay(400);
+    const usageSeed = workspaceId.length + (workspaceId.charCodeAt(1) || 1);
+    return {
+        apiCalls: 5000 + usageSeed * 100 + Math.floor(Math.random() * 1000)
+    };
+}
+
+// --- Agent Graphs ---
+export const getAgentGraphs = async (workspaceId: string): Promise<AgentGraph[]> => {
+    await delay(300);
+    return MOCK_AGENT_GRAPHS.filter(ag => ag.workspaceId === workspaceId);
+}
+
+export const saveAgentGraph = async (agentData: Omit<AgentGraph, 'id' | 'workspaceId'> & { id?: string }, workspaceId: string): Promise<AgentGraph> => {
     await delay(500);
-    // Find the test to get start date, etc.
-    const relevantEvents = analyticsDB.filter(e => e.abTestVariant);
-    
-    const metricsA = {
-        totalRuns: relevantEvents.filter(e => e.abTestVariant === 'A').length,
-        successRate: 0.95,
-        avgRating: 4.5
+    if (agentData.id) { // Update
+        const index = MOCK_AGENT_GRAPHS.findIndex(ag => ag.id === agentData.id);
+        if (index > -1) {
+            MOCK_AGENT_GRAPHS[index] = { ...MOCK_AGENT_GRAPHS[index], ...(agentData as AgentGraph), workspaceId };
+            return MOCK_AGENT_GRAPHS[index];
+        }
+    }
+    // Create
+    const newAgent: AgentGraph = {
+        id: `agent-${Date.now()}`,
+        workspaceId,
+        name: agentData.name,
+        description: agentData.description,
+        nodes: agentData.nodes,
+        edges: agentData.edges,
     };
-    const metricsB = {
-        totalRuns: relevantEvents.filter(e => e.abTestVariant === 'B').length,
-        successRate: 0.91,
-        avgRating: 4.2
-    };
-
-    return { metricsA, metricsB };
-};
-
-export const declareABTestWinner = async (templateId: string, testId: string, winner: 'A' | 'B'): Promise<PromptTemplate> => {
-    await delay(800);
-    const template = await getTemplateById(templateId);
-    if (!template) throw new Error("Template not found");
-
-    const testIndex = template.abTests.findIndex(t => t.id === testId);
-    if (testIndex === -1) throw new Error("A/B Test not found");
-
-    const test = template.abTests[testIndex];
-    test.status = 'completed';
-    test.winner = winner;
-    
-    // Set the winning version as the new active version
-    template.activeVersion = winner === 'A' ? test.versionA : test.versionB;
-    
-    return await saveTemplate(template);
-};
+    MOCK_AGENT_GRAPHS.push(newAgent);
+    return newAgent;
+}

@@ -1,117 +1,80 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getTemplateById, saveTemplate, addTemplate, deployVersion } from '../services/apiService.ts';
-import type { PromptTemplate, PromptTemplateVersion, PromptVariable } from '../types.ts';
-import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import React, { useState, useEffect, useCallback } from 'react';
+// FIX: Imported getABTestsForTemplate to resolve missing function error.
+import { getTemplateById, saveTemplate, deployTemplateVersion, createABTest, declareABTestWinner, getABTestsForTemplate } from '../services/apiService.ts';
+import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest } from '../types.ts';
 import { SpinnerIcon } from '../components/icons/Icons.tsx';
 import { TemplateHeader } from '../components/editor/TemplateHeader.tsx';
-import { VersionManager } from '../components/editor/VersionManager.tsx';
 import { VariableEditor } from '../components/editor/VariableEditor.tsx';
+import { VersionManager } from '../components/editor/VersionManager.tsx';
 import ABTestManager from '../components/ab-testing/ABTestManager.tsx';
-import ABTestResults from '../components/ab-testing/ABTestResults.tsx';
 import CreateABTestModal from '../components/ab-testing/CreateABTestModal.tsx';
-
-// A simple undo/redo hook
-const useUndoRedo = <T,>(initialState: T) => {
-  const [state, setState] = useState({
-    past: [] as T[],
-    present: initialState,
-    future: [] as T[],
-  });
-
-  const canUndo = state.past.length > 0;
-  const canRedo = state.future.length > 0;
-
-  const set = useCallback((newState: T) => {
-    setState(s => ({
-      past: [...s.past, s.present],
-      present: newState,
-      future: [],
-    }));
-  }, []);
-
-  const undo = useCallback(() => {
-    if (!canUndo) return;
-    setState(s => {
-      const newPresent = s.past[s.past.length - 1];
-      const newPast = s.past.slice(0, s.past.length - 1);
-      return {
-        past: newPast,
-        present: newPresent,
-        future: [s.present, ...s.future],
-      };
-    });
-  }, [canUndo]);
-
-  const redo = useCallback(() => {
-    if (!canRedo) return;
-    setState(s => {
-      const newPresent = s.future[0];
-      const newFuture = s.future.slice(1);
-      return {
-        past: [...s.past, s.present],
-        present: newPresent,
-        future: newFuture,
-      };
-    });
-  }, [canRedo]);
-  
-  const reset = useCallback((newState: T) => {
-      setState({ past: [], present: newState, future: [] });
-  }, []);
-
-  return { state: state.present, set, undo, redo, reset, canUndo, canRedo };
-};
-
+import ABTestResults from '../components/ab-testing/ABTestResults.tsx';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import { analyzePrompt, AnalysisResult } from '../services/promptAnalysisService.ts';
+import PromptAnalysisPanel from '../components/editor/PromptAnalysisPanel.tsx';
 
 const NEW_TEMPLATE_VERSION: PromptTemplateVersion = {
-  version: '1',
-  name: 'New Prompt Template',
+  version: '1.0',
+  name: 'New Untitled Template',
   description: 'A brief description of what this template does.',
-  content: 'Your prompt content with {{variables}} goes here.',
-  variables: [{ name: 'variable', type: 'string', defaultValue: '' }],
+  content: 'Your prompt content goes here. Use {{variable_name}} for variables.',
+  variables: [{ name: 'variable_name', type: 'string', defaultValue: '' }],
   riskLevel: 'Low',
   date: new Date().toISOString(),
 };
 
-const TemplateEditor: React.FC<{ templateId: string }> = ({ templateId }) => {
+const TemplateEditor: React.FC<{ templateId?: string }> = ({ templateId }) => {
   const { currentWorkspace, currentUserRole } = useWorkspace();
   const [template, setTemplate] = useState<PromptTemplate | null>(null);
+  const [currentVersion, setCurrentVersion] = useState<PromptTemplateVersion | null>(null);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const [selectedVersion, setSelectedVersion] = useState<PromptTemplateVersion | null>(null);
+  const [variableErrors, setVariableErrors] = useState<Array<Record<string, string>>>([]);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+
+  const [abTests, setABTests] = useState<ABTest[]>([]);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
-  const selectedTest = template?.abTests[0] ?? null;
+  const [selectedTest, setSelectedTest] = useState<ABTest | null>(null);
 
-  const {
-    state: editorState,
-    set: setEditorState,
-    undo,
-    redo,
-    reset: resetEditorState,
-    canUndo,
-    canRedo,
-  } = useUndoRedo<PromptTemplateVersion>(NEW_TEMPLATE_VERSION);
-
-  const isNewTemplate = templateId === 'new';
+  const isNew = templateId === 'new';
   const canEdit = currentUserRole === 'Admin' || currentUserRole === 'Editor';
 
+  const refetchData = useCallback(async () => {
+      if (templateId && !isNew) {
+          try {
+              const fetchedTemplate = await getTemplateById(templateId);
+              if (fetchedTemplate) {
+                  setTemplate(fetchedTemplate);
+                  const activeVer = fetchedTemplate.versions.find(v => v.version === fetchedTemplate.activeVersion) || fetchedTemplate.versions[0];
+                  setCurrentVersion(activeVer);
+                  const tests = await getABTestsForTemplate(templateId);
+                  setABTests(tests);
+              } else {
+                  setError('Template not found.');
+              }
+          } catch (err) {
+              setError('Failed to reload template data.');
+          }
+      }
+  }, [templateId, isNew]);
+
   useEffect(() => {
-    const loadTemplate = async () => {
-      if (isNewTemplate) {
-        setTemplate(null);
-        setSelectedVersion(NEW_TEMPLATE_VERSION);
-        resetEditorState(NEW_TEMPLATE_VERSION);
+    const fetchTemplate = async () => {
+      if (isNew) {
+        setCurrentVersion(NEW_TEMPLATE_VERSION);
         setIsLoading(false);
-      } else {
+      } else if (templateId) {
+        setIsLoading(true);
         try {
           const fetchedTemplate = await getTemplateById(templateId);
           if (fetchedTemplate) {
             setTemplate(fetchedTemplate);
-            const activeVersion = fetchedTemplate.versions.find(v => v.version === fetchedTemplate.activeVersion) || fetchedTemplate.versions[0];
-            setSelectedVersion(activeVersion);
-            resetEditorState(activeVersion);
+            const activeVer = fetchedTemplate.versions.find(v => v.version === fetchedTemplate.activeVersion) || fetchedTemplate.versions[0];
+            setCurrentVersion(activeVer);
+            const tests = await getABTestsForTemplate(templateId);
+            setABTests(tests);
           } else {
             setError('Template not found.');
           }
@@ -122,86 +85,119 @@ const TemplateEditor: React.FC<{ templateId: string }> = ({ templateId }) => {
         }
       }
     };
-    loadTemplate();
-  }, [templateId, isNewTemplate, resetEditorState]);
+    fetchTemplate();
+  }, [templateId, isNew]);
 
-  const handleVersionChange = (version: PromptTemplateVersion) => {
-    setSelectedVersion(version);
-    resetEditorState(version);
+  const handleInputChange = (field: keyof PromptTemplateVersion, value: any) => {
+    if (currentVersion) {
+      setCurrentVersion({ ...currentVersion, [field]: value });
+    }
   };
-  
-  const handleEditorInputChange = (field: keyof PromptTemplateVersion, value: any) => {
-    setEditorState({ ...editorState, [field]: value });
-  };
-  
-  // Variable validation logic
-  const variableErrors = useMemo(() => {
-      const errors: Array<Record<string, string>> = [];
-      const names = new Set<string>();
-      editorState.variables.forEach((v, i) => {
-          const currentErrors: Record<string, string> = {};
-          if (!v.name) {
-              currentErrors.name = "Name is required.";
-          } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(v.name)) {
-              currentErrors.name = "Invalid name format.";
-          } else if (names.has(v.name)) {
-              currentErrors.name = "Variable names must be unique.";
-          }
-          names.add(v.name);
-          errors[i] = currentErrors;
-      });
-      return errors;
-  }, [editorState.variables]);
 
-  const isVariablesValid = variableErrors.every(e => Object.keys(e).length === 0);
+  const handleVariableChange = (index: number, field: keyof PromptVariable, value: any) => {
+    if (currentVersion) {
+      const newVariables = [...currentVersion.variables];
+      newVariables[index] = { ...newVariables[index], [field]: value };
+      setCurrentVersion({ ...currentVersion, variables: newVariables });
+    }
+  };
+
+  const addVariable = () => {
+    if (currentVersion) {
+      const newVar = { name: `var${currentVersion.variables.length + 1}`, type: 'string' as const, defaultValue: '' };
+      setCurrentVersion({ ...currentVersion, variables: [...currentVersion.variables, newVar] });
+    }
+  };
+
+  const removeVariable = (index: number) => {
+    if (currentVersion) {
+      const newVariables = currentVersion.variables.filter((_, i) => i !== index);
+      setCurrentVersion({ ...currentVersion, variables: newVariables });
+    }
+  };
+
+  const validateVariables = useCallback(() => {
+    if (!currentVersion) return false;
+    const errors: Array<Record<string, string>> = [];
+    const nameSet = new Set<string>();
+    let isValid = true;
+
+    currentVersion.variables.forEach((v, index) => {
+      const varErrors: Record<string, string> = {};
+      if (!v.name) {
+        varErrors.name = 'Name is required.';
+        isValid = false;
+      } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(v.name)) {
+        varErrors.name = 'Invalid name format.';
+        isValid = false;
+      } else if (nameSet.has(v.name)) {
+        varErrors.name = 'Name must be unique.';
+        isValid = false;
+      }
+      nameSet.add(v.name);
+      errors[index] = varErrors;
+    });
+
+    setVariableErrors(errors);
+    return isValid;
+  }, [currentVersion]);
+  
+  useEffect(() => {
+    validateVariables();
+    if (currentVersion) {
+      const results = analyzePrompt(currentVersion.content, currentVersion.variables);
+      setAnalysisResult(results);
+    }
+  }, [currentVersion?.variables, currentVersion?.content, validateVariables]);
 
   const handleSave = async () => {
-    if (!isVariablesValid) {
-        alert("Please fix variable errors before saving.");
-        return;
-    }
+    if (!currentVersion || !validateVariables() || !currentWorkspace) return;
     setIsSaving(true);
     try {
-        if (isNewTemplate) {
-            if (!currentWorkspace) throw new Error("No workspace selected");
-            const newTemplateData = {
-                workspaceId: currentWorkspace.id,
-                domain: 'General',
-                versions: [editorState],
-                activeVersion: '1',
-                deployedVersion: null,
-            };
-            // @ts-ignore
-            const created = await addTemplate(newTemplateData, currentWorkspace.id);
-            window.location.hash = `#/templates/${created.id}`;
-        } else if (template) {
-            const newVersionNumber = String(Math.max(...template.versions.map(v => parseInt(v.version))) + 1);
-            const newVersion = { ...editorState, version: newVersionNumber, date: new Date().toISOString() };
-            const updatedTemplate = {
-                ...template,
-                versions: [...template.versions, newVersion],
-                activeVersion: newVersionNumber, // Make new version active
-            };
-            const saved = await saveTemplate(updatedTemplate);
-            setTemplate(saved);
-            setSelectedVersion(newVersion);
-            resetEditorState(newVersion);
-        }
+      let templateToSave: PromptTemplate;
+      if (isNew || !template) {
+        templateToSave = {
+          id: '',
+          workspaceId: currentWorkspace.id,
+          domain: 'General',
+          qualityScore: 75, // Starting score
+          activeVersion: '1.0',
+          deployedVersion: null,
+          versions: [currentVersion],
+          metrics: { totalRuns: 0, successfulRuns: 0, avgUserRating: 0, taskSuccessRate: 0, efficiencyScore: 0.8, totalUserRating: 0 },
+          abTests: [],
+        };
+      } else {
+        const versionExists = template.versions.some(v => v.version === currentVersion.version);
+        const updatedVersions = versionExists
+          ? template.versions.map(v => v.version === currentVersion.version ? currentVersion : v)
+          : [...template.versions, currentVersion];
+        
+        templateToSave = { ...template, versions: updatedVersions, activeVersion: currentVersion.version };
+      }
+      
+      const saved = await saveTemplate(templateToSave);
+      setTemplate(saved);
+      // Redirect or show success
+      if (isNew) {
+        window.location.hash = `#/templates/${saved.id}`;
+      }
+      
     } catch (err) {
-        setError('Failed to save template.');
+      setError('Failed to save template.');
     } finally {
-        setIsSaving(false);
+      setIsSaving(false);
     }
   };
-  
+
   const handleDeploy = async (version: string) => {
       if (!template) return;
-      if (window.confirm(`Are you sure you want to deploy Version ${version} to production?`)) {
+      if (window.confirm(`Are you sure you want to deploy version ${version} to production?`)) {
           setIsSaving(true);
           try {
-              const updated = await deployVersion(template.id, version);
-              setTemplate(updated);
-          } catch (e) {
+              const updatedTemplate = await deployTemplateVersion(template.id, version);
+              setTemplate(updatedTemplate);
+          } catch(err) {
               setError("Failed to deploy version.");
           } finally {
               setIsSaving(false);
@@ -209,85 +205,107 @@ const TemplateEditor: React.FC<{ templateId: string }> = ({ templateId }) => {
       }
   };
   
-  const handleVariableChange = (index: number, field: keyof PromptVariable, value: any) => {
-      const newVariables = [...editorState.variables];
-      newVariables[index] = { ...newVariables[index], [field]: value };
-      handleEditorInputChange('variables', newVariables);
+  const handleCreateTest = async (testData: Partial<ABTest>) => {
+      if (!template) return;
+      setIsSaving(true);
+      try {
+        const newTest = await createABTest(template.id, testData);
+        setABTests(prev => [...prev, newTest]);
+        setIsTestModalOpen(false);
+      } catch (err) {
+        setError('Failed to create A/B test.');
+      } finally {
+        setIsSaving(false);
+      }
   };
   
-  const handleAddVariable = () => {
-      const newVar = { name: `var${editorState.variables.length + 1}`, type: 'string', defaultValue: '' };
-      handleEditorInputChange('variables', [...editorState.variables, newVar]);
-  };
-  
-  const handleRemoveVariable = (index: number) => {
-      handleEditorInputChange('variables', editorState.variables.filter((_, i) => i !== index));
+  const handleDeclareWinner = async (testId: string, winner: 'A' | 'B') => {
+      setIsSaving(true);
+      try {
+          await declareABTestWinner(testId, winner);
+          await refetchData(); // Refetch all data to update status and active version
+          setSelectedTest(null);
+      } catch (err) {
+          setError('Failed to declare winner.');
+      } finally {
+          setIsSaving(false);
+      }
   };
 
-  if (isLoading) return <div className="flex justify-center items-center h-64"><SpinnerIcon className="h-8 w-8 text-primary" /><span className="ml-2">Loading...</span></div>;
+  if (isLoading) return <div className="flex justify-center items-center h-64"><SpinnerIcon className="h-8 w-8 text-primary" /></div>;
   if (error) return <div className="text-destructive text-center">{error}</div>;
-
+  if (!currentVersion) return <div className="text-center">No version selected.</div>;
+  
   return (
     <div className="space-y-6">
-      <TemplateHeader 
-          version={editorState}
-          isNew={isNewTemplate}
-          isSaving={isSaving}
-          isUndoable={canUndo}
-          isRedoable={canRedo}
-          canEdit={canEdit}
-          isVariablesValid={isVariablesValid}
-          onInputChange={handleEditorInputChange}
-          onUndo={undo}
-          onRedo={redo}
-          onSave={handleSave}
+      <TemplateHeader
+        version={currentVersion}
+        isNew={isNew}
+        isSaving={isSaving}
+        isUndoable={false}
+        isRedoable={false}
+        canEdit={canEdit}
+        isVariablesValid={!variableErrors.some(e => Object.keys(e).length > 0)}
+        onInputChange={handleInputChange}
+        onUndo={() => {}}
+        onRedo={() => {}}
+        onSave={handleSave}
       />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-            {!isNewTemplate && template && selectedVersion && (
-                <VersionManager 
-                    template={template}
-                    selectedVersion={selectedVersion}
-                    onVersionChange={handleVersionChange}
-                    onDeploy={handleDeploy}
-                    canEdit={canEdit}
-                />
-            )}
-            <textarea
-              value={editorState.content}
-              onChange={(e) => handleEditorInputChange('content', e.target.value)}
-              disabled={!canEdit}
-              className="w-full h-96 font-mono text-sm p-4 bg-card shadow-card rounded-lg border border-border focus:ring-2 focus:ring-ring focus:outline-none resize-y disabled:opacity-70"
+        <div className="lg:col-span-2 space-y-6">
+          {template && (
+            <VersionManager
+                template={template}
+                selectedVersion={currentVersion}
+                onVersionChange={setCurrentVersion}
+                onDeploy={handleDeploy}
+                canEdit={canEdit}
             />
-        </div>
-        <div className="space-y-6">
-           <VariableEditor 
-             variables={editorState.variables}
-             variableErrors={variableErrors}
-             canEdit={canEdit}
-             onVariableChange={handleVariableChange}
-             onAddVariable={handleAddVariable}
-             onRemoveVariable={handleRemoveVariable}
-           />
-           {!isNewTemplate && template && (
-             <>
-                <ABTestManager 
-                    tests={template.abTests}
-                    onStartTest={() => setIsTestModalOpen(true)}
-                    onSelectTest={() => {}}
-                />
-                <ABTestResults test={selectedTest} />
-             </>
            )}
+          <textarea
+            value={currentVersion.content}
+            onChange={(e) => handleInputChange('content', e.target.value)}
+            className="w-full h-96 p-4 font-mono text-sm bg-card shadow-card rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring resize-y disabled:opacity-70"
+            placeholder="Enter your prompt template here..."
+            disabled={!canEdit}
+          />
+        </div>
+
+        <div className="space-y-6">
+          <VariableEditor
+            variables={currentVersion.variables}
+            variableErrors={variableErrors}
+            canEdit={canEdit}
+            onVariableChange={handleVariableChange}
+            onAddVariable={addVariable}
+            onRemoveVariable={removeVariable}
+          />
+          {analysisResult && <PromptAnalysisPanel analysis={analysisResult} />}
+          {template && canEdit && (
+            <ABTestManager 
+              tests={abTests}
+              onStartTest={() => setIsTestModalOpen(true)}
+              onSelectTest={setSelectedTest}
+            />
+          )}
         </div>
       </div>
       
+      {selectedTest && template && (
+        <ABTestResults 
+          test={selectedTest} 
+          template={template}
+          onClose={() => setSelectedTest(null)}
+          onDeclareWinner={handleDeclareWinner}
+        />
+      )}
+
       {isTestModalOpen && template && (
         <CreateABTestModal 
-            versions={template.versions}
-            onClose={() => setIsTestModalOpen(false)}
-            onSave={(newTest) => { console.log('New test:', newTest); setIsTestModalOpen(false); }}
+          versions={template.versions}
+          onClose={() => setIsTestModalOpen(false)}
+          onSave={handleCreateTest}
         />
       )}
     </div>
