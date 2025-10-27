@@ -1,10 +1,9 @@
 
-
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, { ReactFlowProvider } from 'reactflow';
 import 'reactflow/dist/style.css';
 // Fix: Corrected import paths to be relative.
-import { Node, Edge, NodeType, NodeRunStatus, LogEntry, Run, ModelNodeData, ToolNodeData, InputNodeData, KnowledgeNodeData, AgentGraph } from '../types.ts';
+import type { Node, Edge, NodeType, NodeRunStatus, LogEntry, Run, ModelNodeData, ToolNodeData, InputNodeData, KnowledgeNodeData, AgentGraph } from '../types.ts';
 import { executeAgent } from '../services/agentExecutorService.ts';
 import { getAgentGraphs, saveAgentGraph } from '../services/apiService.ts';
 import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
@@ -84,17 +83,6 @@ const AgenticWorkbench: React.FC = () => {
         }
     }, [selectedNode]);
     
-    const addNode = (preset: { type: NodeType; data: Node['data'] }) => {
-        const newNodeId = `node_${Date.now()}`;
-        const newNode: Node = {
-            id: newNodeId,
-            type: preset.type,
-            position: { x: Math.random() * 400, y: Math.random() * 400 },
-            data: preset.data,
-        };
-        setNodes((nds) => nds.concat(newNode));
-    };
-
     const handleRun = async () => {
         if (nodes.length <= 2) return; // Don't run an empty graph
         const runId = `run-${runs.length + 1}`;
@@ -161,7 +149,7 @@ const AgenticWorkbench: React.FC = () => {
                     isRunning={isRunning}
                 />
                 <div className="flex-1 flex gap-4 min-h-0">
-                    <WorkbenchSidebar addNode={addNode} />
+                    <WorkbenchSidebar />
                     <div className="flex-1 flex flex-col gap-4">
                         <NodeBasedEditor
                             nodes={nodes} setNodes={setNodes}

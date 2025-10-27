@@ -1,33 +1,37 @@
 import React from 'react';
 import { PromptTemplateVersion } from '../../types.ts';
-import { ArrowUturnLeftIcon, ArrowUturnRightIcon } from '../icons/Icons.tsx';
+import { ArrowUturnLeftIcon, ArrowUturnRightIcon, RocketLaunchIcon } from '../icons/Icons.tsx';
 
 interface TemplateHeaderProps {
   version: PromptTemplateVersion;
   isNew: boolean;
-  isSaving: boolean;
+  actionInProgress: 'none' | 'save' | 'deploy';
   isUndoable: boolean;
   isRedoable: boolean;
   canEdit: boolean;
   isVariablesValid: boolean;
+  isDeployed: boolean;
   onInputChange: (field: keyof PromptTemplateVersion, value: any) => void;
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
+  onSaveAndDeploy: () => void;
 }
 
 export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
   version,
   isNew,
-  isSaving,
+  actionInProgress,
   isUndoable,
   isRedoable,
   canEdit,
   isVariablesValid,
+  isDeployed,
   onInputChange,
   onUndo,
   onRedo,
-  onSave
+  onSave,
+  onSaveAndDeploy
 }) => {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -58,10 +62,18 @@ export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
             </button>
             <button
               onClick={onSave}
-              disabled={isSaving || !isVariablesValid}
+              disabled={actionInProgress !== 'none' || !isVariablesValid}
               className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-success-foreground bg-success rounded-md hover:bg-success/90 disabled:opacity-50"
             >
-              {isSaving ? 'Saving...' : (isNew ? 'Create Template' : 'Save Changes')}
+              {actionInProgress === 'save' ? 'Saving...' : (isNew ? 'Create Template' : 'Save Changes')}
+            </button>
+             <button
+              onClick={onSaveAndDeploy}
+              disabled={actionInProgress !== 'none' || !isVariablesValid || (isDeployed && !isUndoable)}
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
+            >
+              <RocketLaunchIcon className="h-4 w-4 mr-2"/>
+              {actionInProgress === 'deploy' ? 'Deploying...' : 'Save & Deploy'}
             </button>
           </>
         )}

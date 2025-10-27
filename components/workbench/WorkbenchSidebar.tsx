@@ -1,9 +1,8 @@
 
-
 import React from 'react';
 // FIX: Imported the `Node` type to resolve a conflict with the built-in DOM `Node` type.
 // Fix: Corrected import paths to be relative.
-import { Node, NodeType, ToolNodeData, InputNodeData, ModelNodeData, KnowledgeNodeData } from '../../types.ts';
+import type { Node, NodeType, ToolNodeData, InputNodeData, ModelNodeData, KnowledgeNodeData } from '../../types.ts';
 import { 
     CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon,
     CollectionIcon, ShareIcon, EnvelopeIcon, TableCellsIcon, CodeBracketIcon, ArrowsPointingOutIcon,
@@ -54,11 +53,12 @@ const PRESET_NODES: NodeCategory[] = [
 ];
 
 
-interface WorkbenchSidebarProps {
-  addNode: (preset: PresetNode) => void;
-}
+const WorkbenchSidebar: React.FC = () => {
+    const onDragStart = (event: React.DragEvent, preset: PresetNode) => {
+        event.dataTransfer.setData('application/reactflow', JSON.stringify(preset));
+        event.dataTransfer.effectAllowed = 'move';
+    };
 
-const WorkbenchSidebar: React.FC<WorkbenchSidebarProps> = ({ addNode }) => {
   return (
     <aside className="w-64 bg-card shadow-card rounded-lg p-4 flex-shrink-0">
       <h2 className="text-lg font-semibold mb-4">Add Nodes</h2>
@@ -68,10 +68,11 @@ const WorkbenchSidebar: React.FC<WorkbenchSidebarProps> = ({ addNode }) => {
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{category.name}</h3>
                 <div className="space-y-1">
                     {category.items.map((preset) => (
-                        <button
+                        <div
                             key={preset.label}
-                            onClick={() => addNode(preset)}
-                            className="w-full flex items-start text-left p-2 rounded-md hover:bg-accent transition-colors"
+                            onDragStart={(event) => onDragStart(event, preset)}
+                            draggable
+                            className="w-full flex items-start text-left p-2 rounded-md hover:bg-accent transition-colors cursor-grab"
                         >
                             <div className="p-2 bg-secondary rounded-md mr-3">
                                 <preset.icon className="h-5 w-5 text-primary" />
@@ -80,7 +81,7 @@ const WorkbenchSidebar: React.FC<WorkbenchSidebarProps> = ({ addNode }) => {
                                 <p className="font-medium text-sm text-foreground">{preset.label}</p>
                                 <p className="text-xs text-muted-foreground">{preset.description}</p>
                             </div>
-                        </button>
+                        </div>
                     ))}
                 </div>
             </div>

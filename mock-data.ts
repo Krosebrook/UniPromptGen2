@@ -1,18 +1,14 @@
 // mock-data.ts
 
-import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, Folder } from './types.ts';
+import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, Folder, Task } from './types.ts';
 import { MOCK_USERS } from './constants.ts';
 
 const MAIN_USER_ID = 'user-001';
 
 export const MOCK_FOLDERS: Folder[] = [
-    // Fix: Added missing `folderId` property to conform to the updated Folder type.
     { id: 'folder-temp-1', name: 'Marketing Prompts', type: 'template', itemCount: 2, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
-    // Fix: Added missing `folderId` property to conform to the updated Folder type.
     { id: 'folder-temp-2', name: 'Support Prompts', type: 'template', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
-    // Fix: Added missing `folderId` property to conform to the updated Folder type.
     { id: 'folder-tool-1', name: 'Internal APIs', type: 'tool', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [{ userId: 'user-002', role: 'Viewer'}], folderId: null },
-    // Fix: Added missing `folderId` property to conform to the updated Folder type.
     { id: 'folder-ks-1', name: 'Q4 Financials', type: 'knowledge', itemCount: 1, createdAt: new Date().toISOString(), ownerId: 'user-002', permissions: [{ userId: MAIN_USER_ID, role: 'Editor'}], folderId: null },
 ];
 
@@ -34,7 +30,6 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-10-15',
     ownerId: MAIN_USER_ID,
     permissions: [],
-    // Fix: Added missing `name` property.
     name: 'Ad Copy with Emojis',
   },
   {
@@ -53,7 +48,6 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-09-20',
     ownerId: MAIN_USER_ID,
     permissions: [{ userId: 'user-002', role: 'Editor' }],
-    // Fix: Added missing `name` property.
     name: 'Customer Support Response',
   },
   {
@@ -72,7 +66,6 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-11-05',
     ownerId: 'user-003',
     permissions: [{ userId: MAIN_USER_ID, role: 'Viewer' }],
-    // Fix: Added missing `name` property.
     name: 'Generate Unit Tests',
   },
    {
@@ -91,7 +84,6 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-11-10',
     ownerId: 'user-002',
     permissions: [],
-    // Fix: Added missing `name` property.
     name: 'Blog Post Idea Generator',
   },
 ];
@@ -172,6 +164,15 @@ export const MOCK_WORKSPACES: Workspace[] = [
     { id: 'ws-001', name: 'Main Production', plan: 'Enterprise', memberIds: ['user-001', 'user-002', 'user-003', 'user-004'] },
     { id: 'ws-002', name: 'Marketing Team', plan: 'Pro', memberIds: ['user-001', 'user-002', 'user-004'] },
     { id: 'ws-003', name: 'Personal Dev', plan: 'Free', memberIds: ['user-001', 'user-003'] },
+];
+
+export const MOCK_TASKS: Task[] = [
+  { id: 'task-1', text: 'Review Q4 marketing prompts', completed: false, priority: 'High', workspaceId: 'ws-001' },
+  { id: 'task-2', text: 'Deploy new unit test generator template', completed: false, priority: 'High', workspaceId: 'ws-001' },
+  { id: 'task-3', text: 'Draft documentation for the CRM User Lookup tool', completed: true, priority: 'Medium', workspaceId: 'ws-001' },
+  { id: 'task-4', text: 'Onboard Sarah Lee to the Marketing workspace', completed: false, priority: 'Low', workspaceId: 'ws-002' },
+  { id: 'task-5', text: 'Plan next A/B test for Ad Copy template', completed: false, priority: 'Medium', workspaceId: 'ws-002' },
+  { id: 'task-6', text: 'Finalize personal development goals', completed: false, priority: 'Low', workspaceId: 'ws-003' },
 ];
 
 export const MOCK_ANALYTICS_DB = {

@@ -1,6 +1,5 @@
 
 
-// Fix: Corrected import paths to be relative.
 import type { Node, Edge, NodeRunStatus, LogEntry, ToolNodeData, InputNodeData, ModelNodeData, KnowledgeNodeData } from '../types.ts';
 import { generateText } from './geminiService.ts';
 import { getKnowledgeSourceContent, executeTool } from './apiService.ts';
@@ -205,7 +204,6 @@ export const executeAgent = async (
             }
 
             case 'knowledge':
-                // FIX: Cast currentNode.data to KnowledgeNodeData to access specific properties.
                 const knowledgeData = currentNode.data as KnowledgeNodeData;
                 log(`Accessing knowledge source: ${knowledgeData.label}`, 'info');
                 if (!knowledgeData.sourceId) throw new Error("Knowledge node is not configured.");

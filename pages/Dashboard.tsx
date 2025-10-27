@@ -1,13 +1,9 @@
-
-
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  RocketLaunchIcon, ClockIcon, CheckCircleIcon, CodeBracketSquareIcon, SpinnerIcon
-// Fix: Corrected import paths to be relative.
+  RocketLaunchIcon, ClockIcon, CheckCircleIcon, CodeBracketSquareIcon, SpinnerIcon, TrashIcon, PlusIcon
 } from '../components/icons/Icons.tsx';
-import { getAnalytics, getDeployedTemplates } from '../services/apiService.ts';
-import { PromptTemplate, AnalyticsChartData } from '../types.ts';
+import { getAnalytics, getDeployedTemplates, getTasks, addTask, updateTask, deleteTask } from '../services/apiService.ts';
+import { PromptTemplate, AnalyticsChartData, Task, TaskPriority } from '../types.ts';
 import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
 import {
   ResponsiveContainer,
@@ -47,6 +43,151 @@ const timeRanges = [
     { label: '30 Days', days: 30 },
 ];
 
+// --- Task List Feature ---
+
+const priorityConfig: Record<TaskPriority, { color: string, border: string, label: string }> = {
+    High: { color: 'text-destructive', border: 'border-destructive', label: 'High' },
+    Medium: { color: 'text-warning', border: 'border-warning', label: 'Medium' },
+    Low: { color: 'text-info', border: 'border-info', label: 'Low' },
+};
+
+const priorityOrder: Record<TaskPriority, number> = {
+    High: 0,
+    Medium: 1,
+    Low: 2,
+};
+
+interface TaskItemProps {
+    task: Task;
+    onToggle: (taskId: string, completed: boolean) => void;
+    onDelete: (taskId: string) => void;
+}
+
+const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onDelete }) => {
+    const config = priorityConfig[task.priority];
+
+    return (
+        <div className={`flex items-center p-3 bg-secondary/50 rounded-md border-l-4 ${config.border} transition-all hover:bg-secondary`}>
+            <input
+                type="checkbox"
+                checked={task.completed}
+                onChange={(e) => onToggle(task.id, e.target.checked)}
+                className="h-5 w-5 rounded border-border text-primary focus:ring-primary bg-input flex-shrink-0"
+            />
+            <span className={`flex-1 mx-3 text-sm ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                {task.text}
+            </span>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${config.color} bg-background`}>
+                {config.label}
+            </span>
+            <button onClick={() => onDelete(task.id)} className="ml-2 text-muted-foreground hover:text-destructive p-1 rounded-full">
+                <TrashIcon className="h-4 w-4" />
+            </button>
+        </div>
+    );
+};
+
+
+const TaskList: React.FC = () => {
+    const { currentWorkspace } = useWorkspace();
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [newTaskText, setNewTaskText] = useState('');
+    const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('Medium');
+
+    const fetchTasks = useCallback(async () => {
+        if (!currentWorkspace) return;
+        setIsLoading(true);
+        try {
+            const fetchedTasks = await getTasks(currentWorkspace.id);
+            const sortedTasks = fetchedTasks.sort((a, b) => {
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                return priorityOrder[a.priority] - priorityOrder[b.priority];
+            });
+            setTasks(sortedTasks);
+        } catch (error) {
+            console.error("Failed to fetch tasks:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [currentWorkspace]);
+
+    useEffect(() => {
+        fetchTasks();
+    }, [fetchTasks]);
+
+    const handleAddTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newTaskText.trim() || !currentWorkspace) return;
+        
+        const newTaskData = {
+            text: newTaskText.trim(),
+            priority: newTaskPriority,
+            completed: false,
+            workspaceId: currentWorkspace.id,
+        };
+        
+        await addTask(newTaskData);
+        setNewTaskText('');
+        setNewTaskPriority('Medium');
+        fetchTasks(); // Refresh list
+    };
+    
+    const handleToggleTask = async (taskId: string, completed: boolean) => {
+        await updateTask(taskId, { completed });
+        fetchTasks();
+    };
+    
+    const handleDeleteTask = async (taskId: string) => {
+        await deleteTask(taskId);
+        fetchTasks();
+    };
+
+    return (
+        <div className="bg-card shadow-card rounded-lg p-6 flex flex-col">
+            <h2 className="text-xl font-semibold mb-4">My Tasks</h2>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2 min-h-[200px] max-h-[300px]">
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-full">
+                        <SpinnerIcon className="h-6 w-6 text-primary" />
+                    </div>
+                ) : tasks.length > 0 ? (
+                     tasks.map(task => (
+                        <TaskItem key={task.id} task={task} onToggle={handleToggleTask} onDelete={handleDeleteTask} />
+                    ))
+                ) : (
+                    <p className="text-center text-muted-foreground pt-10">No tasks for this workspace.</p>
+                )}
+            </div>
+            <form onSubmit={handleAddTask} className="mt-4 flex gap-2 border-t border-border pt-4">
+                <input
+                    type="text"
+                    value={newTaskText}
+                    onChange={(e) => setNewTaskText(e.target.value)}
+                    placeholder="Add a new task..."
+                    className="flex-1 px-3 py-2 text-sm bg-input rounded-md focus:ring-2 focus:ring-ring focus:outline-none"
+                />
+                <select
+                    value={newTaskPriority}
+                    onChange={(e) => setNewTaskPriority(e.target.value as TaskPriority)}
+                    className="px-3 py-2 text-sm bg-input rounded-md focus:ring-2 focus:ring-ring focus:outline-none"
+                >
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+                <button type="submit" className="p-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50" disabled={!newTaskText.trim()}>
+                    <PlusIcon className="h-5 w-5" />
+                </button>
+            </form>
+        </div>
+    );
+}
+
+// --- End of Task List Feature ---
+
 const Dashboard: React.FC = () => {
   const { currentWorkspace } = useWorkspace();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -61,7 +202,6 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
         try {
             const analytics = await getAnalytics(currentWorkspace.id, timeRange);
-            // Fix: Expected 2 arguments, but got 1.
             const templates = await getDeployedTemplates(currentWorkspace.id, MOCK_LOGGED_IN_USER.id);
             
             setStats({
@@ -148,26 +288,30 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-       <div className={`bg-card shadow-card rounded-lg p-6 transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-           <h2 className="text-xl font-semibold mb-4">Top 5 Deployed Templates by Usage ({timeRanges.find(tr => tr.days === timeRange)?.label})</h2>
-           {topTemplates.length > 0 ? (
-               <ul className="divide-y divide-border">
-                 {topTemplates.map(t => {
-                   const activeVersion = t.versions.find(v => v.version === t.activeVersion);
-                   return (
-                     <li key={t.id} className="flex justify-between items-center text-sm py-3">
-                       <div>
-                         <a href={`#/templates/${t.id}`} className="font-medium text-foreground hover:text-primary">{activeVersion?.name || 'Untitled Template'}</a>
-                         <p className="text-xs text-muted-foreground">Deployed v{t.deployedVersion}</p>
-                       </div>
-                       <span className="font-semibold text-primary">{(t as any).runCount.toLocaleString()} runs</span>
-                     </li>
-                   );
-                 })}
-               </ul>
-           ) : (
-            <p className="text-center text-muted-foreground py-8">No deployed templates with usage data in this period.</p>
-           )}
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`bg-card shadow-card rounded-lg p-6 transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
+               <h2 className="text-xl font-semibold mb-4">Top 5 Deployed Templates by Usage ({timeRanges.find(tr => tr.days === timeRange)?.label})</h2>
+               {topTemplates.length > 0 ? (
+                   <ul className="divide-y divide-border">
+                     {topTemplates.map(t => {
+                       const activeVersion = t.versions.find(v => v.version === t.activeVersion);
+                       return (
+                         <li key={t.id} className="flex justify-between items-center text-sm py-3">
+                           <div>
+                             <a href={`#/templates/${t.id}`} className="font-medium text-foreground hover:text-primary">{activeVersion?.name || 'Untitled Template'}</a>
+                             <p className="text-xs text-muted-foreground">Deployed v{t.deployedVersion}</p>
+                           </div>
+                           <span className="font-semibold text-primary">{(t as any).runCount.toLocaleString()} runs</span>
+                         </li>
+                       );
+                     })}
+                   </ul>
+               ) : (
+                <p className="text-center text-muted-foreground py-8">No deployed templates with usage data in this period.</p>
+               )}
+           </div>
+           
+           <TaskList />
        </div>
     </div>
   );

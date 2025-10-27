@@ -274,3 +274,14 @@ export interface Folder {
 }
 
 export type LibraryItem = PromptTemplate | Tool | KnowledgeSource | Folder;
+
+// --- Task Management ---
+export type TaskPriority = 'High' | 'Medium' | 'Low';
+
+export interface Task {
+  id: string;
+  text: string;
+  completed: boolean;
+  priority: TaskPriority;
+  workspaceId: string;
+}

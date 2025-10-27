@@ -5,7 +5,6 @@ import FolderCard from './FolderCard.tsx';
 import CreateFolderModal from './CreateFolderModal.tsx';
 import { LibraryType, Folder, LibraryItem } from '../../types.ts';
 import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
-// Fix: Cannot find name 'getFolders'.
 import { moveItemToFolder, getFolders } from '../../services/apiService.ts';
 import ContextMenu from '../common/ContextMenu.tsx';
 import PermissionsModal from '../modals/PermissionsModal.tsx';

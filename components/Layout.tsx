@@ -2,7 +2,6 @@
 import React from 'react';
 import Sidebar from './Sidebar.tsx';
 import Header from './Header.tsx';
-// Fix: Corrected import path to be relative.
 import { User } from '../types.ts';
 
 interface LayoutProps {

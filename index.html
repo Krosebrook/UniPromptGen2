@@ -84,6 +84,31 @@
         transform: scale(1.5);
         transition: all 0.2s;
       }
+      .react-flow__handle.connecting {
+        background: hsl(217 91% 60%) !important;
+        animation: pulse 1.5s infinite;
+      }
+
+      .react-flow__handle.valid {
+        background: hsl(142 71% 45%) !important;
+        transform: scale(1.5);
+      }
+
+      .react-flow__handle.invalid {
+        background: hsl(0 72% 51%) !important;
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px hsl(217 91% 60% / 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 hsl(217 91% 60% / 0);
+        }
+      }
     </style>
 </head>
 <body class="bg-background text-foreground">

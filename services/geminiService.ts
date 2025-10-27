@@ -1,6 +1,6 @@
 
+
 import { GoogleGenAI, Chat as ChatSession, Modality, GenerateContentResponse } from "@google/genai";
-// Fix: Corrected import path to be relative.
 import { ChatMessage, GroundingSource } from "../types.ts";
 
 // NOTE: A new GoogleGenAI instance must be created for Veo models right before the API call.

@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { analyzeImage } from '../../services/geminiService.ts';
 import { fileToBase64 } from '../../utils/helpers.ts';
-// Fix: Module '"../icons/Icons.tsx"' has no exported member 'PhotoIcon'.
 import { SparklesIcon, UploadIcon } from '../icons/Icons.tsx';
 
 const ImageAnalyzer: React.FC = () => {

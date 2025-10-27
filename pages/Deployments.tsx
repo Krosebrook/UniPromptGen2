@@ -1,12 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getDeployedTemplates } from '../services/apiService.ts';
-import { useLibraryData } from '../hooks/useLibraryData.ts';
 import { SpinnerIcon, RocketLaunchIcon } from '../components/icons/Icons.tsx';
 import DeploymentCard from '../components/DeploymentCard.tsx';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import { MOCK_LOGGED_IN_USER } from '../constants.ts';
+import { PromptTemplate } from '../types.ts';
 
 const Deployments: React.FC = () => {
-  // FIX: Added null as the third argument to useLibraryData to match its function signature.
-  const { data: templates, isLoading, error } = useLibraryData(getDeployedTemplates, 'deployed templates', null);
+  const { currentWorkspace } = useWorkspace();
+  const [templates, setTemplates] = useState<PromptTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentWorkspace) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedTemplates = await getDeployedTemplates(currentWorkspace.id, MOCK_LOGGED_IN_USER.id);
+        setTemplates(fetchedTemplates);
+      } catch (err) {
+        console.error("Failed to load deployments:", err);
+        setError("Could not load deployments. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [currentWorkspace]);
+
 
   const renderContent = () => {
     if (isLoading) {

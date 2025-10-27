@@ -1,7 +1,7 @@
 // apiService.ts
 
-import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AGENTS, MOCK_WORKSPACES, MOCK_FOLDERS } from '../mock-data.ts';
-import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, ABTest, ToolFormData, KnowledgeSourceFormData, Folder, LibraryType, LibraryItem, UserRole, Permission, User } from '../types.ts';
+import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AGENTS, MOCK_WORKSPACES, MOCK_FOLDERS, MOCK_TASKS } from '../mock-data.ts';
+import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, ABTest, ToolFormData, KnowledgeSourceFormData, Folder, LibraryType, LibraryItem, UserRole, Permission, User, Task } from '../types.ts';
 import { MOCK_USERS, MOCK_LOGGED_IN_USER } from '../constants.ts';
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -261,4 +261,40 @@ export const updatePermissions = async (itemId: string, itemType: LibraryType | 
     if (item) {
         item.permissions = permissions;
     }
+};
+
+// --- Tasks ---
+export const getTasks = async (workspaceId: string): Promise<Task[]> => {
+    await delay(400);
+    return MOCK_TASKS.filter(t => t.workspaceId === workspaceId);
+};
+
+export const addTask = async (taskData: Omit<Task, 'id'>): Promise<Task> => {
+    await delay(200);
+    const newTask: Task = {
+        id: `task-${Date.now()}`,
+        ...taskData,
+    };
+    MOCK_TASKS.unshift(newTask);
+    return newTask;
+};
+
+export const updateTask = async (taskId: string, updates: Partial<Omit<Task, 'id'>>): Promise<Task> => {
+    await delay(100);
+    const index = MOCK_TASKS.findIndex(t => t.id === taskId);
+    if (index > -1) {
+        MOCK_TASKS[index] = { ...MOCK_TASKS[index], ...updates };
+        return MOCK_TASKS[index];
+    }
+    throw new Error("Task not found");
+};
+
+export const deleteTask = async (taskId: string): Promise<void> => {
+    await delay(100);
+    const index = MOCK_TASKS.findIndex(t => t.id === taskId);
+    if (index > -1) {
+        MOCK_TASKS.splice(index, 1);
+        return;
+    }
+    throw new Error("Task not found");
 };

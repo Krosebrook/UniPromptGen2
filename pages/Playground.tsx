@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState } from 'react';
 import Chatbot from '../components/playground/Chatbot.tsx';
 import ImageGenerator from '../components/playground/ImageGenerator.tsx';
@@ -16,11 +17,8 @@ import ImageAnalyzer from '../components/playground/ImageAnalyzer.tsx';
 import TextToVideo from '../components/playground/TextToVideo.tsx';
 
 import {
-  // Fix: Module '"../components/icons/Icons.tsx"' has no exported member 'ChatBubbleLeftRightIcon'.
-  // Fix: Module '"../components/icons/Icons.tsx"' has no exported member 'PhotoIcon'.
   QuoteIcon, ScissorsIcon, VideoCameraIcon,
   MicrophoneIcon, SpeakerWaveIcon, GlobeAltIcon, SparklesIcon, BoltIcon, CpuChipIcon
-// Fix: Corrected import path to be relative.
 } from '../components/icons/Icons.tsx';
 
 type PlaygroundTab = 'fast-chat' | 'voice-chat' | 'chat' | 'image-generation' | 'image-editing' | 'image-analysis' | 'video-generation' | 'text-to-video' | 'audio-transcription' | 'text-to-speech' | 'grounded-search' | 'complex-reasoning';

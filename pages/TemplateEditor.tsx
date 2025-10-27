@@ -12,6 +12,7 @@ import ABTestManager from '../components/ab-testing/ABTestManager.tsx';
 import ABTestResults from '../components/ab-testing/ABTestResults.tsx';
 import CreateABTestModal from '../components/ab-testing/CreateABTestModal.tsx';
 import { usePermissions } from '../hooks/usePermissions.ts';
+import { MOCK_LOGGED_IN_USER } from '../constants.ts';
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -31,7 +32,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const [template, setTemplate] = useImmer<PromptTemplate | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<PromptTemplateVersion>(NEW_TEMPLATE_VERSION);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState<'none' | 'save' | 'deploy'>('none');
   
   // Undo/Redo state
   const [history, setHistory] = useState<PromptTemplateVersion[]>([]);
@@ -144,7 +145,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   
   const handleSave = async () => {
       if (!isVariablesValid || !template) return;
-      setIsSaving(true);
+      setActionInProgress('save');
       
       let templateToSave: Partial<PromptTemplate>;
       
@@ -175,10 +176,109 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
           window.location.hash = `#/templates/${savedTemplate.id}`;
       } else {
         setTemplate(savedTemplate);
+        // Reset history after save
+        const newSelectedVersion = savedTemplate.versions.find(v => v.version === savedTemplate.activeVersion) || selectedVersion;
+        setSelectedVersion(newSelectedVersion);
+        setHistory([newSelectedVersion]);
+        setHistoryIndex(0);
       }
 
-      setIsSaving(false);
+      setActionInProgress('none');
   };
+
+    const handleDeploy = async (versionString: string) => {
+      if (!template) return;
+      setActionInProgress('deploy');
+      
+      const templateToSave = {
+          ...template,
+          deployedVersion: versionString,
+      };
+
+      const savedTemplate = await saveTemplate(templateToSave);
+      setTemplate(savedTemplate);
+      setActionInProgress('none');
+  };
+
+  const handleSaveAndDeploy = async () => {
+    if (!isVariablesValid || !template) return;
+    setActionInProgress('deploy');
+
+    // Step 1: Save the current content
+    let templateToSave: Partial<PromptTemplate>;
+    
+    if (isNewTemplate) {
+        templateToSave = {
+          ...template,
+          name: selectedVersion.name,
+          versions: [selectedVersion],
+          activeVersion: selectedVersion.version,
+        };
+    } else {
+        const versionExists = template.versions.some(v => v.version === selectedVersion.version);
+        const updatedVersions = versionExists
+            ? template.versions.map(v => v.version === selectedVersion.version ? selectedVersion : v)
+            : [...template.versions, selectedVersion];
+
+        templateToSave = {
+          ...template,
+          name: selectedVersion.name,
+          versions: updatedVersions,
+          activeVersion: selectedVersion.version,
+        };
+    }
+    
+    const savedTemplate = await saveTemplate(templateToSave);
+
+    // Step 2: Set deployed version and save again
+    const templateToDeploy = {
+        ...savedTemplate,
+        deployedVersion: savedTemplate.activeVersion,
+    };
+    const deployedTemplate = await saveTemplate(templateToDeploy);
+
+    // Step 3: Update local state
+    if (isNewTemplate) {
+        window.location.hash = `#/templates/${deployedTemplate.id}`;
+    } else {
+      setTemplate(deployedTemplate);
+      const newSelectedVersion = deployedTemplate.versions.find(v => v.version === deployedTemplate.activeVersion) || selectedVersion;
+      setSelectedVersion(newSelectedVersion);
+      setHistory([newSelectedVersion]);
+      setHistoryIndex(0);
+    }
+    setActionInProgress('none');
+  };
+
+  const handleCreateNewVersion = useCallback((sourceVersion: PromptTemplateVersion) => {
+    if (!template) return;
+
+    const maxMajor = template.versions.reduce((max, v) => {
+        const major = parseInt(v.version.split('.')[0], 10);
+        return Math.max(max, major);
+    }, 0);
+    
+    const newVersionNumber = `${maxMajor + 1}.0`;
+    
+    const newVersion: PromptTemplateVersion = {
+        ...JSON.parse(JSON.stringify(sourceVersion)), // Deep copy
+        version: newVersionNumber,
+        date: new Date().toISOString(),
+        authorId: MOCK_LOGGED_IN_USER.id,
+    };
+    
+    setTemplate(draft => {
+        if (draft) {
+            draft.versions.push(newVersion);
+            draft.activeVersion = newVersion.version;
+        }
+    });
+
+    setSelectedVersion(newVersion);
+    setHistory([newVersion]);
+    setHistoryIndex(0);
+
+  }, [template, setTemplate]);
   
   const variableErrors = useMemo(() => {
     return selectedVersion.variables.map(variable => {
@@ -210,24 +310,31 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
       <TemplateHeader
         version={selectedVersion}
         isNew={isNewTemplate}
-        isSaving={isSaving}
+        actionInProgress={actionInProgress}
         isUndoable={historyIndex > 0}
         isRedoable={historyIndex < history.length - 1}
         canEdit={canEdit}
         isVariablesValid={isVariablesValid}
+        isDeployed={selectedVersion.version === template.deployedVersion}
         onInputChange={handleInputChange}
         onUndo={handleUndo}
         onRedo={handleRedo}
         onSave={handleSave}
+        onSaveAndDeploy={handleSaveAndDeploy}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-            <VersionManager 
+            <VersionManager
                 template={template}
                 selectedVersion={selectedVersion}
-                onVersionChange={setSelectedVersion}
-                onDeploy={() => {}} // TODO: Implement deploy
+                onVersionChange={(v) => {
+                    setSelectedVersion(v);
+                    setHistory([v]);
+                    setHistoryIndex(0);
+                }}
+                onDeploy={handleDeploy}
+                onCreateNewVersion={handleCreateNewVersion}
                 canEdit={canEdit}
             />
              <textarea

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import {
   HomeIcon, ChartPieIcon, CodeBracketSquareIcon, PlayIcon, UserCircleIcon,
   ShoppingCartIcon, BeakerIcon, TerminalIcon, CollectionIcon, RocketLaunchIcon
-// Fix: Corrected import path to be relative.
 } from './icons/Icons.tsx';
 
 interface NavLinkProps {

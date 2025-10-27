@@ -3,9 +3,7 @@
 
 
 import React, { useRef, useEffect } from 'react';
-// Fix: Corrected import paths to be relative.
 import { LogEntry } from '../../types.ts';
-// Fix: Module '"../icons/Icons.tsx"' has no exported member 'InformationCircleIcon'.
 import { BellIcon, CheckCircleIcon, XCircleIcon, SpinnerIcon } from '../icons/Icons.tsx';
 
 interface LogPanelProps {

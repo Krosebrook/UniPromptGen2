@@ -1,5 +1,4 @@
 
-
 import React, { useCallback, useMemo } from 'react';
 import ReactFlow, {
   Controls,
@@ -13,11 +12,12 @@ import ReactFlow, {
   NodeTypes,
   Connection,
   OnDelete,
+  useReactFlow,
 } from 'reactflow';
 import CustomNode from './nodes/CustomNode.tsx';
 // Fix: Corrected import paths to be relative.
 import { CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon, CollectionIcon } from '../icons/Icons.tsx';
-import { NodeRunStatus, Node, Edge } from '../../types.ts';
+import type { NodeRunStatus, Node, Edge } from '../../types.ts';
 
 interface NodeBasedEditorProps {
   nodes: Node[];
@@ -29,7 +29,11 @@ interface NodeBasedEditorProps {
   selectedNodeId: string | null;
 }
 
+const connectionLineStyle = { stroke: 'hsl(217 91% 60%)', strokeWidth: 3, strokeDasharray: '5 5' };
+
 const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edges, setEdges, setSelectedNode, runStatus, selectedNodeId }) => {
+  const { screenToFlowPosition } = useReactFlow();
+  
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes]
@@ -122,6 +126,38 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
     setSelectedNode(null);
   }, [setSelectedNode]);
 
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+
+      const dataString = event.dataTransfer.getData('application/reactflow');
+      if (!dataString) {
+        return;
+      }
+      
+      const preset = JSON.parse(dataString);
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      const newNode: Node = {
+        id: `node_${Date.now()}`,
+        type: preset.type,
+        position,
+        data: preset.data,
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+    },
+    [screenToFlowPosition, setNodes]
+  );
+
   const nodeTypes: NodeTypes = useMemo(() => ({
     input: (props) => <CustomNode {...props} icon={ArrowRightStartOnRectangleIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
     output: (props) => <CustomNode {...props} icon={ArrowLeftEndOnRectangleIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
@@ -145,6 +181,9 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
         isValidConnection={isValidConnection}
         deleteKeyCode={['Backspace', 'Delete']}
         onDelete={onDelete}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        connectionLineStyle={connectionLineStyle}
         fitView
       >
         <Controls />

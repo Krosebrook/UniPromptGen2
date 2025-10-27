@@ -1,9 +1,9 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
-// Fix: Corrected import paths to be relative.
-import { ToolNodeData, AuthMethod, Tool } from '../../types.ts';
+import type { ToolNodeData, AuthMethod, Tool } from '../../types.ts';
 import { getTools } from '../../services/apiService.ts';
 import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
 import PresetToolConfig from './PresetToolConfig.tsx';
@@ -20,7 +20,6 @@ const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
   
   useEffect(() => {
     if (currentWorkspace) {
-        // Fix: Expected 3 arguments, but got 2.
         getTools(currentWorkspace.id, null, MOCK_LOGGED_IN_USER.id).then(setAvailableTools);
     }
   }, [currentWorkspace]);

@@ -1,9 +1,9 @@
 
 
 
+
 import React, { useState } from 'react';
 import { generateImage } from '../../services/geminiService.ts';
-// Fix: Module '"../icons/Icons.tsx"' has no exported member 'PhotoIcon'.
 import { SparklesIcon } from '../icons/Icons.tsx';
 
 const aspectRatios = ["1:1", "3:4", "4:3", "9:16", "16:9"];

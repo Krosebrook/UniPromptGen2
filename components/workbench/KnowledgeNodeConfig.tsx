@@ -1,9 +1,9 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
-// Fix: Corrected import paths to be relative.
-import { KnowledgeNodeData, KnowledgeSource } from '../../types.ts';
+import type { KnowledgeNodeData, KnowledgeSource } from '../../types.ts';
 import { getKnowledgeSources } from '../../services/apiService.ts';
 import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
 import { MOCK_LOGGED_IN_USER } from '../../constants.ts';
@@ -19,7 +19,6 @@ const KnowledgeNodeConfig: React.FC<KnowledgeNodeConfigProps> = ({ data, onUpdat
   
   useEffect(() => {
     if (currentWorkspace) {
-        // Fix: Expected 3 arguments, but got 2.
         getKnowledgeSources(currentWorkspace.id, null, MOCK_LOGGED_IN_USER.id).then(setAvailableSources);
     }
   }, [currentWorkspace]);

@@ -1,6 +1,5 @@
 import React from 'react';
 import { AnalysisResult, AnalysisWarning } from '../../services/promptAnalysisService.ts';
-// Fix: Module '"../icons/Icons.tsx"' has no exported member 'InformationCircleIcon'.
 import { SparklesIcon, BellIcon } from '../icons/Icons.tsx';
 
 interface PromptAnalysisPanelProps {
