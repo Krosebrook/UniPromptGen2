@@ -258,6 +258,17 @@ export interface ABTest {
     }
 }
 
+export interface ABTestChartData {
+  time: string;
+  versionA_runs: number;
+  versionB_runs: number;
+  versionA_successRate: number;
+  versionB_successRate: number;
+  versionA_avgRating: number;
+  versionB_avgRating: number;
+}
+
+
 // --- Library ---
 export type LibraryType = 'template' | 'tool' | 'knowledge' | 'evaluation';
 

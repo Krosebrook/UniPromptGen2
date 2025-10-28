@@ -1,8 +1,9 @@
-
-
 import React, { useState, useEffect } from 'react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 // Fix: Corrected import paths to be relative.
-import { ABTest, PromptTemplate } from '../../types.ts';
+import { ABTest, PromptTemplate, ABTestChartData } from '../../types.ts';
 import { XCircleIcon, TrophyIcon, SpinnerIcon } from '../icons/Icons.tsx';
 import { getABTestAnalytics } from '../../services/apiService.ts';
 
@@ -19,6 +20,14 @@ interface TestMetrics {
     avgRating: number;
 }
 
+interface AnalyticsData {
+    summary: {
+        versionA: TestMetrics;
+        versionB: TestMetrics;
+    };
+    timeSeries: ABTestChartData[];
+}
+
 const MetricDisplay: React.FC<{ label: string, valueA: string, valueB: string, winner?: 'A' | 'B' | 'None' }> = ({ label, valueA, valueB, winner }) => {
     const isAWinner = winner === 'A';
     const isBWinner = winner === 'B';
@@ -33,8 +42,22 @@ const MetricDisplay: React.FC<{ label: string, valueA: string, valueB: string, w
     );
 };
 
+const ChartTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="p-2 bg-popover/80 backdrop-blur-sm border border-border rounded-md text-sm">
+                <p className="font-semibold mb-1">{label}</p>
+                {payload.map((p: any) => (
+                    <p key={p.name} style={{ color: p.color }}>{`${p.name}: ${p.value}`}</p>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
+
 const ABTestResults: React.FC<ABTestResultsProps> = ({ test, template, onClose, onDeclareWinner }) => {
-    const [metrics, setMetrics] = useState<{versionA: TestMetrics, versionB: TestMetrics} | null>(null);
+    const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -42,7 +65,7 @@ const ABTestResults: React.FC<ABTestResultsProps> = ({ test, template, onClose, 
             setIsLoading(true);
             try {
                 const result = await getABTestAnalytics(test.id);
-                setMetrics(result);
+                setAnalytics(result);
             } catch (error) {
                 console.error("Failed to load A/B test analytics", error);
             } finally {
@@ -53,11 +76,11 @@ const ABTestResults: React.FC<ABTestResultsProps> = ({ test, template, onClose, 
     }, [test.id]);
 
     const renderContent = () => {
-        if (isLoading || !metrics) {
+        if (isLoading || !analytics) {
             return <div className="flex justify-center items-center h-48"><SpinnerIcon className="h-6 w-6 text-primary" /></div>;
         }
 
-        const { versionA, versionB } = metrics;
+        const { versionA, versionB } = analytics.summary;
         const totalRuns = versionA.runs + versionB.runs;
         
         if (totalRuns === 0) {
@@ -86,9 +109,55 @@ const ABTestResults: React.FC<ABTestResultsProps> = ({ test, template, onClose, 
                 <MetricDisplay label="Total Runs" valueA={versionA.runs.toLocaleString()} valueB={versionB.runs.toLocaleString()} />
                 <MetricDisplay label="Success Rate" valueA={`${(versionA.successRate * 100).toFixed(1)}%`} valueB={`${(versionB.successRate * 100).toFixed(1)}%`} winner={successRateWinner} />
                 <MetricDisplay label="Avg. User Rating" valueA={versionA.avgRating.toFixed(2)} valueB={versionB.avgRating.toFixed(2)} winner={ratingWinner} />
+
+                <div className="mt-6 space-y-6">
+                    <h3 className="text-lg font-semibold border-t border-border pt-4">Performance Over Time</h3>
+                    <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Total Runs</h4>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <LineChart data={analytics.timeSeries}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 28% 17%)" />
+                                <XAxis dataKey="time" stroke="hsl(215 15% 65%)" fontSize={12} />
+                                <YAxis stroke="hsl(215 15% 65%)" fontSize={12}/>
+                                <Tooltip content={<ChartTooltip />} />
+                                <Legend />
+                                <Line type="monotone" dataKey="versionA_runs" name={`v${test.versionA}`} stroke="hsl(217 91% 60%)" strokeWidth={2} />
+                                <Line type="monotone" dataKey="versionB_runs" name={`v${test.versionB}`} stroke="hsl(142 71% 45%)" strokeWidth={2} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Success Rate</h4>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <LineChart data={analytics.timeSeries}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 28% 17%)" />
+                                <XAxis dataKey="time" stroke="hsl(215 15% 65%)" fontSize={12} />
+                                <YAxis domain={[0, 1]} tickFormatter={(v) => `${v*100}%`} stroke="hsl(215 15% 65%)" fontSize={12}/>
+                                <Tooltip formatter={(value: number) => `${(value * 100).toFixed(1)}%`} />
+                                <Legend />
+                                <Line type="monotone" dataKey="versionA_successRate" name={`v${test.versionA}`} stroke="hsl(217 91% 60%)" strokeWidth={2} />
+                                <Line type="monotone" dataKey="versionB_successRate" name={`v${test.versionB}`} stroke="hsl(142 71% 45%)" strokeWidth={2} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Average User Rating</h4>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <LineChart data={analytics.timeSeries}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215 28% 17%)" />
+                                <XAxis dataKey="time" stroke="hsl(215 15% 65%)" fontSize={12} />
+                                <YAxis domain={[1, 5]} stroke="hsl(215 15% 65%)" fontSize={12}/>
+                                <Tooltip formatter={(value: number) => value.toFixed(2)} />
+                                <Legend />
+                                <Line type="monotone" dataKey="versionA_avgRating" name={`v${test.versionA}`} stroke="hsl(217 91% 60%)" strokeWidth={2} />
+                                <Line type="monotone" dataKey="versionB_avgRating" name={`v${test.versionB}`} stroke="hsl(142 71% 45%)" strokeWidth={2} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
                 
                 {!isCompleted && (
-                    <div className="mt-6 flex justify-end gap-2">
+                    <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
                         <button 
                             onClick={() => onDeclareWinner(test.id, 'A')}
                             className="px-4 py-2 text-sm font-medium text-primary-foreground bg-success rounded-md hover:bg-success/90"
@@ -109,13 +178,17 @@ const ABTestResults: React.FC<ABTestResultsProps> = ({ test, template, onClose, 
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40" onClick={onClose}>
-            <div className="bg-popover w-full max-w-2xl rounded-lg shadow-xl p-6 relative" onClick={e => e.stopPropagation()}>
-                <button onClick={onClose} className="absolute top-3 right-3 p-1 rounded-full hover:bg-accent">
+            <div className="bg-popover w-full max-w-3xl rounded-lg shadow-xl relative" onClick={e => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-3 right-3 p-1 rounded-full hover:bg-accent z-10">
                     <XCircleIcon className="h-6 w-6 text-muted-foreground" />
                 </button>
-                <h2 className="text-2xl font-bold mb-1">{test.name}</h2>
-                <p className="text-muted-foreground mb-4">Live results for v{test.versionA} vs v{test.versionB}</p>
-                {renderContent()}
+                <div className="p-6">
+                    <h2 className="text-2xl font-bold mb-1">{test.name}</h2>
+                    <p className="text-muted-foreground mb-4">Live results for v{test.versionA} vs v{test.versionB}</p>
+                </div>
+                <div className="max-h-[70vh] overflow-y-auto px-6 pb-6">
+                    {renderContent()}
+                </div>
             </div>
         </div>
     );

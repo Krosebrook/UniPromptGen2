@@ -1,6 +1,6 @@
 // mock-data.ts
 
-import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, Folder, Task } from './types.ts';
+import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, Folder, Task, ABTest } from './types.ts';
 import { MOCK_USERS } from './constants.ts';
 
 const MAIN_USER_ID = 'user-001';
@@ -85,6 +85,32 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
     ownerId: 'user-002',
     permissions: [],
     name: 'Blog Post Idea Generator',
+  },
+  {
+    id: 'template-005',
+    folderId: null, // In root
+    domain: 'Productivity',
+    qualityScore: 89,
+    versions: [
+      { 
+        version: '1.0', 
+        name: 'Meeting Transcript Summarizer', 
+        description: "Generates a concise summary from a meeting transcript, including action items.", 
+        content: 'Please summarize the following meeting transcript. Your summary should include:\n1. A brief overview of the main topics discussed.\n2. A list of key decisions that were made.\n3. A bulleted list of all action items, including who is assigned to each item.\n\nTranscript:\n{{meeting_transcript}}', 
+        variables: [{ name: 'meeting_transcript', type: 'string', defaultValue: 'Alice: We need to decide on the Q1 marketing campaign. Bob: I propose we focus on social media. Charlie: I agree, let\'s assign Alice to create the content plan.' }], 
+        date: '2023-11-20T10:00:00Z', 
+        authorId: 'user-001' 
+      },
+    ],
+    activeVersion: '1.0',
+    deployedVersion: null,
+    metrics: { totalRuns: 25, successfulRuns: 24, avgUserRating: 4.6, totalUserRating: 115, taskSuccessRate: 0.96, efficiencyScore: 0.91 },
+    createdBy: 'user-001',
+    createdAt: '2023-11-20T10:00:00Z',
+    updatedAt: '2023-11-20T10:00:00Z',
+    ownerId: MAIN_USER_ID,
+    permissions: [{ userId: 'user-002', role: 'Viewer' }],
+    name: 'Meeting Transcript Summarizer',
   },
 ];
 
@@ -175,10 +201,31 @@ export const MOCK_TASKS: Task[] = [
   { id: 'task-6', text: 'Finalize personal development goals', completed: false, priority: 'Low', workspaceId: 'ws-003' },
 ];
 
+export const MOCK_AB_TESTS: ABTest[] = [
+    {
+        id: 'ab-test-001',
+        templateId: 'template-001',
+        name: 'Emoji vs. No Emoji',
+        status: 'running',
+        versionA: '1.0',
+        versionB: '1.1',
+        trafficSplit: 50,
+    },
+    {
+        id: 'ab-test-002',
+        templateId: 'template-001',
+        name: 'Older test',
+        status: 'completed',
+        versionA: '1.0',
+        versionB: '1.1',
+        trafficSplit: 50,
+        results: {
+            winner: 'versionB',
+            reason: 'Higher user rating and success rate.',
+        }
+    }
+];
+
 export const MOCK_ANALYTICS_DB = {
     // ...
 };
-
-export const MOCK_AB_TESTS = [
-    // ...
-];

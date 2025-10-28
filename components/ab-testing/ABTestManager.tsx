@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 // Fix: Corrected import paths to be relative.
 import { ABTest } from '../../types.ts';
@@ -9,14 +7,20 @@ interface ABTestManagerProps {
     tests: ABTest[];
     onStartTest: () => void;
     onSelectTest: (test: ABTest) => void;
+    canCreateTest: boolean;
 }
 
-const ABTestManager: React.FC<ABTestManagerProps> = ({ tests, onStartTest, onSelectTest }) => {
+const ABTestManager: React.FC<ABTestManagerProps> = ({ tests, onStartTest, onSelectTest, canCreateTest }) => {
     return (
         <div className="bg-card shadow-card rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">A/B Tests</h3>
-                <button onClick={onStartTest} className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90">
+                <button 
+                    onClick={onStartTest} 
+                    disabled={!canCreateTest}
+                    title={canCreateTest ? "Start a new A/B test" : "You need at least two versions to start an A/B test"}
+                    className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                     <PlusIcon className="h-4 w-4" />
                     New Test
                 </button>

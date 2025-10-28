@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getTemplateById, saveTemplate } from '../services/apiService.ts';
-import { PromptTemplate, PromptTemplateVersion, PromptVariable } from '../types.ts';
+import { getTemplateById, saveTemplate, getABTestsForTemplate, createABTest, declareWinner } from '../services/apiService.ts';
+import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest } from '../types.ts';
 import { SpinnerIcon } from '../components/icons/Icons.tsx';
 import { useImmer } from 'use-immer';
 import { TemplateHeader } from '../components/editor/TemplateHeader.tsx';
@@ -39,12 +39,20 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   // A/B Testing state
+  const [abTests, setAbTests] = useState<ABTest[]>([]);
   const [isABTestModalOpen, setIsABTestModalOpen] = useState(false);
-  const [selectedABTest, setSelectedABTest] = useState<any | null>(null);
+  const [selectedABTest, setSelectedABTest] = useState<ABTest | null>(null);
   
   const { canEdit } = usePermissions(template);
 
   const isNewTemplate = templateId === 'new' || !templateId;
+
+  const fetchABTests = useCallback(async () => {
+    if (templateId && !isNewTemplate) {
+        const tests = await getABTestsForTemplate(templateId);
+        setAbTests(tests);
+    }
+  }, [templateId, isNewTemplate]);
 
   useEffect(() => {
     if (isNewTemplate) {
@@ -77,11 +85,12 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
           setSelectedVersion(active);
           setHistory([active]);
           setHistoryIndex(0);
+          fetchABTests();
         }
         setIsLoading(false);
       });
     }
-  }, [templateId, isNewTemplate, setTemplate]);
+  }, [templateId, isNewTemplate, setTemplate, fetchABTests]);
   
   const updateSelectedVersion = useCallback((updater: (draft: PromptTemplateVersion) => void) => {
       const newVersion = JSON.parse(JSON.stringify(selectedVersion));
@@ -280,6 +289,21 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
 
   }, [template, setTemplate]);
   
+  const handleCreateABTest = async (newTestData: Partial<ABTest>) => {
+    if (!template) return;
+    const testToSave: Partial<ABTest> = { ...newTestData, templateId: template.id };
+    const savedTest = await createABTest(testToSave);
+    setAbTests(prev => [...prev, savedTest]);
+    setIsABTestModalOpen(false);
+  };
+
+  const handleDeclareWinner = async (testId: string, winner: 'A' | 'B') => {
+      const winnerKey = winner === 'A' ? 'versionA' : 'versionB';
+      const updatedTest = await declareWinner(testId, winnerKey);
+      setAbTests(prev => prev.map(t => t.id === testId ? updatedTest : t));
+      setSelectedABTest(updatedTest);
+  };
+
   const variableErrors = useMemo(() => {
     return selectedVersion.variables.map(variable => {
       const errors: Record<string, string> = {};
@@ -357,14 +381,15 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
             />
             <PromptAnalysisPanel analysis={analysis} />
             <ABTestManager 
-                tests={[]}
+                tests={abTests}
                 onStartTest={() => setIsABTestModalOpen(true)}
                 onSelectTest={setSelectedABTest}
+                canCreateTest={template.versions.length >= 2}
             />
         </div>
       </div>
-      {isABTestModalOpen && template && <CreateABTestModal versions={template.versions} onClose={() => setIsABTestModalOpen(false)} onSave={() => {}} />}
-      {selectedABTest && template && <ABTestResults test={selectedABTest} template={template} onClose={() => setSelectedABTest(null)} onDeclareWinner={() => {}} />}
+      {isABTestModalOpen && template && <CreateABTestModal versions={template.versions} onClose={() => setIsABTestModalOpen(false)} onSave={handleCreateABTest} />}
+      {selectedABTest && template && <ABTestResults test={selectedABTest} template={template} onClose={() => setSelectedABTest(null)} onDeclareWinner={handleDeclareWinner} />}
     </div>
   );
 };

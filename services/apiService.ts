@@ -1,6 +1,6 @@
 // apiService.ts
 
-import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AGENTS, MOCK_WORKSPACES, MOCK_FOLDERS, MOCK_TASKS } from '../mock-data.ts';
+import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AGENTS, MOCK_WORKSPACES, MOCK_FOLDERS, MOCK_TASKS, MOCK_AB_TESTS } from '../mock-data.ts';
 import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, ABTest, ToolFormData, KnowledgeSourceFormData, Folder, LibraryType, LibraryItem, UserRole, Permission, User, Task } from '../types.ts';
 import { MOCK_USERS, MOCK_LOGGED_IN_USER } from '../constants.ts';
 
@@ -215,20 +215,63 @@ export const getAnalytics = async (workspaceId: string, days: number): Promise<a
     };
 };
 
+export const getABTestsForTemplate = async (templateId: string): Promise<ABTest[]> => {
+    await delay(300);
+    return MOCK_AB_TESTS.filter(t => t.templateId === templateId);
+};
+
+export const createABTest = async (testData: Partial<ABTest>): Promise<ABTest> => {
+    await delay(400);
+    const newTest: ABTest = {
+        id: `ab-test-${Date.now()}`,
+        status: 'running',
+        ...testData,
+    } as ABTest;
+    MOCK_AB_TESTS.push(newTest);
+    return newTest;
+};
+
+export const declareWinner = async (testId: string, winner: 'versionA' | 'versionB'): Promise<ABTest> => {
+    await delay(300);
+    const testIndex = MOCK_AB_TESTS.findIndex(t => t.id === testId);
+    if (testIndex > -1) {
+        MOCK_AB_TESTS[testIndex].status = 'completed';
+        MOCK_AB_TESTS[testIndex].results = {
+            winner,
+            reason: 'Manually declared by user.'
+        };
+        return MOCK_AB_TESTS[testIndex];
+    }
+    throw new Error('Test not found');
+};
+
 export const getABTestAnalytics = async (testId: string): Promise<any> => {
     await delay(500);
-    return {
+
+    const summary = {
         versionA: {
-            runs: Math.floor(Math.random() * 500),
+            runs: Math.floor(Math.random() * 500) + 200,
             successRate: 0.92 + Math.random() * 0.05,
             avgRating: 4.3 + Math.random() * 0.4
         },
         versionB: {
-            runs: Math.floor(Math.random() * 500),
+            runs: Math.floor(Math.random() * 500) + 200,
             successRate: 0.91 + Math.random() * 0.05,
             avgRating: 4.4 + Math.random() * 0.4
         }
     };
+
+    const timeSeries = Array.from({ length: 7 }, (_, i) => ({
+        time: `Day ${i + 1}`,
+        versionA_runs: Math.floor(Math.random() * 100),
+        versionB_runs: Math.floor(Math.random() * 100),
+        versionA_successRate: 0.90 + Math.random() * 0.08,
+        versionB_successRate: 0.90 + Math.random() * 0.08,
+        versionA_avgRating: 4.2 + Math.random() * 0.6,
+        versionB_avgRating: 4.2 + Math.random() * 0.6,
+    }));
+
+    return { summary, timeSeries };
 };
 
 export const getBillingUsage = async (workspaceId: string): Promise<{ apiCalls: number }> => {
