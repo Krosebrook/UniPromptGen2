@@ -102,13 +102,14 @@ export const getFolders = async (workspaceId: string, type: LibraryType, folderI
     return MOCK_FOLDERS.filter(f => f.type === type && f.folderId === folderId && hasPermission(f, userId, userRole));
 };
 
-export const moveItemToFolder = async (itemId: string, folderId: string | null, itemType: LibraryType): Promise<void> => {
+export const moveItemToFolder = async (itemId: string, folderId: string | null, itemType: LibraryType | 'folder'): Promise<void> => {
     await delay(300);
     let itemArray: any[];
     switch (itemType) {
         case 'template': itemArray = MOCK_TEMPLATES; break;
         case 'tool': itemArray = MOCK_TOOLS; break;
         case 'knowledge': itemArray = MOCK_KNOWLEDGE_SOURCES; break;
+        case 'folder': itemArray = MOCK_FOLDERS; break;
         default: return;
     }
     const item = itemArray.find(i => i.id === itemId);

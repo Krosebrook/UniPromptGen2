@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useLibraryData } from '../../hooks/useLibraryData.ts';
 import { SpinnerIcon, FolderIcon, PlusIcon, FolderPlusIcon, ArrowRightIcon, HomeIcon } from '../icons/Icons.tsx';
 import FolderCard from './FolderCard.tsx';
@@ -39,6 +39,8 @@ const LibraryShell = <T extends LibraryItem>({
   const { currentWorkspace } = useWorkspace();
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [draggedItem, setDraggedItem] = useState<LibraryItem | null>(null);
+  const [isDraggingOverRoot, setIsDraggingOverRoot] = useState(false);
+  const dragCounter = useRef(0);
 
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, item: LibraryItem } | null>(null);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
@@ -70,22 +72,51 @@ const LibraryShell = <T extends LibraryItem>({
   const handleDropOnFolder = async (e: React.DragEvent, targetFolder: Folder) => {
     e.preventDefault();
     if (draggedItem && draggedItem.id !== targetFolder.id && draggedItem.folderId !== targetFolder.id) {
-      await moveItemToFolder(draggedItem.id, targetFolder.id, libraryType);
+      const typeToMove = 'itemCount' in draggedItem ? 'folder' : libraryType;
+      await moveItemToFolder(draggedItem.id, targetFolder.id, typeToMove);
       refreshData();
       refreshFolders();
-      setDraggedItem(null);
     }
+    setDraggedItem(null);
   };
   
   const handleDropOnRoot = async (e: React.DragEvent) => {
       e.preventDefault();
+      setIsDraggingOverRoot(false);
+      dragCounter.current = 0;
       if (draggedItem && draggedItem.folderId !== null) {
-          await moveItemToFolder(draggedItem.id, null, libraryType);
+          const typeToMove = 'itemCount' in draggedItem ? 'folder' : libraryType;
+          await moveItemToFolder(draggedItem.id, null, typeToMove);
           refreshData();
           refreshFolders();
-          setDraggedItem(null);
       }
+      setDraggedItem(null);
   }
+  
+  const handleDragOverRoot = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedItem && draggedItem.folderId !== null) {
+        e.dataTransfer.dropEffect = 'move';
+    } else {
+        e.dataTransfer.dropEffect = 'none';
+    }
+  };
+
+  const handleDragEnterRoot = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounter.current++;
+    if (draggedItem && draggedItem.folderId !== null) {
+        setIsDraggingOverRoot(true);
+    }
+  };
+
+  const handleDragLeaveRoot = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+        setIsDraggingOverRoot(false);
+    }
+  };
 
   const handleContextMenu = (e: React.MouseEvent, item: LibraryItem) => {
       e.preventDefault();
@@ -160,7 +191,7 @@ const LibraryShell = <T extends LibraryItem>({
   };
 
   return (
-    <div className="space-y-6" onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnRoot}>
+    <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 className="text-3xl font-bold text-foreground">{title}</h1>
@@ -195,7 +226,17 @@ const LibraryShell = <T extends LibraryItem>({
             )}
         </div>
 
-        {renderContent()}
+        <div
+            onDrop={handleDropOnRoot}
+            onDragOver={handleDragOverRoot}
+            onDragEnter={handleDragEnterRoot}
+            onDragLeave={handleDragLeaveRoot}
+            className={`transition-all rounded-lg min-h-[200px] ${
+            isDraggingOverRoot ? 'bg-primary/10 ring-2 ring-primary ring-inset p-2' : ''
+            }`}
+        >
+            {renderContent()}
+        </div>
 
         {isCreateFolderModalOpen && (
             <CreateFolderModal onClose={() => setIsCreateFolderModalOpen(false)} onSave={handleCreateFolder} />

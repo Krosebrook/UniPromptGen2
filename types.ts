@@ -1,4 +1,3 @@
-
 // types.ts
 import React from 'react';
 
@@ -62,6 +61,7 @@ export interface PromptVariable {
   name: string;
   type: 'string' | 'number' | 'boolean';
   defaultValue?: string | number | boolean;
+  description?: string;
 }
 
 export interface PromptTemplateVersion {

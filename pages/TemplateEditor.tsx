@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getTemplateById, saveTemplate, getABTestsForTemplate, createABTest, declareWinner } from '../services/apiService.ts';
+import { getTemplateById, saveTemplate } from '../services/apiService.ts';
 import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest } from '../types.ts';
 import { SpinnerIcon } from '../components/icons/Icons.tsx';
 import { useImmer } from 'use-immer';
@@ -15,6 +15,8 @@ import CreateABTestModal from '../components/ab-testing/CreateABTestModal.tsx';
 import { usePermissions } from '../hooks/usePermissions.ts';
 import { MOCK_LOGGED_IN_USER } from '../constants.ts';
 import TemplatePreviewPanel from '../components/editor/TemplatePreviewPanel.tsx';
+import { useHistory } from '../hooks/useHistory.ts';
+import { useABTesting } from '../hooks/useABTesting.ts';
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -25,87 +27,74 @@ const NEW_TEMPLATE_VERSION: PromptTemplateVersion = {
   name: 'New Untitled Template',
   description: 'A brief description of what this template does.',
   content: 'Please provide context about {{query}}.',
-  variables: [{ name: 'query', type: 'string', defaultValue: '' }],
+  variables: [{ name: 'query', type: 'string', defaultValue: '', description: 'The main input or question for the prompt.' }],
   date: new Date().toISOString(),
   authorId: 'user-001',
 };
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const [template, setTemplate] = useImmer<PromptTemplate | null>(null);
-  const [selectedVersion, setSelectedVersion] = useState<PromptTemplateVersion>(NEW_TEMPLATE_VERSION);
   const [isLoading, setIsLoading] = useState(true);
   const [actionInProgress, setActionInProgress] = useState<'none' | 'save' | 'deploy'>('none');
   
-  // Undo/Redo state
-  const [history, setHistory] = useState<PromptTemplateVersion[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-
-  // A/B Testing state
-  const [abTests, setAbTests] = useState<ABTest[]>([]);
-  const [isABTestModalOpen, setIsABTestModalOpen] = useState(false);
-  const [selectedABTest, setSelectedABTest] = useState<ABTest | null>(null);
-  
-  const { canEdit } = usePermissions(template);
-
   const isNewTemplate = templateId === 'new' || !templateId;
 
-  const fetchABTests = useCallback(async () => {
-    if (templateId && !isNewTemplate) {
-        const tests = await getABTestsForTemplate(templateId);
-        setAbTests(tests);
-    }
-  }, [templateId, isNewTemplate]);
+  const {
+    state: selectedVersion,
+    setState: updateSelectedVersion,
+    undo: handleUndo,
+    redo: handleRedo,
+    reset: resetHistory,
+    canUndo,
+    canRedo,
+  } = useHistory(NEW_TEMPLATE_VERSION);
+  
+  const {
+    abTests,
+    isABTestModalOpen,
+    setIsABTestModalOpen,
+    selectedABTest,
+    setSelectedABTest,
+    createTest: handleCreateABTest,
+    declareWinner: handleDeclareWinner,
+  } = useABTesting(isNewTemplate ? undefined : templateId);
+
+  const { canEdit } = usePermissions(template);
 
   useEffect(() => {
-    if (isNewTemplate) {
-      const newTemplateObject: PromptTemplate = {
-        id: 'new',
-        folderId: null,
-        domain: 'General',
-        qualityScore: 0,
-        versions: [NEW_TEMPLATE_VERSION],
-        activeVersion: '1.0',
-        deployedVersion: null,
-        metrics: { totalRuns: 0, successfulRuns: 0, avgUserRating: 0, totalUserRating: 0, taskSuccessRate: 0, efficiencyScore: 0 },
-        createdBy: 'user-001',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        ownerId: 'user-001',
-        permissions: [],
-        name: 'New Untitled Template'
-      };
-      setTemplate(newTemplateObject);
-      setSelectedVersion(NEW_TEMPLATE_VERSION);
-      setHistory([NEW_TEMPLATE_VERSION]);
-      setHistoryIndex(0);
-      setIsLoading(false);
-    } else if (templateId) {
-      getTemplateById(templateId).then(data => {
-        if (data) {
-          setTemplate(data);
-          const active = data.versions.find(v => v.version === data.activeVersion) || data.versions[0];
-          setSelectedVersion(active);
-          setHistory([active]);
-          setHistoryIndex(0);
-          fetchABTests();
+    const loadTemplate = async () => {
+        if (isNewTemplate) {
+          const newTemplateObject: PromptTemplate = {
+            id: 'new',
+            folderId: null,
+            domain: 'General',
+            qualityScore: 0,
+            versions: [NEW_TEMPLATE_VERSION],
+            activeVersion: '1.0',
+            deployedVersion: null,
+            metrics: { totalRuns: 0, successfulRuns: 0, avgUserRating: 0, totalUserRating: 0, taskSuccessRate: 0, efficiencyScore: 0 },
+            createdBy: 'user-001',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            ownerId: 'user-001',
+            permissions: [],
+            name: 'New Untitled Template'
+          };
+          setTemplate(newTemplateObject);
+          resetHistory(NEW_TEMPLATE_VERSION);
+          setIsLoading(false);
+        } else if (templateId) {
+          const data = await getTemplateById(templateId);
+          if (data) {
+            setTemplate(data);
+            const active = data.versions.find(v => v.version === data.activeVersion) || data.versions[0];
+            resetHistory(active);
+          }
+          setIsLoading(false);
         }
-        setIsLoading(false);
-      });
-    }
-  }, [templateId, isNewTemplate, setTemplate, fetchABTests]);
-  
-  const updateSelectedVersion = useCallback((updater: (draft: PromptTemplateVersion) => void) => {
-      const newVersion = JSON.parse(JSON.stringify(selectedVersion));
-      updater(newVersion);
-
-      // Add to history
-      const newHistory = history.slice(0, historyIndex + 1);
-      newHistory.push(newVersion);
-      setHistory(newHistory);
-      setHistoryIndex(newHistory.length - 1);
-
-      setSelectedVersion(newVersion);
-  }, [selectedVersion, history, historyIndex]);
+    };
+    loadTemplate();
+  }, [templateId, isNewTemplate, setTemplate, resetHistory]);
   
   const handleInputChange = useCallback((field: keyof PromptTemplateVersion, value: any) => {
     updateSelectedVersion(draft => {
@@ -114,31 +103,30 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   }, [updateSelectedVersion]);
   
   const handleVariableChange = useCallback((index: number, field: keyof PromptVariable, value: any) => {
-    const oldName = selectedVersion.variables[index]?.name;
-    
     updateSelectedVersion(draft => {
       if (!draft.variables[index]) return;
 
-      if (field === 'name') {
-        draft.variables[index].name = value;
+      const oldName = draft.variables[index].name;
+      (draft.variables[index] as any)[field] = value;
 
-        if (oldName && oldName !== value && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(oldName)) {
-            const oldVarRegex = new RegExp(`\\{\\{\\s*${oldName}\\s*\\}\\}`, 'g');
-            draft.content = draft.content.replace(oldVarRegex, `{{${value}}}`);
-        }
-      } else {
-        (draft.variables[index] as any)[field] = value;
-        
-        if (field === 'type' && value === 'boolean' && typeof draft.variables[index].defaultValue !== 'boolean') {
-            draft.variables[index].defaultValue = false;
-        }
+      if (field === 'name' && oldName && oldName !== value && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(oldName)) {
+        const oldVarRegex = new RegExp(`\\{\\{\\s*${oldName}\\s*\\}\\}`, 'g');
+        draft.content = draft.content.replace(oldVarRegex, `{{${value}}}`);
+      }
+      
+      if (field === 'type') {
+          switch(value) {
+              case 'boolean': draft.variables[index].defaultValue = false; break;
+              case 'number': draft.variables[index].defaultValue = 0; break;
+              default: draft.variables[index].defaultValue = ''; break;
+          }
       }
     });
-  }, [selectedVersion.variables, updateSelectedVersion]);
+  }, [updateSelectedVersion]);
 
   const handleAddVariable = useCallback(() => {
     updateSelectedVersion(draft => {
-      draft.variables.push({ name: 'new_variable', type: 'string', defaultValue: '' });
+      draft.variables.push({ name: 'new_variable', type: 'string', defaultValue: '', description: '' });
     });
   }, [updateSelectedVersion]);
   
@@ -155,48 +143,44 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
       });
   }, [updateSelectedVersion]);
 
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1;
-      setSelectedVersion(history[newIndex]);
-      setHistoryIndex(newIndex);
-    }
-  };
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const isModifier = isMac ? event.metaKey : event.ctrlKey;
 
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1;
-      setSelectedVersion(history[newIndex]);
-      setHistoryIndex(newIndex);
-    }
-  };
+      if (isModifier && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      }
+      if (!isMac && isModifier && event.key.toLowerCase() === 'y') {
+          event.preventDefault();
+          handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
   
   const handleSave = async () => {
       if (!isVariablesValid || !template) return;
       setActionInProgress('save');
       
-      let templateToSave: Partial<PromptTemplate>;
-      
-      if (isNewTemplate) {
-          templateToSave = {
-            ...template,
-            name: selectedVersion.name,
-            versions: [selectedVersion],
-            activeVersion: selectedVersion.version,
-          };
-      } else {
-          const versionExists = template.versions.some(v => v.version === selectedVersion.version);
-          const updatedVersions = versionExists
-              ? template.versions.map(v => v.version === selectedVersion.version ? selectedVersion : v)
-              : [...template.versions, selectedVersion];
+      const versionExists = !isNewTemplate && template.versions.some(v => v.version === selectedVersion.version);
+      const updatedVersions = versionExists
+          ? template.versions.map(v => v.version === selectedVersion.version ? selectedVersion : v)
+          : [...(template.versions || []), selectedVersion];
 
-          templateToSave = {
-            ...template,
-            name: selectedVersion.name,
-            versions: updatedVersions,
-            activeVersion: selectedVersion.version,
-          };
-      }
+      const templateToSave: Partial<PromptTemplate> = {
+        ...template,
+        name: selectedVersion.name,
+        versions: updatedVersions,
+        activeVersion: selectedVersion.version,
+      };
       
       const savedTemplate = await saveTemplate(templateToSave);
       
@@ -204,11 +188,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
           window.location.hash = `#/templates/${savedTemplate.id}`;
       } else {
         setTemplate(savedTemplate);
-        // Reset history after save
         const newSelectedVersion = savedTemplate.versions.find(v => v.version === savedTemplate.activeVersion) || selectedVersion;
-        setSelectedVersion(newSelectedVersion);
-        setHistory([newSelectedVersion]);
-        setHistoryIndex(0);
+        resetHistory(newSelectedVersion);
       }
 
       setActionInProgress('none');
@@ -217,13 +198,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
     const handleDeploy = async (versionString: string) => {
       if (!template) return;
       setActionInProgress('deploy');
-      
-      const templateToSave = {
-          ...template,
-          deployedVersion: versionString,
-      };
-
-      const savedTemplate = await saveTemplate(templateToSave);
+      const savedTemplate = await saveTemplate({ ...template, deployedVersion: versionString });
       setTemplate(savedTemplate);
       setActionInProgress('none');
   };
@@ -232,48 +207,27 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
     if (!isVariablesValid || !template) return;
     setActionInProgress('deploy');
 
-    // Step 1: Save the current content
-    let templateToSave: Partial<PromptTemplate>;
-    
-    if (isNewTemplate) {
-        templateToSave = {
-          ...template,
-          name: selectedVersion.name,
-          versions: [selectedVersion],
-          activeVersion: selectedVersion.version,
-        };
-    } else {
-        const versionExists = template.versions.some(v => v.version === selectedVersion.version);
-        const updatedVersions = versionExists
-            ? template.versions.map(v => v.version === selectedVersion.version ? selectedVersion : v)
-            : [...template.versions, selectedVersion];
+    const versionExists = !isNewTemplate && template.versions.some(v => v.version === selectedVersion.version);
+    const updatedVersions = versionExists
+        ? template.versions.map(v => v.version === selectedVersion.version ? selectedVersion : v)
+        : [...(template.versions || []), selectedVersion];
 
-        templateToSave = {
-          ...template,
-          name: selectedVersion.name,
-          versions: updatedVersions,
-          activeVersion: selectedVersion.version,
-        };
-    }
+    const templateToSave = {
+      ...template,
+      name: selectedVersion.name,
+      versions: updatedVersions,
+      activeVersion: selectedVersion.version,
+    };
     
     const savedTemplate = await saveTemplate(templateToSave);
+    const deployedTemplate = await saveTemplate({ ...savedTemplate, deployedVersion: savedTemplate.activeVersion });
 
-    // Step 2: Set deployed version and save again
-    const templateToDeploy = {
-        ...savedTemplate,
-        deployedVersion: savedTemplate.activeVersion,
-    };
-    const deployedTemplate = await saveTemplate(templateToDeploy);
-
-    // Step 3: Update local state
     if (isNewTemplate) {
         window.location.hash = `#/templates/${deployedTemplate.id}`;
     } else {
       setTemplate(deployedTemplate);
       const newSelectedVersion = deployedTemplate.versions.find(v => v.version === deployedTemplate.activeVersion) || selectedVersion;
-      setSelectedVersion(newSelectedVersion);
-      setHistory([newSelectedVersion]);
-      setHistoryIndex(0);
+      resetHistory(newSelectedVersion);
     }
     setActionInProgress('none');
   };
@@ -281,11 +235,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const handleCreateNewVersion = useCallback((sourceVersion: PromptTemplateVersion) => {
     if (!template) return;
 
-    const maxMajor = template.versions.reduce((max, v) => {
-        const major = parseInt(v.version.split('.')[0], 10);
-        return Math.max(max, major);
-    }, 0);
-    
+    const maxMajor = Math.max(0, ...template.versions.map(v => parseInt(v.version.split('.')[0], 10)));
     const newVersionNumber = `${maxMajor + 1}.0`;
     
     const newVersion: PromptTemplateVersion = {
@@ -301,43 +251,23 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
             draft.activeVersion = newVersion.version;
         }
     });
-
-    setSelectedVersion(newVersion);
-    setHistory([newVersion]);
-    setHistoryIndex(0);
-
-  }, [template, setTemplate]);
+    resetHistory(newVersion);
+  }, [template, setTemplate, resetHistory]);
   
-  const handleCreateABTest = async (newTestData: Partial<ABTest>) => {
-    if (!template) return;
-    const testToSave: Partial<ABTest> = { ...newTestData, templateId: template.id };
-    const savedTest = await createABTest(testToSave);
-    setAbTests(prev => [...prev, savedTest]);
-    setIsABTestModalOpen(false);
-  };
-
-  const handleDeclareWinner = async (testId: string, winner: 'A' | 'B') => {
-      const winnerKey = winner === 'A' ? 'versionA' : 'versionB';
-      const updatedTest = await declareWinner(testId, winnerKey);
-      setAbTests(prev => prev.map(t => t.id === testId ? updatedTest : t));
-      setSelectedABTest(updatedTest);
-  };
-
   const variableErrors = useMemo(() => {
+    const nameCounts = new Map<string, number>();
+    selectedVersion.variables.forEach(v => nameCounts.set(v.name, (nameCounts.get(v.name) || 0) + 1));
+
     return selectedVersion.variables.map(variable => {
       const errors: Record<string, string> = {};
-      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(variable.name)) {
-        errors.name = "Invalid name format. Use letters, numbers, and underscores. Cannot start with a number.";
-      }
-      if (selectedVersion.variables.filter(v => v.name === variable.name).length > 1) {
-          errors.name = "Variable names must be unique.";
-      }
+      if (!variable.name.trim()) errors.name = "Variable name cannot be empty.";
+      else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(variable.name)) errors.name = "Invalid name format.";
+      else if ((nameCounts.get(variable.name) || 0) > 1) errors.name = "Variable names must be unique.";
       return errors;
     });
   }, [selectedVersion.variables]);
 
   const isVariablesValid = variableErrors.every(err => Object.keys(err).length === 0);
-  
   const analysis = useMemo(() => analyzePrompt(selectedVersion.content, selectedVersion.variables), [selectedVersion.content, selectedVersion.variables]);
 
   if (isLoading) {
@@ -354,8 +284,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
         version={selectedVersion}
         isNew={isNewTemplate}
         actionInProgress={actionInProgress}
-        isUndoable={historyIndex > 0}
-        isRedoable={historyIndex < history.length - 1}
+        isUndoable={canUndo}
+        isRedoable={canRedo}
         canEdit={canEdit}
         isVariablesValid={isVariablesValid}
         isDeployed={selectedVersion.version === template.deployedVersion}
@@ -371,11 +301,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
             <VersionManager
                 template={template}
                 selectedVersion={selectedVersion}
-                onVersionChange={(v) => {
-                    setSelectedVersion(v);
-                    setHistory([v]);
-                    setHistoryIndex(0);
-                }}
+                onVersionChange={resetHistory}
                 onDeploy={handleDeploy}
                 onCreateNewVersion={handleCreateNewVersion}
                 canEdit={canEdit}

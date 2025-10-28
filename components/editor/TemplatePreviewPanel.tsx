@@ -57,9 +57,12 @@ const TemplatePreviewPanel: React.FC<TemplatePreviewPanelProps> = ({ variables, 
         <div className="space-y-4">
           {variables.map(variable => (
             <div key={variable.name}>
-              <label htmlFor={`preview-${variable.name}`} className="block text-sm font-medium text-muted-foreground mb-1">
-                {variable.name} <span className="text-xs">({variable.type})</span>
+              <label htmlFor={`preview-${variable.name}`} className="block text-sm font-medium text-foreground">
+                {variable.name} <span className="text-xs text-muted-foreground">({variable.type})</span>
               </label>
+              {variable.description && (
+                <p className="text-xs text-muted-foreground mb-1">{variable.description}</p>
+              )}
               <input
                 id={`preview-${variable.name}`}
                 type={variable.type === 'number' ? 'number' : 'text'}

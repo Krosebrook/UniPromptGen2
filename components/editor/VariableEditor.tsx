@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PromptVariable } from '../../types.ts';
 import { PlusIcon, XCircleIcon, Bars3Icon } from '../icons/Icons.tsx';
@@ -125,6 +126,16 @@ export const VariableEditor: React.FC<VariableEditorProps> = ({
                     className="w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 )}
+              </div>
+               <div>
+                <label className="text-xs font-medium text-muted-foreground">Description (optional)</label>
+                <textarea
+                  value={v.description || ''}
+                  onChange={(e) => onVariableChange(index, 'description', e.target.value)}
+                  className="w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                  rows={2}
+                  placeholder="What is this variable for?"
+                />
               </div>
             </fieldset>
           </div>
