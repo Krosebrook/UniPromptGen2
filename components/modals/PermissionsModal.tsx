@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { LibraryItem, User, Permission, PermissionRole } from '../../types.ts';
+import { LibraryItem, User, Permission, PermissionRole, LibraryType } from '../../types.ts';
 import { useWorkspace } from '../../contexts/WorkspaceContext.tsx';
 import { getUsersForWorkspace, updatePermissions } from '../../services/apiService.ts';
 import { MOCK_LOGGED_IN_USER } from '../../constants.ts';
 
 interface PermissionsModalProps {
     item: LibraryItem;
-    itemType: 'template' | 'tool' | 'knowledge' | 'folder';
+    itemType: LibraryType | 'folder';
     onClose: () => void;
 }
 
@@ -112,7 +112,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({ item, itemType, onC
                                     <p className="text-xs text-muted-foreground">{user.email}</p>
                                 </div>
                             </div>
-                             <button onClick={() => handleRoleChange(user.id, 'Viewer')} className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded-md">Add</button>
+                             <button onClick={() => { handleRoleChange(user.id, 'Viewer'); setSearch(''); }} className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded-md">Add</button>
                         </div>
                     ))}
                 </div>

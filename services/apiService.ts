@@ -1,6 +1,6 @@
 // apiService.ts
 
-import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AGENTS, MOCK_WORKSPACES, MOCK_FOLDERS, MOCK_TASKS, MOCK_AB_TESTS } from '../mock-data.ts';
+import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AGENTS, MOCK_WORKSPACES, MOCK_FOLDERS, MOCK_TASKS, MOCK_AB_TESTS, deleteFolderInMock } from '../mock-data.ts';
 import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, ABTest, ToolFormData, KnowledgeSourceFormData, Folder, LibraryType, LibraryItem, UserRole, Permission, User, Task } from '../types.ts';
 import { MOCK_USERS, MOCK_LOGGED_IN_USER } from '../constants.ts';
 
@@ -80,7 +80,7 @@ export const getDeployedTemplates = async (workspaceId: string, userId: string):
 
 // --- Folders ---
 
-export const createFolder = async (name: string, type: LibraryType, workspaceId: string): Promise<Folder> => {
+export const createFolder = async (name: string, type: LibraryType, workspaceId: string, parentFolderId: string | null): Promise<Folder> => {
     await delay(200);
     const newFolder: Folder = {
         id: `folder-${type}-${Date.now()}`,
@@ -90,7 +90,7 @@ export const createFolder = async (name: string, type: LibraryType, workspaceId:
         createdAt: new Date().toISOString(),
         ownerId: MOCK_LOGGED_IN_USER.id,
         permissions: [],
-        folderId: null, // For now, all folders are root
+        folderId: parentFolderId,
     };
     MOCK_FOLDERS.push(newFolder);
     return newFolder;
@@ -99,7 +99,6 @@ export const createFolder = async (name: string, type: LibraryType, workspaceId:
 export const getFolders = async (workspaceId: string, type: LibraryType, folderId: string | null, userId: string): Promise<Folder[]> => {
     await delay(200);
     const userRole = getRole(userId, workspaceId);
-    // This mock service only supports root folders for now
     return MOCK_FOLDERS.filter(f => f.type === type && f.folderId === folderId && hasPermission(f, userId, userRole));
 };
 
@@ -126,6 +125,11 @@ export const updateFolder = async (folderId: string, data: Partial<Folder>): Pro
         return MOCK_FOLDERS[index];
     }
     throw new Error("Folder not found");
+};
+
+export const deleteFolder = async (folderId: string): Promise<void> => {
+    await delay(300);
+    deleteFolderInMock(folderId);
 };
 
 // --- Tools ---

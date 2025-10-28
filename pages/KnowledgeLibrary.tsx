@@ -11,7 +11,7 @@ const KnowledgeLibrary: React.FC = () => {
       title="Knowledge Library"
       description="Manage knowledge sources for grounding."
       fetchDataFunction={getKnowledgeSources}
-      createFolderFunction={(name, workspaceId) => createFolder(name, 'knowledge', workspaceId)}
+      createFolderFunction={(name, workspaceId, folderId) => createFolder(name, 'knowledge', workspaceId, folderId)}
       renderItem={(item, canEdit, onDragStart, onContextMenu) => (
         <KnowledgeSourceCard
           source={item as KnowledgeSource}

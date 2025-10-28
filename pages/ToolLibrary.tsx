@@ -11,7 +11,7 @@ const ToolLibrary: React.FC = () => {
       title="Tool Library"
       description="Browse and manage tools for your agents."
       fetchDataFunction={getTools}
-      createFolderFunction={(name, workspaceId) => createFolder(name, 'tool', workspaceId)}
+      createFolderFunction={(name, workspaceId, folderId) => createFolder(name, 'tool', workspaceId, folderId)}
       renderItem={(item, canEdit, onDragStart, onContextMenu) => (
         <ToolCard
           tool={item as Tool}

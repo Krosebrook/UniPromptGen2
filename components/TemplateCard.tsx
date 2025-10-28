@@ -10,16 +10,15 @@ interface TemplateCardProps {
   onContextMenu: (e: React.MouseEvent, item: PromptTemplate) => void;
 }
 
-const TemplateCard: React.FC<TemplateCardProps> = ({ template, onDragStart, onContextMenu }) => {
+const TemplateCard: React.FC<TemplateCardProps> = ({ template, canEdit, onDragStart, onContextMenu }) => {
   const activeVersion = template.versions.find(v => v.version === template.activeVersion);
-  const { canEdit } = usePermissions(template);
 
   return (
     <div
       draggable={canEdit}
       onDragStart={(e) => onDragStart(e, template)}
       onContextMenu={(e) => onContextMenu(e, template)}
-      className={`bg-card shadow-card rounded-lg p-4 flex flex-col justify-between h-full group transition-shadow hover:shadow-lg ${canEdit ? 'cursor-grab' : ''}`}
+      className={`bg-card shadow-card rounded-lg p-4 flex flex-col justify-between h-full group transition-shadow hover:shadow-lg ${canEdit ? 'cursor-grab' : 'cursor-default'}`}
     >
       <div>
         <div className="flex justify-between items-start">

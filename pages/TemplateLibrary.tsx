@@ -11,7 +11,7 @@ const TemplateLibrary: React.FC = () => {
       title="Template Library"
       description="Browse and manage prompt templates."
       fetchDataFunction={getTemplates}
-      createFolderFunction={(name, workspaceId) => createFolder(name, 'template', workspaceId)}
+      createFolderFunction={(name, workspaceId, folderId) => createFolder(name, 'template', workspaceId, folderId)}
       newItemLink="/templates/new"
       renderItem={(item, canEdit, onDragStart, onContextMenu) => (
         <TemplateCard

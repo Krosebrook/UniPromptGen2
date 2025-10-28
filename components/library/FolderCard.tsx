@@ -7,10 +7,11 @@ interface FolderCardProps {
   folder: Folder;
   onDoubleClick: () => void;
   onDrop: (e: React.DragEvent) => void;
-  onContextMenu: (e: React.MouseEvent) => void;
+  onDragStart: (e: React.DragEvent, item: Folder) => void;
+  onContextMenu: (e: React.MouseEvent, item: Folder) => void;
 }
 
-const FolderCard: React.FC<FolderCardProps> = ({ folder, onDoubleClick, onDrop, onContextMenu }) => {
+const FolderCard: React.FC<FolderCardProps> = ({ folder, onDoubleClick, onDrop, onDragStart, onContextMenu }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const { canEdit } = usePermissions(folder);
 
@@ -41,8 +42,10 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder, onDoubleClick, onDrop, 
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onContextMenu={onContextMenu}
-      className={`bg-card shadow-card rounded-lg p-4 flex flex-col justify-center items-center h-full group cursor-pointer transition-all ${
+      draggable={canEdit}
+      onDragStart={(e) => onDragStart(e, folder)}
+      onContextMenu={(e) => onContextMenu(e, folder)}
+      className={`bg-card shadow-card rounded-lg p-4 flex flex-col justify-center items-center h-full group cursor-pointer transition-all ${ canEdit ? 'cursor-grab' : 'cursor-default'} ${
         isDragOver ? 'ring-2 ring-primary scale-105' : ''
       }`}
     >

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { LibraryItem, LibraryType } from '../../types.ts';
-import { updateFolder } from '../../services/apiService.ts'; // Assuming only folders are renameable for now
+import { LibraryItem, LibraryType, Folder } from '../../types.ts';
+import { updateFolder, saveTemplate } from '../../services/apiService.ts';
 
 interface RenameModalProps {
     item: LibraryItem;
@@ -10,7 +10,7 @@ interface RenameModalProps {
 }
 
 const RenameModal: React.FC<RenameModalProps> = ({ item, itemType, onClose, onRenamed }) => {
-    const [name, setName] = useState(item.name);
+    const [name, setName] = useState('name' in item ? item.name : '');
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSave = async () => {
@@ -20,13 +20,25 @@ const RenameModal: React.FC<RenameModalProps> = ({ item, itemType, onClose, onRe
         }
 
         setIsSaving(true);
-        if (itemType === 'folder') {
-            await updateFolder(item.id, { name });
+        try {
+            if (itemType === 'folder') {
+                await updateFolder(item.id, { name });
+            } else if (itemType === 'template') {
+                const template = item as any; // Cast to access versions
+                const activeVersion = template.versions.find((v: any) => v.version === template.activeVersion);
+                if (activeVersion) {
+                    activeVersion.name = name;
+                }
+                await saveTemplate({ ...template, name });
+            }
+            // TODO: Add rename logic for other item types
+            onRenamed();
+        } catch (error) {
+            console.error("Failed to rename item:", error);
+        } finally {
+            setIsSaving(false);
+            onClose();
         }
-        // TODO: Add rename logic for other item types
-        setIsSaving(false);
-        onRenamed();
-        onClose();
     };
 
     return (

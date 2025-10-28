@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PromptTemplate, PromptTemplateVersion } from '../../types.ts';
 import { RocketLaunchIcon, DocumentDuplicateIcon, PencilIcon } from '../icons/Icons.tsx';

@@ -5,14 +5,14 @@ import { MOCK_USERS } from './constants.ts';
 
 const MAIN_USER_ID = 'user-001';
 
-export const MOCK_FOLDERS: Folder[] = [
+export let MOCK_FOLDERS: Folder[] = [
     { id: 'folder-temp-1', name: 'Marketing Prompts', type: 'template', itemCount: 2, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
     { id: 'folder-temp-2', name: 'Support Prompts', type: 'template', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
     { id: 'folder-tool-1', name: 'Internal APIs', type: 'tool', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [{ userId: 'user-002', role: 'Viewer'}], folderId: null },
     { id: 'folder-ks-1', name: 'Q4 Financials', type: 'knowledge', itemCount: 1, createdAt: new Date().toISOString(), ownerId: 'user-002', permissions: [{ userId: MAIN_USER_ID, role: 'Editor'}], folderId: null },
 ];
 
-export const MOCK_TEMPLATES: PromptTemplate[] = [
+export let MOCK_TEMPLATES: PromptTemplate[] = [
   {
     id: 'template-001',
     folderId: 'folder-temp-1',
@@ -114,7 +114,7 @@ export const MOCK_TEMPLATES: PromptTemplate[] = [
   },
 ];
 
-export const MOCK_TOOLS: Tool[] = [
+export let MOCK_TOOLS: Tool[] = [
   {
     id: 'tool-001',
     folderId: 'folder-tool-1',
@@ -147,7 +147,7 @@ export const MOCK_TOOLS: Tool[] = [
   }
 ];
 
-export const MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
+export let MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     {
         id: 'ks-001',
         folderId: 'folder-ks-1',
@@ -176,7 +176,7 @@ export const MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     }
 ];
 
-export const MOCK_AGENTS: AgentGraph[] = [
+export let MOCK_AGENTS: AgentGraph[] = [
     {
         id: 'agent-001',
         name: 'Customer Support Triage Agent',
@@ -223,7 +223,7 @@ export const MOCK_WORKSPACES: Workspace[] = [
     { id: 'ws-003', name: 'Personal Dev', plan: 'Free', memberIds: ['user-001', 'user-003'] },
 ];
 
-export const MOCK_TASKS: Task[] = [
+export let MOCK_TASKS: Task[] = [
   { id: 'task-1', text: 'Review Q4 marketing prompts', completed: false, priority: 'High', workspaceId: 'ws-001' },
   { id: 'task-2', text: 'Deploy new unit test generator template', completed: false, priority: 'High', workspaceId: 'ws-001' },
   { id: 'task-3', text: 'Draft documentation for the CRM User Lookup tool', completed: true, priority: 'Medium', workspaceId: 'ws-001' },
@@ -232,7 +232,7 @@ export const MOCK_TASKS: Task[] = [
   { id: 'task-6', text: 'Finalize personal development goals', completed: false, priority: 'Low', workspaceId: 'ws-003' },
 ];
 
-export const MOCK_AB_TESTS: ABTest[] = [
+export let MOCK_AB_TESTS: ABTest[] = [
     {
         id: 'ab-test-001',
         templateId: 'template-001',
@@ -256,6 +256,24 @@ export const MOCK_AB_TESTS: ABTest[] = [
         }
     }
 ];
+
+export const deleteFolderInMock = (folderId: string) => {
+    const folderIndex = MOCK_FOLDERS.findIndex(f => f.id === folderId);
+    if (folderIndex > -1) {
+        // Move items in the folder to root
+        MOCK_TEMPLATES.forEach(t => {
+            if (t.folderId === folderId) t.folderId = null;
+        });
+        MOCK_TOOLS.forEach(t => {
+            if (t.folderId === folderId) t.folderId = null;
+        });
+        MOCK_KNOWLEDGE_SOURCES.forEach(ks => {
+            if (ks.folderId === folderId) ks.folderId = null;
+        });
+        // Delete the folder
+        MOCK_FOLDERS.splice(folderIndex, 1);
+    }
+};
 
 export const MOCK_ANALYTICS_DB = {
     // ...

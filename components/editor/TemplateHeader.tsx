@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PromptTemplateVersion } from '../../types.ts';
 import { ArrowUturnLeftIcon, ArrowUturnRightIcon, RocketLaunchIcon } from '../icons/Icons.tsx';
@@ -69,7 +70,7 @@ export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
             </button>
              <button
               onClick={onSaveAndDeploy}
-              disabled={actionInProgress !== 'none' || !isVariablesValid || (isDeployed && !isUndoable)}
+              disabled={actionInProgress !== 'none' || !isVariablesValid || (isDeployed && !isUndoable && !isRedoable)}
               className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
             >
               <RocketLaunchIcon className="h-4 w-4 mr-2"/>

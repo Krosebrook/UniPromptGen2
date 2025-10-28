@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getTemplateById, saveTemplate, getABTestsForTemplate, createABTest, declareWinner } from '../services/apiService.ts';
 import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest } from '../types.ts';
@@ -13,6 +14,7 @@ import ABTestResults from '../components/ab-testing/ABTestResults.tsx';
 import CreateABTestModal from '../components/ab-testing/CreateABTestModal.tsx';
 import { usePermissions } from '../hooks/usePermissions.ts';
 import { MOCK_LOGGED_IN_USER } from '../constants.ts';
+import TemplatePreviewPanel from '../components/editor/TemplatePreviewPanel.tsx';
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -112,10 +114,27 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   }, [updateSelectedVersion]);
   
   const handleVariableChange = useCallback((index: number, field: keyof PromptVariable, value: any) => {
+    const oldName = selectedVersion.variables[index]?.name;
+    
     updateSelectedVersion(draft => {
+      if (!draft.variables[index]) return;
+
+      if (field === 'name') {
+        draft.variables[index].name = value;
+
+        if (oldName && oldName !== value && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(oldName)) {
+            const oldVarRegex = new RegExp(`\\{\\{\\s*${oldName}\\s*\\}\\}`, 'g');
+            draft.content = draft.content.replace(oldVarRegex, `{{${value}}}`);
+        }
+      } else {
         (draft.variables[index] as any)[field] = value;
+        
+        if (field === 'type' && value === 'boolean' && typeof draft.variables[index].defaultValue !== 'boolean') {
+            draft.variables[index].defaultValue = false;
+        }
+      }
     });
-  }, [updateSelectedVersion]);
+  }, [selectedVersion.variables, updateSelectedVersion]);
 
   const handleAddVariable = useCallback(() => {
     updateSelectedVersion(draft => {
@@ -367,6 +386,10 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                 className="w-full h-96 p-4 bg-card shadow-card rounded-md text-foreground font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring resize-y disabled:opacity-70 disabled:cursor-not-allowed"
                 placeholder="Enter your prompt template here..."
                 disabled={!canEdit}
+            />
+            <TemplatePreviewPanel 
+                variables={selectedVersion.variables}
+                content={selectedVersion.content}
             />
         </div>
         <div className="space-y-6">
