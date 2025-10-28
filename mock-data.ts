@@ -180,9 +180,40 @@ export const MOCK_AGENTS: AgentGraph[] = [
     {
         id: 'agent-001',
         name: 'Customer Support Triage Agent',
-        description: 'An agent that analyzes a customer support ticket, gets user details from the CRM, and drafts a response.',
-        nodes: [],
-        edges: [],
+        description: 'An agent that analyzes a customer support ticket, gets user details from the CRM, and provides triage information.',
+        nodes: [
+            { id: 'agent-001-input', type: 'input', position: { x: 50, y: 200 }, data: { label: 'Support Ticket', initialValue: '{\n "ticket_text": "My order #12345 has not arrived yet. It was supposed to be here yesterday."\n}' } },
+            { id: 'agent-001-model', type: 'model', position: { x: 300, y: 200 }, data: { label: 'Triage & Extract', promptTemplate: 'Analyze the support ticket. Extract the order number and categorize the issue (e.g., "Shipping", "Billing", "Technical"). Output as JSON with "order_number" and "category" keys.\n\nTicket:\n{{ticket_text}}', temperature: 0.2, topK: 40, topP: 0.95 } },
+            { id: 'agent-001-tool', type: 'tool', position: { x: 550, y: 200 }, data: { label: 'CRM Lookup', subType: 'HttpRequest', settings: { method: 'GET', url: 'https://mock-crm.com/api/orders/{{order_number}}', headers: '{}', body: '{}' } } },
+            { id: 'agent-001-output', type: 'output', position: { x: 800, y: 200 }, data: { label: 'Triage Result' } },
+        ],
+        edges: [
+            { id: 'e-a1-1-2', source: 'agent-001-input', target: 'agent-001-model', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-a1-2-3', source: 'agent-001-model', target: 'agent-001-tool', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-a1-3-4', source: 'agent-001-tool', target: 'agent-001-output', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+        ],
+    },
+    {
+        id: 'agent-002',
+        name: 'Blog Post Research and Draft Agent',
+        description: 'A multi-step agent that researches a topic, creates an outline, and then drafts a blog post.',
+        nodes: [
+            { id: 'input-blog', type: 'input', position: { x: 50, y: 300 }, data: { label: 'Blog Topic', initialValue: '{\n  "topic": "The Rise of Agentic AI"\n}' } },
+            { id: 'tool-search1', type: 'tool', position: { x: 300, y: 150 }, data: { label: 'Initial Research', subType: 'HttpRequest', settings: { method: 'GET', url: 'https://mock-search-api.com/search?q={{topic}}', headers: '{}', body: '{}' } } },
+            { id: 'model-outline', type: 'model', position: { x: 550, y: 300 }, data: { label: 'Outline Generator', promptTemplate: 'Based on the initial research and the topic "{{topic}}", create a detailed blog post outline. Return the outline as a JSON object with keys like "introduction", "point_1", "point_2", and "conclusion".\n\nResearch data:\n{{data}}', temperature: 0.5, topK: 40, topP: 0.95 } },
+            { id: 'tool-search2', type: 'tool', position: { x: 800, y: 150 }, data: { label: 'Deeper Dive', subType: 'HttpRequest', settings: { method: 'GET', url: 'https://mock-search-api.com/search?q={{point_1}}', headers: '{}', body: '{}' } } },
+            { id: 'model-draft', type: 'model', position: { x: 1050, y: 300 }, data: { label: 'Draft Writer', promptTemplate: 'Write a full blog post based on the following outline and research. \n\nOutline:\n- {{introduction}}\n- {{point_1}}\n- {{point_2}}\n- {{conclusion}}\n\nDeeper dive research:\n{{data}}', temperature: 0.7, topK: 40, topP: 0.95 } },
+            { id: 'output-blog', type: 'output', position: { x: 1300, y: 300 }, data: { label: 'Final Draft' } },
+        ],
+        edges: [
+            { id: 'e-blog-in-s1', source: 'input-blog', target: 'tool-search1', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-blog-in-m1', source: 'input-blog', target: 'model-outline', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-blog-s1-m1', source: 'tool-search1', target: 'model-outline', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-blog-m1-s2', source: 'model-outline', target: 'tool-search2', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-blog-m1-m2', source: 'model-outline', target: 'model-draft', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-blog-s2-m2', source: 'tool-search2', target: 'model-draft', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+            { id: 'e-blog-m2-out', source: 'model-draft', target: 'output-blog', sourceHandle: 'data_output', targetHandle: 'data_input', animated: true, style: { strokeWidth: 2 } },
+        ],
     }
 ];
 
