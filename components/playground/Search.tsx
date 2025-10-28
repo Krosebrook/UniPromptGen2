@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { runGroundedSearch } from '../../services/geminiService.ts';
-// Fix: Corrected import paths to be relative.
 import { GroundingSource } from '../../types.ts';
 import { GlobeAltIcon } from '../icons/Icons.tsx';
 

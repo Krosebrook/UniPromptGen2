@@ -3,7 +3,6 @@
 import React, { useState, useRef } from 'react';
 import { transcribeAudio } from '../../services/geminiService.ts';
 import { fileToBase64 } from '../../utils/helpers.ts';
-// Fix: Corrected import path to be relative.
 import { MicrophoneIcon } from '../icons/Icons.tsx';
 
 const AudioTranscriber: React.FC = () => {

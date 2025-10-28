@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { generateVideoFromImage } from '../../services/geminiService.ts';
 import { fileToBase64 } from '../../utils/helpers.ts';
-// Fix: Corrected import path to be relative.
 import { VideoCameraIcon, UploadIcon, KeyIcon } from '../icons/Icons.tsx';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];

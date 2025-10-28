@@ -1,7 +1,6 @@
 
 
 import React from 'react';
-// Fix: Corrected import paths to be relative.
 import { User } from '../types.ts';
 import { StarIcon, SparklesIcon, ChartBarIcon } from '../components/icons/Icons.tsx';
 

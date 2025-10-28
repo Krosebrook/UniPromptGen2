@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { runComplexReasoning } from '../../services/geminiService.ts';
-// Fix: Corrected import path to be relative.
 import { SparklesIcon } from '../icons/Icons.tsx';
 
 const ComplexReasoning: React.FC = () => {

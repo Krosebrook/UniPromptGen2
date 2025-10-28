@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { decode, encode, decodeAudioData } from '../../utils/helpers.ts';
-// Fix: Corrected import path to be relative.
 import { MicrophoneIcon, StopCircleIcon } from '../icons/Icons.tsx';
 
 interface TranscriptionEntry {

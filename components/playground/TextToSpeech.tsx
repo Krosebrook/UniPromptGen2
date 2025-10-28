@@ -3,7 +3,6 @@
 import React, { useState, useRef } from 'react';
 import { generateSpeech } from '../../services/geminiService.ts';
 import { decode, decodeAudioData } from '../../utils/helpers.ts';
-// Fix: Corrected import path to be relative.
 import { SpeakerWaveIcon } from '../icons/Icons.tsx';
 
 const TextToSpeech: React.FC = () => {

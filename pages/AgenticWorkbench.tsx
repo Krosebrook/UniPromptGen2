@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, { ReactFlowProvider } from 'reactflow';
 import 'reactflow/dist/style.css';
-// Fix: Corrected import paths to be relative.
 import type { Node, Edge, NodeType, NodeRunStatus, LogEntry, Run, ModelNodeData, ToolNodeData, InputNodeData, KnowledgeNodeData, AgentGraph } from '../types.ts';
 import { executeAgent } from '../services/agentExecutorService.ts';
 import { getAgentGraphs, saveAgentGraph } from '../services/apiService.ts';

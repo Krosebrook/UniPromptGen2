@@ -1,3 +1,4 @@
+
 // types.ts
 import React from 'react';
 
@@ -280,7 +281,6 @@ export interface Folder {
     createdAt: string;
     ownerId: string;
     permissions: Permission[];
-    // Fix: Changed folderId type from `null` to `string | null` to support nesting and conform to LibraryItem.
     folderId: string | null;
 }
 

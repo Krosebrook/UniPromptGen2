@@ -1,7 +1,6 @@
 
 
 import React, { useState } from 'react';
-// Fix: Corrected import path to be relative.
 import { PromptTemplateVersion, ABTest } from '../../types.ts';
 
 interface CreateABTestModalProps {

@@ -1,7 +1,6 @@
 
 
 import React from 'react';
-// Fix: Corrected import path to be relative.
 import { ShoppingCartIcon } from '../components/icons/Icons.tsx';
 
 const Marketplace: React.FC = () => {
