@@ -39,6 +39,17 @@ const ModelNodeConfig: React.FC<ModelNodeConfigProps> = ({ data, onUpdate }) => 
   return (
     <div className="space-y-4">
       <div>
+        <label className="block text-sm font-medium text-foreground">Model</label>
+        <select
+          value={data.modelName || 'gemini-2.5-flash'}
+          onChange={(e) => onUpdate({ modelName: e.target.value as ModelNodeData['modelName'] })}
+          className="w-full mt-1 p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+        >
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+        </select>
+      </div>
+      <div>
         <label htmlFor="prompt-template" className="block text-sm font-medium text-foreground">Prompt Template</label>
         <textarea
           id="prompt-template"
@@ -77,6 +88,27 @@ const ModelNodeConfig: React.FC<ModelNodeConfigProps> = ({ data, onUpdate }) => 
         step={1}
         onChange={(val) => onUpdate({ topK: val })}
       />
+      <ConfigSlider
+        label="Max Tokens"
+        description="Maximum number of tokens to generate."
+        value={data.maxTokens || 1024}
+        min={1}
+        max={8192}
+        step={1}
+        onChange={(val) => onUpdate({ maxTokens: val })}
+      />
+       <div>
+        <label htmlFor="stop-sequences" className="block text-sm font-medium text-foreground">Stop Sequences</label>
+        <input
+          id="stop-sequences"
+          type="text"
+          value={(data.stopSequences || []).join(', ')}
+          onChange={(e) => onUpdate({ stopSequences: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+          className="w-full mt-1 p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+          placeholder="e.g., ###, ---"
+        />
+        <p className="text-xs text-muted-foreground mt-1">Comma-separated list of strings to stop generation.</p>
+      </div>
     </div>
   );
 };

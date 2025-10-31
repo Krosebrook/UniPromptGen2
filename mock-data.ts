@@ -30,6 +30,32 @@ export let MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-10-15',
     ownerId: MAIN_USER_ID,
     permissions: [],
+    comments: [
+        {
+            id: 'comment-1',
+            version: '1.1',
+            authorId: 'user-002',
+            text: 'Should we add a call-to-action variable?',
+            timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+            resolved: false,
+        },
+        {
+            id: 'comment-2',
+            version: '1.1',
+            authorId: 'user-001',
+            text: 'Good idea. I\'ll think about how to phrase it.',
+            timestamp: new Date(Date.now() - 86000000).toISOString(), // ~1 day ago
+            resolved: false,
+        },
+        {
+            id: 'comment-3',
+            version: '1.0',
+            authorId: 'user-001',
+            text: 'This version feels a bit dry. The emoji version is much better.',
+            timestamp: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
+            resolved: true,
+        }
+    ],
     name: 'Ad Copy with Emojis',
   },
   {
@@ -48,6 +74,7 @@ export let MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-09-20',
     ownerId: MAIN_USER_ID,
     permissions: [{ userId: 'user-002', role: 'Editor' }],
+    comments: [],
     name: 'Customer Support Response',
   },
   {
@@ -66,6 +93,7 @@ export let MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-11-05',
     ownerId: 'user-003',
     permissions: [{ userId: MAIN_USER_ID, role: 'Viewer' }],
+    comments: [],
     name: 'Generate Unit Tests',
   },
    {
@@ -84,6 +112,7 @@ export let MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-11-10',
     ownerId: 'user-002',
     permissions: [],
+    comments: [],
     name: 'Blog Post Idea Generator',
   },
   {
@@ -110,6 +139,7 @@ export let MOCK_TEMPLATES: PromptTemplate[] = [
     updatedAt: '2023-11-20T10:00:00Z',
     ownerId: MAIN_USER_ID,
     permissions: [{ userId: 'user-002', role: 'Viewer' }],
+    comments: [],
     name: 'Meeting Transcript Summarizer',
   },
 ];

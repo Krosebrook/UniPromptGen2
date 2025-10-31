@@ -90,6 +90,15 @@ export interface Permission {
     role: PermissionRole;
 }
 
+export interface Comment {
+    id: string;
+    version: string; // associate comment with a specific version
+    authorId: string;
+    text: string;
+    timestamp: string;
+    resolved: boolean;
+}
+
 export interface PromptTemplate {
   id: string;
   folderId: string | null;
@@ -104,6 +113,7 @@ export interface PromptTemplate {
   updatedAt: string;
   ownerId: string;
   permissions: Permission[];
+  comments: Comment[];
   name: string; // Added name for LibraryItem compatibility
 }
 
@@ -123,10 +133,13 @@ export interface InputNodeData {
 
 export interface ModelNodeData {
   label: string;
+  modelName: 'gemini-2.5-flash' | 'gemini-2.5-pro';
   promptTemplate: string;
   temperature: number;
   topK: number;
   topP: number;
+  maxTokens: number;
+  stopSequences: string[];
 }
 
 export interface ToolNodeData {

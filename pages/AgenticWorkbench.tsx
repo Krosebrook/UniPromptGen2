@@ -17,7 +17,7 @@ import SaveAgentModal from '../components/workbench/SaveAgentModal.tsx';
 
 const initialNodes: Node[] = [
   { id: '1', type: 'input', position: { x: 50, y: 200 }, data: { label: 'Start', initialValue: '{\n  "topic": "the future of AI"\n}' } as InputNodeData },
-  { id: '3', type: 'model', position: { x: 400, y: 200 }, data: { label: 'Model', promptTemplate: 'You are a helpful assistant. Write about {{topic}}.', temperature: 0.7, topK: 40, topP: 0.95 } as ModelNodeData },
+  { id: '3', type: 'model', position: { x: 400, y: 200 }, data: { label: 'Model', modelName: 'gemini-2.5-flash', promptTemplate: 'You are a helpful assistant. Write about {{topic}}.', temperature: 0.7, topK: 40, topP: 0.95, maxTokens: 1024, stopSequences: [] } as ModelNodeData },
   { id: '2', type: 'output', position: { x: 800, y: 200 }, data: { label: 'End' } },
 ];
 

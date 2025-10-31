@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getTemplateById, saveTemplate } from '../services/apiService.ts';
-import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest } from '../types.ts';
+import { getTemplateById, saveTemplate, addComment, updateComment } from '../services/apiService.ts';
+import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest, Comment } from '../types.ts';
 import { SpinnerIcon } from '../components/icons/Icons.tsx';
 import { useImmer } from 'use-immer';
 import { TemplateHeader } from '../components/editor/TemplateHeader.tsx';
 import { VariableEditor } from '../components/editor/VariableEditor.tsx';
 import { VersionManager } from '../components/editor/VersionManager.tsx';
 import PromptAnalysisPanel from '../components/editor/PromptAnalysisPanel.tsx';
+import CommentsPanel from '../components/editor/CommentsPanel.tsx';
 import { analyzePrompt } from '../services/promptAnalysisService.ts';
 import ABTestManager from '../components/ab-testing/ABTestManager.tsx';
 import ABTestResults from '../components/ab-testing/ABTestResults.tsx';
@@ -17,6 +17,7 @@ import { MOCK_LOGGED_IN_USER } from '../constants.ts';
 import TemplatePreviewPanel from '../components/editor/TemplatePreviewPanel.tsx';
 import { useHistory } from '../hooks/useHistory.ts';
 import { useABTesting } from '../hooks/useABTesting.ts';
+import VersionComparisonModal from '../components/editor/VersionComparisonModal.tsx';
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -36,6 +37,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const [template, setTemplate] = useImmer<PromptTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [actionInProgress, setActionInProgress] = useState<'none' | 'save' | 'deploy'>('none');
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   
   const isNewTemplate = templateId === 'new' || !templateId;
 
@@ -78,6 +80,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
             updatedAt: new Date().toISOString(),
             ownerId: 'user-001',
             permissions: [],
+            comments: [],
             name: 'New Untitled Template'
           };
           setTemplate(newTemplateObject);
@@ -253,7 +256,49 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
     });
     resetHistory(newVersion);
   }, [template, setTemplate, resetHistory]);
+
+  const handleRevertToVersion = useCallback((sourceVersion: PromptTemplateVersion) => {
+    if (!template) return;
+
+    // This is a "soft" revert. It loads the state of the old version into the editor.
+    // The user must then explicitly save to persist this change.
+    const revertedState = JSON.parse(JSON.stringify(sourceVersion)); // Deep copy
+    resetHistory(revertedState);
+  }, [template, resetHistory]);
   
+  const handleAddComment = useCallback(async (text: string) => {
+    if (!template || isNewTemplate) return;
+    
+    const newCommentData = {
+        version: selectedVersion.version,
+        authorId: MOCK_LOGGED_IN_USER.id,
+        text,
+    };
+    
+    const addedComment = await addComment(template.id, newCommentData);
+    
+    setTemplate(draft => {
+        if (draft) {
+            draft.comments.push(addedComment);
+        }
+    });
+  }, [template, isNewTemplate, selectedVersion, setTemplate]);
+
+  const handleUpdateComment = useCallback(async (commentId: string, updates: Partial<Comment>) => {
+    if (!template || isNewTemplate) return;
+
+    const updatedComment = await updateComment(template.id, commentId, updates);
+    
+    setTemplate(draft => {
+        if (draft) {
+            const index = draft.comments.findIndex(c => c.id === commentId);
+            if (index !== -1) {
+                draft.comments[index] = updatedComment;
+            }
+        }
+    });
+  }, [template, isNewTemplate, setTemplate]);
+
   const variableErrors = useMemo(() => {
     const nameCounts = new Map<string, number>();
     selectedVersion.variables.forEach(v => nameCounts.set(v.name, (nameCounts.get(v.name) || 0) + 1));
@@ -304,6 +349,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                 onVersionChange={resetHistory}
                 onDeploy={handleDeploy}
                 onCreateNewVersion={handleCreateNewVersion}
+                onStartCompare={() => setIsCompareModalOpen(true)}
+                onRevert={handleRevertToVersion}
                 canEdit={canEdit}
             />
              <textarea
@@ -335,10 +382,21 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                 onSelectTest={setSelectedABTest}
                 canCreateTest={template.versions.length >= 2}
             />
+            <CommentsPanel
+                templateId={template.id}
+                comments={template.comments}
+                selectedVersionString={selectedVersion.version}
+                onAddComment={handleAddComment}
+                onUpdateComment={handleUpdateComment}
+                canComment={!isNewTemplate && canEdit}
+            />
         </div>
       </div>
       {isABTestModalOpen && template && <CreateABTestModal versions={template.versions} onClose={() => setIsABTestModalOpen(false)} onSave={handleCreateABTest} />}
       {selectedABTest && template && <ABTestResults test={selectedABTest} template={template} onClose={() => setSelectedABTest(null)} onDeclareWinner={handleDeclareWinner} />}
+      {isCompareModalOpen && template && (
+        <VersionComparisonModal versions={template.versions} onClose={() => setIsCompareModalOpen(false)} />
+      )}
     </div>
   );
 };

@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import type { ToolNodeData, AuthMethod, Tool } from '../../types.ts';
 import { getTools } from '../../services/apiService.ts';
@@ -13,6 +9,21 @@ interface ToolNodeConfigProps {
   data: ToolNodeData;
   onUpdate: (data: Partial<ToolNodeData>) => void;
 }
+
+// Sub-components for different config field types
+const ConfigInput: React.FC<{ label: string; value: string; onChange: (value: string) => void; placeholder?: string; disabled?: boolean; }> = ({ label, value, onChange, placeholder, disabled }) => (
+    <div>
+        <label className="block text-sm font-medium text-foreground mb-1">{label}</label>
+        <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            disabled={disabled}
+            className="w-full p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+        />
+    </div>
+);
 
 const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
   const { currentWorkspace } = useWorkspace();
@@ -85,22 +96,5 @@ const ToolNodeConfig: React.FC<ToolNodeConfigProps> = ({ data, onUpdate }) => {
     </div>
   );
 };
-
-// Sub-components for different config field types
-
-const ConfigInput: React.FC<{ label: string; value: string; onChange: (value: string) => void; placeholder?: string; disabled?: boolean; }> = ({ label, value, onChange, placeholder, disabled }) => (
-    <div>
-        <label className="block text-sm font-medium text-foreground mb-1">{label}</label>
-        <input
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            disabled={disabled}
-            className="w-full p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
-        />
-    </div>
-);
-
 
 export default ToolNodeConfig;

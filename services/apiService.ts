@@ -1,7 +1,7 @@
 // apiService.ts
 
 import { MOCK_TEMPLATES, MOCK_TOOLS, MOCK_KNOWLEDGE_SOURCES, MOCK_AGENTS, MOCK_WORKSPACES, MOCK_FOLDERS, MOCK_TASKS, MOCK_AB_TESTS, deleteFolderInMock } from '../mock-data.ts';
-import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, ABTest, ToolFormData, KnowledgeSourceFormData, Folder, LibraryType, LibraryItem, UserRole, Permission, User, Task } from '../types.ts';
+import { PromptTemplate, Tool, KnowledgeSource, AgentGraph, Workspace, ABTest, ToolFormData, KnowledgeSourceFormData, Folder, LibraryType, LibraryItem, UserRole, Permission, User, Task, Comment } from '../types.ts';
 import { MOCK_USERS, MOCK_LOGGED_IN_USER } from '../constants.ts';
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -65,6 +65,7 @@ export const saveTemplate = async (templateData: Partial<PromptTemplate>): Promi
         updatedAt: new Date().toISOString(),
         ownerId: MOCK_LOGGED_IN_USER.id,
         permissions: [],
+        comments: [],
         ...templateData,
         name: templateData.name || 'Untitled Template',
     };
@@ -77,6 +78,35 @@ export const getDeployedTemplates = async (workspaceId: string, userId: string):
     const userRole = getRole(userId, workspaceId);
     return MOCK_TEMPLATES.filter(t => t.deployedVersion && hasPermission(t, userId, userRole));
 };
+
+// --- Comments ---
+export const addComment = async (templateId: string, commentData: Omit<Comment, 'id' | 'timestamp' | 'resolved'>): Promise<Comment> => {
+    await delay(200);
+    const template = MOCK_TEMPLATES.find(t => t.id === templateId);
+    if (!template) throw new Error("Template not found");
+
+    const newComment: Comment = {
+        id: `comment-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        resolved: false,
+        ...commentData,
+    };
+    template.comments.push(newComment);
+    return newComment;
+};
+
+export const updateComment = async (templateId: string, commentId: string, updates: Partial<Comment>): Promise<Comment> => {
+    await delay(100);
+    const template = MOCK_TEMPLATES.find(t => t.id === templateId);
+    if (!template) throw new Error("Template not found");
+
+    const commentIndex = template.comments.findIndex(c => c.id === commentId);
+    if (commentIndex === -1) throw new Error("Comment not found");
+
+    template.comments[commentIndex] = { ...template.comments[commentIndex], ...updates };
+    return template.comments[commentIndex];
+};
+
 
 // --- Folders ---
 

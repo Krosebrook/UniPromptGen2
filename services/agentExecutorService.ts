@@ -186,10 +186,12 @@ export const executeAgent = async (
 
                 log('Generating content with model...', 'info');
                 const modelConfig = {
-                    model: 'gemini-2.5-flash' as const,
+                    model: modelData.modelName,
                     temperature: modelData.temperature,
                     topP: modelData.topP,
-                    topK: modelData.topK
+                    topK: modelData.topK,
+                    maxTokens: modelData.maxTokens,
+                    stopSequences: modelData.stopSequences,
                 };
                 const result = await generateText(finalPrompt, modelConfig);
 

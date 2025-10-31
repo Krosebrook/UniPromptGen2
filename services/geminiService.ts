@@ -63,6 +63,8 @@ export const generateText = async (
         temperature?: number;
         topP?: number;
         topK?: number;
+        maxTokens?: number;
+        stopSequences?: string[];
     } = {}
 ): Promise<string> => {
     const {
@@ -70,7 +72,9 @@ export const generateText = async (
         systemInstruction,
         temperature,
         topP,
-        topK
+        topK,
+        maxTokens,
+        stopSequences,
     } = config;
 
     const response = await ai.models.generateContent({
@@ -81,6 +85,8 @@ export const generateText = async (
             temperature,
             topP,
             topK,
+            maxOutputTokens: maxTokens,
+            stopSequences,
         },
     });
 
