@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout.tsx';
 import Dashboard from './pages/Dashboard.tsx';
@@ -14,6 +15,7 @@ import KnowledgeLibrary from './pages/KnowledgeLibrary.tsx';
 import LandingPage from './pages/LandingPage.tsx';
 import Deployments from './pages/Deployments.tsx';
 import Settings from './pages/Settings.tsx';
+import ConfigurationExplorer from './pages/ConfigurationExplorer.tsx';
 import { MOCK_LOGGED_IN_USER } from './constants.ts';
 import { WorkspaceProvider } from './contexts/WorkspaceContext.tsx';
 
@@ -28,6 +30,7 @@ const routeConfig: Record<string, React.FC<any>> = {
   '/knowledge-library': KnowledgeLibrary,
   '/deployments': Deployments,
   '/settings': Settings,
+  '/config-explorer': ConfigurationExplorer,
 };
 
 

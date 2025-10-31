@@ -1,8 +1,11 @@
 
+
+
 import React, { useState, useEffect } from 'react';
 import {
   HomeIcon, ChartPieIcon, CodeBracketSquareIcon, PlayIcon, UserCircleIcon,
-  ShoppingCartIcon, BeakerIcon, TerminalIcon, CollectionIcon, RocketLaunchIcon
+  ShoppingCartIcon, BeakerIcon, TerminalIcon, CollectionIcon, RocketLaunchIcon,
+  CpuChipIcon
 } from './icons/Icons.tsx';
 
 interface NavLinkProps {
@@ -46,6 +49,7 @@ const Sidebar: React.FC = () => {
     { href: '#/tool-library', icon: TerminalIcon, label: 'Tool Library' },
     { href: '#/knowledge-library', icon: CollectionIcon, label: 'Knowledge Library' },
     { href: '#/marketplace', icon: ShoppingCartIcon, label: 'Marketplace' },
+    { href: '#/config-explorer', icon: CpuChipIcon, label: 'Config Explorer' },
   ];
 
   return (

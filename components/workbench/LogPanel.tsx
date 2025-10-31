@@ -1,7 +1,6 @@
 
 
 
-
 import React, { useRef, useEffect } from 'react';
 import { LogEntry } from '../../types.ts';
 import { BellIcon, CheckCircleIcon, XCircleIcon, SpinnerIcon } from '../icons/Icons.tsx';

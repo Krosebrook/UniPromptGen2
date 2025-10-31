@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeRunStatus } from '../../../types.ts';
@@ -18,7 +16,15 @@ const statusStyles: Record<NodeRunStatus, string> = {
     error: 'border-destructive',
 };
 
-const CustomNode: React.FC<CustomNodeProps> = ({ data, type, isConnectable, icon: Icon, runStatus = 'idle', isSelected }) => {
+// FIX: Refactored component signature to destructure props in the parameters to resolve typing issues.
+const CustomNode: React.FC<CustomNodeProps> = ({
+    data,
+    type,
+    isConnectable,
+    icon: Icon,
+    runStatus = 'idle',
+    isSelected,
+}) => {
   const borderClass = statusStyles[runStatus];
   // Separate ring class for selection to coexist with status border
   const ringClass = isSelected ? 'ring-2 ring-ring ring-offset-card ring-offset-2' : '';

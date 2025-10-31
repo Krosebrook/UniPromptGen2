@@ -95,14 +95,14 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
 
       if (!sourceNode || !targetNode) return false;
 
-      // Rule 1: Knowledge nodes can only connect to the 'knowledge_input' handle of a model node.
-      if (sourceNode.type === 'knowledge') {
-          return targetNode.type === 'model' && connection.targetHandle === 'knowledge_input';
-      }
+      // Fix: Refactored knowledge connection logic to resolve TS error and simplify.
+      // Rules for knowledge connections
+      const isKnowledgeSource = sourceNode.type === 'knowledge';
+      const isKnowledgeTarget = connection.targetHandle === 'knowledge_input';
 
-      // Rule 2: 'knowledge_input' handle only accepts connections from knowledge nodes.
-      if (connection.targetHandle === 'knowledge_input') {
-          return sourceNode.type === 'knowledge';
+      if (isKnowledgeSource || isKnowledgeTarget) {
+          // If one end is a knowledge connection, the other must be too, and the target must be a model.
+          return isKnowledgeSource && isKnowledgeTarget && targetNode.type === 'model';
       }
       
       // Rule 3: Enforce a single incoming connection per handle.
