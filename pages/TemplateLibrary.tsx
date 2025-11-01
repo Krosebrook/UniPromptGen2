@@ -13,12 +13,14 @@ const TemplateLibrary: React.FC = () => {
       fetchDataFunction={getTemplates}
       createFolderFunction={(name, workspaceId, folderId) => createFolder(name, 'template', workspaceId, folderId)}
       newItemLink="/templates/new"
-      renderItem={(item, canEdit, onDragStart, onContextMenu) => (
+      renderItem={(item, canEdit, onDragStart, onContextMenu, isFavorite, onToggleFavorite) => (
         <TemplateCard
           template={item as PromptTemplate}
           canEdit={canEdit}
           onDragStart={onDragStart}
           onContextMenu={onContextMenu}
+          isFavorite={isFavorite}
+          onToggleFavorite={onToggleFavorite}
         />
       )}
     />

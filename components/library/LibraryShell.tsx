@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useLibraryData } from '../../hooks/useLibraryData.ts';
 import { SpinnerIcon, FolderIcon, PlusIcon, FolderPlusIcon, ArrowRightIcon, HomeIcon } from '../icons/Icons.tsx';
 import FolderCard from './FolderCard.tsx';
@@ -22,7 +22,9 @@ interface LibraryShellProps<T extends LibraryItem> {
     item: T,
     canEdit: boolean,
     onDragStart: (e: React.DragEvent, item: T) => void,
-    onContextMenu: (e: React.MouseEvent, item: T) => void
+    onContextMenu: (e: React.MouseEvent, item: T) => void,
+    isFavorite: boolean,
+    onToggleFavorite: (itemId: string) => void
   ) => React.ReactNode;
 }
 
@@ -46,6 +48,29 @@ const LibraryShell = <T extends LibraryItem>({
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
+
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const favoritesKey = `promptPlatform_favorites_${libraryType}`;
+
+  useEffect(() => {
+    try {
+      const storedFavorites = localStorage.getItem(favoritesKey);
+      if (storedFavorites) {
+        setFavorites(JSON.parse(storedFavorites));
+      }
+    } catch (error) {
+      console.error("Failed to parse favorites from localStorage", error);
+    }
+  }, [favoritesKey]);
+
+  const toggleFavorite = (itemId: string) => {
+    const newFavorites = favorites.includes(itemId)
+      ? favorites.filter(id => id !== itemId)
+      : [...favorites, itemId];
+    
+    setFavorites(newFavorites);
+    localStorage.setItem(favoritesKey, JSON.stringify(newFavorites));
+  };
   
   const { data, isLoading, error, refreshData } = useLibraryData(fetchDataFunction, libraryType, currentFolder?.id || null);
   const { data: folders, isLoading: foldersLoading, refreshData: refreshFolders } = useLibraryData(
@@ -159,9 +184,23 @@ const LibraryShell = <T extends LibraryItem>({
       );
     }
 
-    const allItems = [...folders, ...data];
+    const sortedFolders = [...folders].sort((a, b) => a.name.localeCompare(b.name));
+    
+    const sortedData = [...data].sort((a, b) => {
+        const aIsFavorite = favorites.includes(a.id);
+        const bIsFavorite = favorites.includes(b.id);
 
-    if (allItems.length === 0) {
+        if (aIsFavorite && !bIsFavorite) return -1;
+        if (!aIsFavorite && bIsFavorite) return 1;
+        
+        if ('name' in a && 'name' in b) {
+            return (a as any).name.localeCompare((b as any).name);
+        }
+
+        return 0;
+    });
+
+    if (sortedFolders.length === 0 && sortedData.length === 0) {
       return (
         <div className="text-center py-16 text-muted-foreground">
           <FolderIcon className="h-16 w-16 mx-auto mb-4" />
@@ -172,7 +211,7 @@ const LibraryShell = <T extends LibraryItem>({
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {folders.map(folder => (
+        {sortedFolders.map(folder => (
             <FolderCard 
                 key={folder.id} 
                 folder={folder} 
@@ -182,9 +221,10 @@ const LibraryShell = <T extends LibraryItem>({
                 onContextMenu={(e) => handleContextMenu(e, folder)}
             />
         ))}
-        {data.map(item => {
+        {sortedData.map(item => {
             const { canEdit: canEditItem } = usePermissions(item);
-            return renderItem(item as T, canEditItem, handleDragStart, handleContextMenu);
+            const isFavorite = favorites.includes(item.id);
+            return renderItem(item as T, canEditItem, handleDragStart, handleContextMenu, isFavorite, toggleFavorite);
         })}
       </div>
     );
