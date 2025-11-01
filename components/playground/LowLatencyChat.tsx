@@ -1,7 +1,7 @@
 
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from '@google/genai';
+import { GoogleGenAI, Session, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { decode, encode, decodeAudioData } from '../../utils/helpers.ts';
 import { MicrophoneIcon, StopCircleIcon } from '../icons/Icons.tsx';
 
@@ -15,7 +15,7 @@ const LowLatencyChat: React.FC = () => {
     const [transcriptionHistory, setTranscriptionHistory] = useState<TranscriptionEntry[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+    const sessionPromiseRef = useRef<Promise<Session> | null>(null);
     const currentInputTranscriptionRef = useRef('');
     const currentOutputTranscriptionRef = useRef('');
     

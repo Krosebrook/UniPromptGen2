@@ -273,7 +273,9 @@ export const runGroundedSearch = async (query: string): Promise<{ text: string, 
     });
 
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const sources: GroundingSource[] = groundingChunks.map(chunk => ({ web: chunk.web })).filter(s => s.web);
+    const sources: GroundingSource[] = groundingChunks
+        .filter(chunk => chunk.web?.uri && chunk.web?.title)
+        .map(chunk => ({ web: { uri: chunk.web!.uri!, title: chunk.web!.title! } }));
 
     return {
         text: response.text,
