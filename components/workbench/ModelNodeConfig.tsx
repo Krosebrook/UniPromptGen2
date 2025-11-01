@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import type { ModelNodeData } from '../../types.ts';
 
@@ -41,7 +39,7 @@ const ModelNodeConfig: React.FC<ModelNodeConfigProps> = ({ data, onUpdate }) => 
       <div>
         <label className="block text-sm font-medium text-foreground">Model</label>
         <select
-          value={data.modelName || 'gemini-2.5-flash'}
+          value={data.modelName}
           onChange={(e) => onUpdate({ modelName: e.target.value as ModelNodeData['modelName'] })}
           className="w-full mt-1 p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
         >
@@ -91,7 +89,7 @@ const ModelNodeConfig: React.FC<ModelNodeConfigProps> = ({ data, onUpdate }) => 
       <ConfigSlider
         label="Max Tokens"
         description="Maximum number of tokens to generate."
-        value={data.maxTokens || 1024}
+        value={data.maxTokens}
         min={1}
         max={8192}
         step={1}
@@ -102,7 +100,7 @@ const ModelNodeConfig: React.FC<ModelNodeConfigProps> = ({ data, onUpdate }) => 
         <input
           id="stop-sequences"
           type="text"
-          value={(data.stopSequences || []).join(', ')}
+          value={data.stopSequences.join(', ')}
           onChange={(e) => onUpdate({ stopSequences: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
           className="w-full mt-1 p-2 text-sm bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
           placeholder="e.g., ###, ---"

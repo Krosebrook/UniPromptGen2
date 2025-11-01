@@ -48,7 +48,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({
   const showKnowledgeInput = type === 'model';
 
   return (
-    <div className={`bg-secondary p-3 border-2 rounded-md w-48 transition-all ${borderClass} ${ringClass}`}>
+    <div className={`bg-secondary p-3 border-2 rounded-md w-48 transition-all ${borderClass} ${ringClass} hover:scale-[1.03] hover:shadow-glow`}>
       {showKnowledgeInput && (
         <Handle
             type="target"

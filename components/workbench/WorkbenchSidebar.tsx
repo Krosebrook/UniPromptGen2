@@ -35,6 +35,7 @@ const PRESET_NODES: NodeCategory[] = [
         items: [
             { type: 'tool', label: 'Wait / Delay', icon: PauseIcon, description: 'Pause the workflow.', data: { label: 'Wait', subType: 'Wait', settings: { duration: 5, unit: 'seconds' } } as ToolNodeData },
             { type: 'tool', label: 'Execute Code', icon: CodeBracketIcon, description: 'Run custom Javascript code.', data: { label: 'Code', subType: 'ExecuteCode', settings: { code: 'return { result: "hello from code" };' } } as ToolNodeData },
+            { type: 'tool', label: 'Code Snippet', icon: CodeBracketIcon, description: 'Runs a simple Javascript snippet.', data: { label: 'Code Snippet', subType: 'ExecuteCode', settings: { code: 'return { message: "This is a simple code snippet." };' } } as ToolNodeData },
             { type: 'tool', label: 'Transform JSON', icon: ArrowsPointingOutIcon, description: 'Restructure JSON data.', data: { label: 'Transform JSON', subType: 'TransformJson', settings: { expression: 'items[].name', jsonInput: '{{input}}' } } as ToolNodeData },
         ]
     },
