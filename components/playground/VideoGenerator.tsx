@@ -1,7 +1,6 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
-import { generateVideoFromImage, generateVideoFromText } from '../../services/geminiService.ts';
+import { generateVideoFromImage } from '../../services/geminiService.ts';
 import { fileToBase64 } from '../../utils/helpers.ts';
 import { VideoCameraIcon, UploadIcon, KeyIcon, XCircleIcon } from '../icons/Icons.tsx';
 
@@ -72,20 +71,15 @@ const VideoGenerator: React.FC = () => {
   }
 
   const handleGenerate = async () => {
-    if (!prompt) return;
+    if (!image) return;
     setIsLoading(true);
     setGeneratedVideo(null);
     setError(null);
 
     try {
-        if (image) {
-            const imageBase64 = await fileToBase64(image.file);
-            const videoUrl = await generateVideoFromImage(prompt, imageBase64, image.file.type, aspectRatio);
-            setGeneratedVideo(videoUrl);
-        } else {
-            const videoUrl = await generateVideoFromText(prompt, aspectRatio);
-            setGeneratedVideo(videoUrl);
-        }
+        const imageBase64 = await fileToBase64(image.file);
+        const videoUrl = await generateVideoFromImage(prompt, imageBase64, image.file.type, aspectRatio);
+        setGeneratedVideo(videoUrl);
     } catch (err) {
       console.error("Video generation failed:", err);
       if (err instanceof Error && err.message.includes('Requested entity was not found')) {
@@ -133,7 +127,7 @@ const VideoGenerator: React.FC = () => {
         />
         
         <div className="bg-input/50 p-3 rounded-md">
-            <label className="block text-sm font-medium text-muted-foreground mb-2">Starting Image (Optional)</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Starting Image</label>
             {image ? (
                 <div className="relative group w-32">
                     <img src={image.url} alt="Uploaded preview" className="w-32 h-auto object-contain rounded-md" />
@@ -155,7 +149,7 @@ const VideoGenerator: React.FC = () => {
                 <option value="9:16">9:16 (Portrait)</option>
             </select>
 
-            <button onClick={handleGenerate} disabled={isLoading || !prompt} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50">
+            <button onClick={handleGenerate} disabled={isLoading || !image} className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50">
                 <VideoCameraIcon className="h-5 w-5 mr-2" /> {isLoading ? 'Generating...' : 'Generate Video'}
             </button>
         </div>
@@ -168,7 +162,7 @@ const VideoGenerator: React.FC = () => {
             <div className="text-center text-muted-foreground">
                 <VideoCameraIcon className="h-12 w-12 mx-auto mb-2"/>
                  <p>Your generated video will appear here.</p>
-                 <p className="text-xs">Enter a prompt to begin. You can optionally add a starting image.</p>
+                 <p className="text-xs">Upload a starting image to begin.</p>
             </div>
         )}
       </div>
