@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PromptTemplateVersion } from '../../types.ts';
-import { ArrowUturnLeftIcon, ArrowUturnRightIcon, RocketLaunchIcon } from '../icons/Icons.tsx';
+import { ArrowUturnLeftIcon, ArrowUturnRightIcon, RocketLaunchIcon, DocumentDuplicateIcon } from '../icons/Icons.tsx';
 
 interface TemplateHeaderProps {
   version: PromptTemplateVersion;
@@ -17,6 +17,7 @@ interface TemplateHeaderProps {
   onRedo: () => void;
   onSave: () => void;
   onSaveAndDeploy: () => void;
+  onCreateNewVersion: () => void;
 }
 
 export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
@@ -32,7 +33,8 @@ export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
   onUndo,
   onRedo,
   onSave,
-  onSaveAndDeploy
+  onSaveAndDeploy,
+  onCreateNewVersion,
 }) => {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -60,6 +62,10 @@ export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
             </button>
             <button onClick={onRedo} disabled={!isRedoable} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Redo">
               <ArrowUturnRightIcon className="h-5 w-5" />
+            </button>
+            <button onClick={onCreateNewVersion} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-secondary rounded-md hover:bg-accent" title="Create a new version from the current one">
+              <DocumentDuplicateIcon className="h-5 w-5" />
+              New Version
             </button>
             <button
               onClick={onSave}

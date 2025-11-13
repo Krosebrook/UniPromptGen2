@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { generateVideoFromText } from '../../services/geminiService.ts';
 import { VideoCameraIcon, KeyIcon } from '../icons/Icons.tsx';

@@ -339,6 +339,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
         onRedo={handleRedo}
         onSave={handleSave}
         onSaveAndDeploy={handleSaveAndDeploy}
+        onCreateNewVersion={() => handleCreateNewVersion(selectedVersion)}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

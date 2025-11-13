@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { sendMessage, startChat } from '../../services/geminiService.ts';
 import type { ChatMessage } from '../../types.ts';
@@ -14,7 +15,7 @@ const Chatbot: React.FC = () => {
   useEffect(() => {
     // Initialize with a welcome message
     setMessages([{ id: 'init', role: 'model', text: 'Hello! How can I help you today?', timestamp: new Date() }]);
-    startChat(); // Initialize the chat session
+    startChat('gemini-2.5-flash'); // Initialize the chat session
   }, []);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const modelMessage = await sendMessage(input);
+      const modelMessage = await sendMessage(input, 'gemini-2.5-flash');
       setMessages(prev => [...prev, modelMessage]);
     } catch (error) {
       console.error("Failed to send message:", error);

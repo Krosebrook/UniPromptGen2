@@ -1,7 +1,5 @@
 
 
-
-
 import React, { useState } from 'react';
 import Chatbot from '../components/playground/Chatbot.tsx';
 import ImageGenerator from '../components/playground/ImageGenerator.tsx';
@@ -14,14 +12,13 @@ import ComplexReasoning from '../components/playground/ComplexReasoning.tsx';
 import LowLatencyChat from '../components/playground/LowLatencyChat.tsx';
 import FastChat from '../components/playground/FastChat.tsx';
 import ImageAnalyzer from '../components/playground/ImageAnalyzer.tsx';
-import TextToVideo from '../components/playground/TextToVideo.tsx';
 
 import {
   QuoteIcon, ScissorsIcon, VideoCameraIcon,
   MicrophoneIcon, SpeakerWaveIcon, GlobeAltIcon, SparklesIcon, BoltIcon, CpuChipIcon
 } from '../components/icons/Icons.tsx';
 
-type PlaygroundTab = 'fast-chat' | 'voice-chat' | 'chat' | 'image-generation' | 'image-editing' | 'image-analysis' | 'video-generation' | 'text-to-video' | 'audio-transcription' | 'text-to-speech' | 'grounded-search' | 'complex-reasoning';
+type PlaygroundTab = 'fast-chat' | 'voice-chat' | 'chat' | 'image-generation' | 'image-editing' | 'image-analysis' | 'video-generation' | 'audio-transcription' | 'text-to-speech' | 'grounded-search' | 'complex-reasoning';
 
 const TABS: { id: PlaygroundTab; label: string; icon: React.ElementType; component: React.ElementType }[] = [
   { id: 'fast-chat', label: 'Fast Chat', icon: BoltIcon, component: FastChat },
@@ -30,8 +27,7 @@ const TABS: { id: PlaygroundTab; label: string; icon: React.ElementType; compone
   { id: 'image-generation', label: 'Image Generation', icon: SparklesIcon, component: ImageGenerator },
   { id: 'image-editing', label: 'Image Editing', icon: ScissorsIcon, component: ImageEditor },
   { id: 'image-analysis', label: 'Image Analysis', icon: CpuChipIcon, component: ImageAnalyzer },
-  { id: 'video-generation', label: 'Image-to-Video', icon: VideoCameraIcon, component: VideoGenerator },
-  { id: 'text-to-video', label: 'Text-to-Video', icon: VideoCameraIcon, component: TextToVideo },
+  { id: 'video-generation', label: 'Video Generation', icon: VideoCameraIcon, component: VideoGenerator },
   { id: 'audio-transcription', label: 'Audio Transcription', icon: MicrophoneIcon, component: AudioTranscriber },
   { id: 'text-to-speech', label: 'Text-to-Speech', icon: SpeakerWaveIcon, component: TextToSpeech },
   { id: 'grounded-search', label: 'Grounded Search', icon: GlobeAltIcon, component: Search },

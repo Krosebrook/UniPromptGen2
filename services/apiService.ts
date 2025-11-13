@@ -194,6 +194,32 @@ export const getKnowledgeSourceContent = async (sourceId: string): Promise<strin
     return `This is mock content from the knowledge source: "${source.name}". It contains important details about ${source.description}.`;
 };
 
+export const createKnowledgeSource = async (sourceData: KnowledgeSourceFormData, workspaceId: string, folderId: string | null): Promise<KnowledgeSource> => {
+    await delay(300);
+    const newSource: KnowledgeSource = {
+        id: `ks-${Date.now()}`,
+        folderId,
+        status: 'Pending',
+        createdBy: MOCK_LOGGED_IN_USER.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ownerId: MOCK_LOGGED_IN_USER.id,
+        permissions: [],
+        ...sourceData,
+    };
+    MOCK_KNOWLEDGE_SOURCES.push(newSource);
+    // Simulate indexing process
+    setTimeout(() => {
+        const idx = MOCK_KNOWLEDGE_SOURCES.findIndex(s => s.id === newSource.id);
+        if (idx > -1) MOCK_KNOWLEDGE_SOURCES[idx].status = 'Indexing';
+    }, 1500);
+    setTimeout(() => {
+        const idx = MOCK_KNOWLEDGE_SOURCES.findIndex(s => s.id === newSource.id);
+        if (idx > -1) MOCK_KNOWLEDGE_SOURCES[idx].status = 'Ready';
+    }, 5000);
+    return newSource;
+};
+
 // --- Agents ---
 
 export const getAgentGraphs = async (workspaceId: string): Promise<AgentGraph[]> => {

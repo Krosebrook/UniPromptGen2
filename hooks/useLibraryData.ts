@@ -7,7 +7,8 @@ type FetchFunction<T> = (workspaceId: string, folderId: string | null, userId: s
 export const useLibraryData = <T,>(
   fetchFunction: FetchFunction<T>,
   dataType: string,
-  folderId: string | null
+  folderId: string | null,
+  refreshKey?: number,
 ) => {
   const { currentWorkspace } = useWorkspace();
   const [data, setData] = useState<T[]>([]);
@@ -35,7 +36,7 @@ export const useLibraryData = <T,>(
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, refreshKey]);
 
   const refreshData = useCallback(() => {
     fetchData();

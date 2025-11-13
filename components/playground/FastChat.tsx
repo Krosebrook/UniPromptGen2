@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { sendLiteMessage, startLiteChat } from '../../services/geminiService.ts';
+import { sendMessage, startChat } from '../../services/geminiService.ts';
 import type { ChatMessage } from '../../types.ts';
 import { PaperAirplaneIcon, UserCircleIcon, BoltIcon } from '../icons/Icons.tsx';
 
@@ -12,7 +12,7 @@ const FastChat: React.FC = () => {
   useEffect(() => {
     // Initialize with a welcome message
     setMessages([{ id: 'init', role: 'model', text: 'Hello! I am the fast chat assistant, powered by Flash Lite. How can I help you?', timestamp: new Date() }]);
-    startLiteChat(); // Initialize the chat session
+    startChat('gemini-flash-lite-latest'); // Initialize the chat session
   }, []);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const FastChat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const modelMessage = await sendLiteMessage(input);
+      const modelMessage = await sendMessage(input, 'gemini-flash-lite-latest');
       setMessages(prev => [...prev, modelMessage]);
     } catch (error) {
       console.error("Failed to send message:", error);

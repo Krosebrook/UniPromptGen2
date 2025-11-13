@@ -18,6 +18,8 @@ interface LibraryShellProps<T extends LibraryItem> {
   fetchDataFunction: (workspaceId: string, folderId: string | null, userId: string) => Promise<T[]>;
   createFolderFunction: (name: string, workspaceId: string, folderId: string | null) => Promise<Folder>;
   newItemLink?: string;
+  onNewItemClick?: (currentFolder: Folder | null) => void;
+  refreshKey?: number;
   renderItem: (
     item: T,
     canEdit: boolean,
@@ -35,6 +37,8 @@ const LibraryShell = <T extends LibraryItem>({
   fetchDataFunction,
   createFolderFunction,
   newItemLink,
+  onNewItemClick,
+  refreshKey,
   renderItem,
 }: LibraryShellProps<T>) => {
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
@@ -72,11 +76,12 @@ const LibraryShell = <T extends LibraryItem>({
     localStorage.setItem(favoritesKey, JSON.stringify(newFavorites));
   };
   
-  const { data, isLoading, error, refreshData } = useLibraryData(fetchDataFunction, libraryType, currentFolder?.id || null);
+  const { data, isLoading, error, refreshData } = useLibraryData(fetchDataFunction, libraryType, currentFolder?.id || null, refreshKey);
   const { data: folders, isLoading: foldersLoading, refreshData: refreshFolders } = useLibraryData(
     (wsId, folderId, userId) => getFolders(wsId, libraryType, folderId, userId),
     `${libraryType} folders`,
-    currentFolder?.id || null
+    currentFolder?.id || null,
+    refreshKey
   );
 
   const { canEdit: canEditInCurrentFolder } = usePermissions(currentFolder);
@@ -244,7 +249,12 @@ const LibraryShell = <T extends LibraryItem>({
                       <FolderPlusIcon className="h-5 w-5" />
                       New Folder
                   </button>
-                  {newItemLink && (
+                  {onNewItemClick ? (
+                    <button onClick={() => onNewItemClick(currentFolder)} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90">
+                        <PlusIcon className="h-5 w-5" />
+                        New {libraryType.charAt(0).toUpperCase() + libraryType.slice(1)}
+                    </button>
+                  ) : newItemLink && (
                       <a href={newItemLink} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90">
                           <PlusIcon className="h-5 w-5" />
                           New {libraryType.charAt(0).toUpperCase() + libraryType.slice(1)}

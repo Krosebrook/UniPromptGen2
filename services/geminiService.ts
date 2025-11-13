@@ -1,5 +1,6 @@
 
 
+
 import { GoogleGenAI, Chat as ChatSession, Modality, GenerateContentResponse } from "@google/genai";
 import { ChatMessage, GroundingSource } from "../types.ts";
 
@@ -7,46 +8,22 @@ import { ChatMessage, GroundingSource } from "../types.ts";
 // This instance is for all other models.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-let chat: ChatSession | null = null;
-let liteChat: ChatSession | null = null;
+const chatSessions = new Map<string, ChatSession>();
 
-export const startChat = () => {
-    chat = ai.chats.create({
-        model: 'gemini-2.5-flash',
-    });
+export const startChat = (model: 'gemini-2.5-flash' | 'gemini-flash-lite-latest') => {
+    const newChat = ai.chats.create({ model });
+    chatSessions.set(model, newChat);
 };
 
-export const sendMessage = async (message: string): Promise<ChatMessage> => {
+export const sendMessage = async (message: string, model: 'gemini-2.5-flash' | 'gemini-flash-lite-latest'): Promise<ChatMessage> => {
+    let chat = chatSessions.get(model);
     if (!chat) {
-        startChat();
-    }
-    if (!chat) { // startChat should initialize it, but as a fallback
-        throw new Error("Chat session not initialized.");
+        // If a chat session hasn't been explicitly started, create one.
+        chat = ai.chats.create({ model });
+        chatSessions.set(model, chat);
     }
 
     const response: GenerateContentResponse = await chat.sendMessage({ message });
-    return {
-        id: `model-${Date.now()}`,
-        role: 'model',
-        text: response.text,
-        timestamp: new Date(),
-    };
-};
-
-export const startLiteChat = () => {
-    liteChat = ai.chats.create({
-        model: 'gemini-flash-lite-latest',
-    });
-};
-
-export const sendLiteMessage = async (message: string): Promise<ChatMessage> => {
-    if (!liteChat) {
-        startLiteChat();
-    }
-    if (!liteChat) {
-        throw new Error("Lite Chat session not initialized.");
-    }
-    const response: GenerateContentResponse = await liteChat.sendMessage({ message });
     return {
         id: `model-${Date.now()}`,
         role: 'model',
