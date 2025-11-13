@@ -12,12 +12,14 @@ import ReactFlow, {
   OnConnect,
   NodeTypes,
   Connection,
-  OnDelete,
   useReactFlow,
 } from 'reactflow';
 import CustomNode from './nodes/CustomNode.tsx';
 import { CpuChipIcon, WrenchScrewdriverIcon, ArrowRightStartOnRectangleIcon, ArrowLeftEndOnRectangleIcon, CollectionIcon } from '../icons/Icons.tsx';
 import type { NodeRunStatus, Node, Edge } from '../../types.ts';
+
+// Type definition for the onDelete handler
+type OnDeleteHandler = (params: { nodes: Node[]; edges: Edge[] }) => void;
 
 interface NodeBasedEditorProps {
   nodes: Node[];
@@ -57,7 +59,7 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
     [setEdges]
   );
 
-  const onDelete: OnDelete = useCallback(({ nodes: nodesToDelete, edges: edgesToDelete }) => {
+  const onDelete: OnDeleteHandler = useCallback(({ nodes: nodesToDelete, edges: edgesToDelete }) => {
     const nodesToDeleteCount = nodesToDelete.length;
     const edgesToDeleteCount = edgesToDelete.length;
 
