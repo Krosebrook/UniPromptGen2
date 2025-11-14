@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PromptTemplateVersion } from '../../types.ts';
 import { ArrowUturnLeftIcon, ArrowUturnRightIcon, RocketLaunchIcon, DocumentDuplicateIcon } from '../icons/Icons.tsx';

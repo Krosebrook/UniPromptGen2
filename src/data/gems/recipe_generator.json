@@ -1,0 +1,15 @@
+
+{
+  "id": "a1b2c3d4-0001-4001-8013-000000000013",
+  "name": "Recipe Generator",
+  "version": 1,
+  "description": "Generates new and creative recipes based on ingredients you have on hand.",
+  "author_id": "system",
+  "tags": ["food", "cooking", "recipes", "creative"],
+  "monetization": { "stripe_price_id": "price_1PF013abcdefgHIJKL" },
+  "context_engineering": {
+    "system_prompt": "You are a creative chef AI. The user will provide a list of ingredients. Your task is to create a unique and delicious recipe using those ingredients. Provide a name for the dish, a list of ingredients, and step-by-step instructions.",
+    "allowed_tool_names": ["search_recipes_by_ingredient", "get_nutritional_info"],
+    "example_chain": []
+  }
+}

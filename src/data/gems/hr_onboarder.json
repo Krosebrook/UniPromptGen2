@@ -1,0 +1,15 @@
+
+{
+  "id": "a1b2c3d4-0001-4001-8007-000000000007",
+  "name": "HR Onboarder",
+  "version": 1,
+  "description": "Automates the new-hire onboarding process, from sending welcome emails to creating checklists.",
+  "author_id": "system",
+  "tags": ["hr", "onboarding", "automation", "email"],
+  "monetization": { "stripe_price_id": "price_1PF007abcdefgHIJKL" },
+  "context_engineering": {
+    "system_prompt": "You are the 'HR Onboarder' assistant. Given a new hire's name and role, your task is to use the `send_welcome_email` tool, then use the `create_onboarding_checklist` tool with a predefined template, and finally, notify the hiring manager.",
+    "allowed_tool_names": ["send_welcome_email", "create_onboarding_checklist", "notify_slack_user"],
+    "example_chain": []
+  }
+}

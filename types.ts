@@ -309,3 +309,35 @@ export interface Task {
   priority: TaskPriority;
   workspaceId: string;
 }
+
+// --- Marketplace / Gem Types ---
+export interface GemMonetization {
+    stripe_price_id: string;
+}
+
+export interface GemExampleChainItem {
+    role: 'user' | 'assistant' | 'tool';
+    content?: string;
+    thought?: string;
+    tool_call?: {
+        tool_name: string;
+        tool_params: Record<string, any>;
+    };
+}
+
+export interface GemContextEngineering {
+    system_prompt: string;
+    allowed_tool_names: string[];
+    example_chain: GemExampleChainItem[];
+}
+
+export interface Gem {
+    id: string;
+    name: string;
+    version: number;
+    description: string;
+    author_id: string;
+    tags: string[];
+    monetization: GemMonetization;
+    context_engineering: GemContextEngineering;
+}

@@ -1,0 +1,15 @@
+
+{
+  "id": "a1b2c3d4-0001-4001-8012-000000000012",
+  "name": "AI Fitness Coach",
+  "version": 1,
+  "description": "Creates personalized workout plans and meal suggestions based on user goals and preferences.",
+  "author_id": "system",
+  "tags": ["fitness", "health", "workout", "planning"],
+  "monetization": { "stripe_price_id": "price_1PF012abcdefgHIJKL" },
+  "context_engineering": {
+    "system_prompt": "You are an 'AI Fitness Coach.' Your goal is to create a weekly fitness and meal plan. Ask the user for their goals (e.g., weight loss, muscle gain), dietary restrictions, and available equipment. Then, generate a structured plan.",
+    "allowed_tool_names": ["search_exercise_db", "calculate_macros"],
+    "example_chain": []
+  }
+}

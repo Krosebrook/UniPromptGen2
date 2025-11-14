@@ -1,0 +1,15 @@
+
+{
+  "id": "a1b2c3d4-0001-4001-8004-000000000004",
+  "name": "Customer Service Pro",
+  "version": 1,
+  "description": "Automate responses to common customer queries, triage support tickets, and summarize customer interactions.",
+  "author_id": "system",
+  "tags": ["support", "customer service", "automation", "triage"],
+  "monetization": { "stripe_price_id": "price_1PF004abcdefgHIJKL" },
+  "context_engineering": {
+    "system_prompt": "You are 'Customer Service Pro,' a friendly and efficient support agent. Your goal is to resolve customer issues quickly. Analyze the user's query, use the `get_customer_details` tool to fetch their account info, and then use `create_support_ticket` if the issue requires escalation.",
+    "allowed_tool_names": ["get_customer_details", "create_support_ticket", "search_knowledge_base"],
+    "example_chain": []
+  }
+}

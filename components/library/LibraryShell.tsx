@@ -30,6 +30,36 @@ interface LibraryShellProps<T extends LibraryItem> {
   ) => React.ReactNode;
 }
 
+// Wrapper component to correctly use hooks
+interface ItemWrapperProps<T extends LibraryItem> {
+  item: T;
+  favorites: string[];
+  renderItem: (
+    item: T,
+    canEdit: boolean,
+    onDragStart: (e: React.DragEvent, item: T) => void,
+    onContextMenu: (e: React.MouseEvent, item: T) => void,
+    isFavorite: boolean,
+    onToggleFavorite: (itemId: string) => void
+  ) => React.ReactNode;
+  onDragStart: (e: React.DragEvent, item: T) => void;
+  onContextMenu: (e: React.MouseEvent, item: T) => void;
+  onToggleFavorite: (itemId: string) => void;
+}
+
+const ItemWrapper = <T extends LibraryItem>({
+  item,
+  favorites,
+  renderItem,
+  onDragStart,
+  onContextMenu,
+  onToggleFavorite,
+}: ItemWrapperProps<T>) => {
+  const { canEdit } = usePermissions(item);
+  const isFavorite = favorites.includes(item.id);
+  return renderItem(item, canEdit, onDragStart, onContextMenu, isFavorite, onToggleFavorite);
+};
+
 const LibraryShell = <T extends LibraryItem>({
   libraryType,
   title,
@@ -226,11 +256,17 @@ const LibraryShell = <T extends LibraryItem>({
                 onContextMenu={(e) => handleContextMenu(e, folder)}
             />
         ))}
-        {sortedData.map(item => {
-            const { canEdit: canEditItem } = usePermissions(item);
-            const isFavorite = favorites.includes(item.id);
-            return renderItem(item as T, canEditItem, handleDragStart, handleContextMenu, isFavorite, toggleFavorite);
-        })}
+        {sortedData.map(item => (
+            <ItemWrapper
+              key={item.id}
+              item={item as T}
+              favorites={favorites}
+              renderItem={renderItem}
+              onDragStart={(e, dragItem) => handleDragStart(e, dragItem)}
+              onContextMenu={(e, contextItem) => handleContextMenu(e, contextItem)}
+              onToggleFavorite={toggleFavorite}
+            />
+        ))}
       </div>
     );
   };

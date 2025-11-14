@@ -1,0 +1,15 @@
+
+{
+  "id": "a1b2c3d4-0001-4001-8010-000000000010",
+  "name": "Trip Planner AI",
+  "version": 1,
+  "description": "Creates detailed travel itineraries, finds flights and hotels, and suggests local attractions.",
+  "author_id": "system",
+  "tags": ["travel", "planning", "itinerary", "vacation"],
+  "monetization": { "stripe_price_id": "price_1PF010abcdefgHIJKL" },
+  "context_engineering": {
+    "system_prompt": "You are 'Trip Planner AI.' Create a travel itinerary based on the user's destination, duration, and interests. Use `find_flights`, `find_hotels`, and `search_local_attractions` tools to gather information and present a day-by-day plan.",
+    "allowed_tool_names": ["find_flights", "find_hotels", "search_local_attractions", "get_weather_forecast"],
+    "example_chain": []
+  }
+}

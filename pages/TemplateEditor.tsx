@@ -238,8 +238,13 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const handleCreateNewVersion = useCallback((sourceVersion: PromptTemplateVersion) => {
     if (!template) return;
 
-    const maxMajor = Math.max(0, ...template.versions.map(v => parseInt(v.version.split('.')[0], 10)));
-    const newVersionNumber = `${maxMajor + 1}.0`;
+    const [sourceMajor] = sourceVersion.version.split('.').map(Number);
+    
+    const maxMinor = Math.max(-1, ...template.versions
+        .filter(v => parseInt(v.version.split('.')[0], 10) === sourceMajor)
+        .map(v => parseInt(v.version.split('.')[1] || '0', 10))
+    );
+    const newVersionNumber = `${sourceMajor}.${maxMinor + 1}`;
     
     const newVersion: PromptTemplateVersion = {
         ...JSON.parse(JSON.stringify(sourceVersion)), // Deep copy
