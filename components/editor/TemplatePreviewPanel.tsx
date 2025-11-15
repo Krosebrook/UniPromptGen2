@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PromptVariable } from '../../types.ts';
-import { generateText } from '../../services/geminiService.ts';
+import { generateText, analyzeImage } from '../../services/geminiService.ts';
+import { fileToBase64 } from '../../utils/helpers.ts';
 import { PlayIcon, SpinnerIcon } from '../icons/Icons.tsx';
 
 interface TemplatePreviewPanelProps {
@@ -40,38 +41,73 @@ const TemplatePreviewPanel: React.FC<TemplatePreviewPanelProps> = ({ variables, 
     setPreviewOutput('');
     setError('');
 
-    let finalPrompt = content;
-    
-    const readFileContent = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            if (file.type.startsWith('text/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target?.result as string);
-                reader.onerror = (e) => reject(e);
-                reader.readAsText(file);
-            } else {
-                resolve(`[File content for: ${file.name}]`);
-            }
-        });
-    };
-
     try {
-      for (const variable of variables) {
-        const value = variableValues[variable.name];
-        const regex = new RegExp(`{{${variable.name}}}`, 'g');
-        
-        let replacement: string;
-        if (variable.type === 'file' && value instanceof File) {
-          replacement = await readFileContent(value);
-        } else {
-          replacement = String(value ?? '');
-        }
-        
-        finalPrompt = finalPrompt.replace(regex, replacement);
-      }
+      let finalPrompt = content;
+      
+      const imageFileVariable = variables.find(v => 
+          v.type === 'file' && 
+          variableValues[v.name] instanceof File &&
+          (variableValues[v.name] as File).type.startsWith('image/')
+      );
 
-      const result = await generateText(finalPrompt);
-      setPreviewOutput(result);
+      if (imageFileVariable) {
+        // Multimodal case with one image
+        const imageFile = variableValues[imageFileVariable.name] as File;
+        const imageBase64 = await fileToBase64(imageFile);
+
+        // Remove the image variable placeholder from the prompt to create the text part
+        let textPart = content.replace(new RegExp(`{{\\s*${imageFileVariable.name}\\s*}}`, 'g'), '');
+        
+        // Substitute other variables into the text part
+        for (const variable of variables) {
+            if (variable.name === imageFileVariable.name) continue;
+            
+            const value = variableValues[variable.name];
+            const regex = new RegExp(`{{\\s*${variable.name}\\s*}}`, 'g');
+            
+            // For this preview, we'll just use a placeholder for other file types.
+            const replacement = (variable.type === 'file' && value instanceof File)
+                ? `[Content of file: ${value.name}]`
+                : String(value ?? '');
+
+            textPart = textPart.replace(regex, replacement);
+        }
+
+        const result = await analyzeImage(textPart.trim(), imageBase64, imageFile.type);
+        setPreviewOutput(result);
+
+      } else {
+        // Text-only case (including text files)
+        const readFileContent = (file: File): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                if (file.type.startsWith('text/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target?.result as string);
+                    reader.onerror = (e) => reject(e);
+                    reader.readAsText(file);
+                } else {
+                    resolve(`[Binary file content: ${file.name}]`);
+                }
+            });
+        };
+        
+        for (const variable of variables) {
+            const value = variableValues[variable.name];
+            const regex = new RegExp(`{{\\s*${variable.name}\\s*}}`, 'g');
+            
+            let replacement: string;
+            if (variable.type === 'file' && value instanceof File) {
+              replacement = await readFileContent(value);
+            } else {
+              replacement = String(value ?? '');
+            }
+            
+            finalPrompt = finalPrompt.replace(regex, replacement);
+        }
+  
+        const result = await generateText(finalPrompt);
+        setPreviewOutput(result);
+      }
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : 'An unknown error occurred.');

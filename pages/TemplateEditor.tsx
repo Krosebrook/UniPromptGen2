@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getTemplateById, saveTemplate, addComment, updateComment } from '../services/apiService.ts';
-import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest, Comment } from '../types.ts';
+import { getTemplateById, saveTemplate, addComment, updateComment, getKnowledgeSources } from '../services/apiService.ts';
+import { PromptTemplate, PromptTemplateVersion, PromptVariable, ABTest, Comment, KnowledgeSource } from '../types.ts';
 import { SpinnerIcon } from '../components/icons/Icons.tsx';
 import { useImmer } from 'use-immer';
 import { TemplateHeader } from '../components/editor/TemplateHeader.tsx';
@@ -18,6 +18,9 @@ import TemplatePreviewPanel from '../components/editor/TemplatePreviewPanel.tsx'
 import { useHistory } from '../hooks/useHistory.ts';
 import { useABTesting } from '../hooks/useABTesting.ts';
 import VersionComparisonModal from '../components/editor/VersionComparisonModal.tsx';
+import { produce } from 'immer';
+import { useWorkspace } from '../contexts/WorkspaceContext.tsx';
+import KnowledgeSourceSelector from '../components/editor/KnowledgeSourceSelector.tsx';
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -29,6 +32,7 @@ const NEW_TEMPLATE_VERSION: PromptTemplateVersion = {
   description: 'A brief description of what this template does.',
   content: 'Please provide context about {{query}}.',
   variables: [{ name: 'query', type: 'string', defaultValue: '', description: 'The main input or question for the prompt.' }],
+  knowledgeSourceId: null,
   date: new Date().toISOString(),
   authorId: 'user-001',
 };
@@ -38,7 +42,9 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [actionInProgress, setActionInProgress] = useState<'none' | 'save' | 'deploy'>('none');
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
-  
+  const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
+  const { currentWorkspace } = useWorkspace();
+
   const isNewTemplate = templateId === 'new' || !templateId;
 
   const {
@@ -64,7 +70,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const { canEdit } = usePermissions(template);
 
   useEffect(() => {
-    const loadTemplate = async () => {
+    const loadData = async () => {
+        setIsLoading(true);
         if (isNewTemplate) {
           const newTemplateObject: PromptTemplate = {
             id: 'new',
@@ -85,7 +92,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
           };
           setTemplate(newTemplateObject);
           resetHistory(NEW_TEMPLATE_VERSION);
-          setIsLoading(false);
         } else if (templateId) {
           const data = await getTemplateById(templateId);
           if (data) {
@@ -93,11 +99,17 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
             const active = data.versions.find(v => v.version === data.activeVersion) || data.versions[0];
             resetHistory(active);
           }
-          setIsLoading(false);
         }
+        
+        if (currentWorkspace) {
+            const sources = await getKnowledgeSources(currentWorkspace.id, null, MOCK_LOGGED_IN_USER.id);
+            setKnowledgeSources(sources);
+        }
+        
+        setIsLoading(false);
     };
-    loadTemplate();
-  }, [templateId, isNewTemplate, setTemplate, resetHistory]);
+    loadData();
+  }, [templateId, isNewTemplate, setTemplate, resetHistory, currentWorkspace]);
   
   const handleInputChange = useCallback((field: keyof PromptTemplateVersion, value: any) => {
     updateSelectedVersion(draft => {
@@ -237,41 +249,49 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
     setActionInProgress('none');
   };
 
-  const handleCreateNewVersion = useCallback((sourceVersion: PromptTemplateVersion) => {
+  const handleSaveAsNewVersion = useCallback(async (bump: 'minor' | 'major') => {
     if (!template) return;
 
-    const [sourceMajor] = sourceVersion.version.split('.').map(Number);
+    let newVersionNumber: string;
+    const versions = template.versions.map(v => v.version);
     
-    const maxMinor = Math.max(-1, ...template.versions
-        .filter(v => parseInt(v.version.split('.')[0], 10) === sourceMajor)
-        .map(v => parseInt(v.version.split('.')[1] || '0', 10))
-    );
-    const newVersionNumber = `${sourceMajor}.${maxMinor + 1}`;
-    
+    if (bump === 'major') {
+        const majorVersions = versions.map(v => parseInt(v.split('.')[0], 10));
+        const nextMajor = Math.max(0, ...majorVersions.filter(v => !isNaN(v))) + 1;
+        newVersionNumber = `${nextMajor}.0`;
+    } else { // minor bump
+        const currentMajor = parseInt(selectedVersion.version.split('.')[0], 10);
+        const minorVersionsInMajor = versions
+            .filter(v => parseInt(v.split('.')[0], 10) === currentMajor)
+            .map(v => parseInt(v.split('.')[1] || '0', 10));
+        const nextMinor = Math.max(-1, ...minorVersionsInMajor.filter(v => !isNaN(v))) + 1;
+        newVersionNumber = `${currentMajor}.${nextMinor}`;
+    }
+
     const newVersion: PromptTemplateVersion = {
-        ...JSON.parse(JSON.stringify(sourceVersion)), // Deep copy
+        ...selectedVersion, // This uses the current editor state
         version: newVersionNumber,
         date: new Date().toISOString(),
         authorId: MOCK_LOGGED_IN_USER.id,
     };
     
-    setTemplate(draft => {
-        if (draft) {
-            draft.versions.push(newVersion);
-            draft.activeVersion = newVersion.version;
-        }
+    const templateToSave = produce(template, draft => {
+        draft.versions.push(newVersion);
+        draft.activeVersion = newVersion.version;
     });
+
+    const savedTemplate = await saveTemplate(templateToSave);
+    
+    setTemplate(savedTemplate);
     resetHistory(newVersion);
-  }, [template, setTemplate, resetHistory]);
 
-  const handleRevertToVersion = useCallback((sourceVersion: PromptTemplateVersion) => {
+  }, [template, selectedVersion, setTemplate, resetHistory]);
+
+  const handleLoadVersionInEditor = useCallback((sourceVersion: PromptTemplateVersion) => {
     if (!template) return;
-
-    // This is a "soft" revert. It loads the state of the old version into the editor.
-    // The user must then explicitly save to persist this change.
-    const revertedState = JSON.parse(JSON.stringify(sourceVersion)); // Deep copy
-    resetHistory(revertedState);
-  }, [template, resetHistory]);
+    const loadedState = JSON.parse(JSON.stringify(sourceVersion));
+    updateSelectedVersion(() => loadedState);
+  }, [template, updateSelectedVersion]);
   
   const handleAddComment = useCallback(async (text: string) => {
     if (!template || isNewTemplate) return;
@@ -322,6 +342,26 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
   const isVariablesValid = variableErrors.every(err => Object.keys(err).length === 0);
   const analysis = useMemo(() => analyzePrompt(selectedVersion.content, selectedVersion.variables), [selectedVersion.content, selectedVersion.variables]);
 
+  const nextVersionNumbers = useMemo(() => {
+    if (!template) return { minor: '...', major: '...' };
+
+    const versions = template.versions.map(v => v.version);
+    
+    const majorVersions = versions.map(v => parseInt(v.split('.')[0], 10));
+    const nextMajor = Math.max(0, ...majorVersions.filter(v => !isNaN(v))) + 1;
+    const nextMajorVersion = `${nextMajor}.0`;
+
+    const currentMajor = parseInt(selectedVersion.version.split('.')[0], 10);
+    const minorVersionsInMajor = versions
+        .filter(v => parseInt(v.split('.')[0], 10) === currentMajor)
+        .map(v => parseInt(v.split('.')[1] || '0', 10));
+    const nextMinor = Math.max(-1, ...minorVersionsInMajor.filter(v => !isNaN(v))) + 1;
+    const nextMinorVersion = `${currentMajor}.${nextMinor}`;
+
+    return { minor: nextMinorVersion, major: nextMajorVersion };
+  }, [template, selectedVersion.version]);
+
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><SpinnerIcon className="h-8 w-8 text-primary" /></div>;
   }
@@ -346,7 +386,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
         onRedo={handleRedo}
         onSave={handleSave}
         onSaveAndDeploy={handleSaveAndDeploy}
-        onCreateNewVersion={() => handleCreateNewVersion(selectedVersion)}
+        onSaveAsNewVersion={handleSaveAsNewVersion}
+        nextVersionNumbers={nextVersionNumbers}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -356,9 +397,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                 selectedVersion={selectedVersion}
                 onVersionChange={resetHistory}
                 onDeploy={handleDeploy}
-                onCreateNewVersion={handleCreateNewVersion}
                 onStartCompare={() => setIsCompareModalOpen(true)}
-                onRevert={handleRevertToVersion}
+                onLoadVersionInEditor={handleLoadVersionInEditor}
                 canEdit={canEdit}
             />
              <textarea
@@ -382,6 +422,12 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
                 onAddVariable={handleAddVariable}
                 onRemoveVariable={handleRemoveVariable}
                 onVariableReorder={handleVariableReorder}
+            />
+            <KnowledgeSourceSelector
+                selectedSourceId={selectedVersion.knowledgeSourceId}
+                sources={knowledgeSources}
+                onSelectSource={(sourceId) => handleInputChange('knowledgeSourceId', sourceId)}
+                canEdit={canEdit}
             />
             <PromptAnalysisPanel analysis={analysis} />
             <ABTestManager 

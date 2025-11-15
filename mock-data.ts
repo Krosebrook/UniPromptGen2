@@ -9,7 +9,7 @@ export let MOCK_FOLDERS: Folder[] = [
     { id: 'folder-temp-1', name: 'Marketing Prompts', type: 'template', itemCount: 2, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
     { id: 'folder-temp-2', name: 'Support Prompts', type: 'template', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [], folderId: null },
     { id: 'folder-tool-1', name: 'Internal APIs', type: 'tool', itemCount: 1, createdAt: new Date().toISOString(), ownerId: MAIN_USER_ID, permissions: [{ userId: 'user-002', role: 'Viewer'}], folderId: null },
-    { id: 'folder-ks-1', name: 'Q4 Financials', type: 'knowledge', itemCount: 1, createdAt: new Date().toISOString(), ownerId: 'user-002', permissions: [{ userId: MAIN_USER_ID, role: 'Editor'}], folderId: null },
+    { id: 'folder-ks-1', name: 'Q4 Financials', type: 'knowledge', itemCount: 0, createdAt: new Date().toISOString(), ownerId: 'user-002', permissions: [{ userId: MAIN_USER_ID, role: 'Editor'}], folderId: null },
 ];
 
 export let MOCK_TEMPLATES: PromptTemplate[] = [
@@ -127,6 +127,7 @@ export let MOCK_TEMPLATES: PromptTemplate[] = [
         description: "Generates a concise summary from a meeting transcript, including action items.", 
         content: 'Please summarize the following meeting transcript. Your summary should include:\n1. A brief overview of the main topics discussed.\n2. A list of key decisions that were made.\n3. A bulleted list of all action items, including who is assigned to each item.\n\nTranscript:\n{{meeting_transcript}}', 
         variables: [{ name: 'meeting_transcript', type: 'string', defaultValue: 'Alice: We need to decide on the Q1 marketing campaign. Bob: I propose we focus on social media. Charlie: I agree, let\'s assign Alice to create the content plan.' }], 
+        knowledgeSourceId: 'ks-002',
         date: '2023-11-20T10:00:00Z', 
         authorId: 'user-001' 
       },
@@ -174,13 +175,28 @@ export let MOCK_TOOLS: Tool[] = [
     updatedAt: '2023-11-01',
     ownerId: 'user-003',
     permissions: [],
+  },
+  {
+    id: 'tool-003',
+    folderId: null,
+    name: 'Slack Notifier',
+    description: 'Sends a message to a specified Slack channel or user.',
+    apiEndpoint: 'https://slack.com/api/chat.postMessage',
+    authMethod: 'OAuth 2.0',
+    requestSchema: '{ "channel": "string", "text": "string" }',
+    responseSchema: '{ "ok": "boolean", "message_ts": "string" }',
+    createdBy: 'user-001',
+    createdAt: '2023-11-15',
+    updatedAt: '2023-11-15',
+    ownerId: MAIN_USER_ID,
+    permissions: [],
   }
 ];
 
 export let MOCK_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     {
         id: 'ks-001',
-        folderId: 'folder-ks-1',
+        folderId: null,
         name: 'Q4 2023 Financial Report',
         description: 'The complete financial report for the fourth quarter of 2023.',
         type: 'PDF',

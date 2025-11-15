@@ -70,6 +70,7 @@ export interface PromptTemplateVersion {
   description: string;
   content: string;
   variables: PromptVariable[];
+  knowledgeSourceId?: string | null;
   date: string;
   authorId: string;
 }

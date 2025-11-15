@@ -7,9 +7,8 @@ interface VersionManagerProps {
   selectedVersion: PromptTemplateVersion;
   onVersionChange: (version: PromptTemplateVersion) => void;
   onDeploy: (versionString: string) => void;
-  onCreateNewVersion: (sourceVersion: PromptTemplateVersion) => void;
   onStartCompare: () => void;
-  onRevert: (sourceVersion: PromptTemplateVersion) => void;
+  onLoadVersionInEditor: (sourceVersion: PromptTemplateVersion) => void;
   canEdit: boolean;
 }
 
@@ -20,9 +19,8 @@ const VersionItem: React.FC<{
     canEdit: boolean;
     onSelect: () => void;
     onDeploy: () => void;
-    onRevert: () => void;
-    onCreateNew: () => void;
-}> = ({ version, isDeployed, isSelected, canEdit, onSelect, onDeploy, onRevert, onCreateNew }) => {
+    onLoadVersionInEditor: () => void;
+}> = ({ version, isDeployed, isSelected, canEdit, onSelect, onDeploy, onLoadVersionInEditor }) => {
     
     const author = {name: `User (${version.authorId.slice(-4)})`}; 
 
@@ -40,20 +38,17 @@ const VersionItem: React.FC<{
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
                 {!isSelected && (
-                    <button onClick={onSelect} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-medium bg-background rounded-md hover:bg-accent" title="Edit this version">
+                    <button onClick={onSelect} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-medium bg-background rounded-md hover:bg-accent" title="Switch to editing this version">
                         <PencilIcon className="h-3 w-3" /> Edit
                     </button>
                 )}
                 {canEdit && (
                     <>
                         {!isSelected && (
-                             <button onClick={onRevert} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-medium bg-background rounded-md hover:bg-accent" title="Load this version into the editor">
-                                <ArrowUturnLeftIcon className="h-3 w-3" /> Revert
+                             <button onClick={onLoadVersionInEditor} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-medium bg-background rounded-md hover:bg-accent" title="Load this version's content into the editor">
+                                <ArrowUturnLeftIcon className="h-3 w-3" /> Load
                             </button>
                         )}
-                        <button onClick={onCreateNew} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-medium bg-background rounded-md hover:bg-accent" title="Create a new version based on this one">
-                            <DocumentDuplicateIcon className="h-3 w-3" /> New from this
-                        </button>
                         <button onClick={onDeploy} disabled={isDeployed} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-medium text-success-foreground bg-success rounded-md hover:bg-success/90 disabled:opacity-50" title="Set this version as live">
                             <RocketLaunchIcon className="h-3 w-3" /> Deploy
                         </button>
@@ -65,7 +60,7 @@ const VersionItem: React.FC<{
 };
 
 
-export const VersionManager: React.FC<VersionManagerProps> = ({ template, selectedVersion, onVersionChange, onDeploy, onCreateNewVersion, onStartCompare, onRevert, canEdit }) => {
+export const VersionManager: React.FC<VersionManagerProps> = ({ template, selectedVersion, onVersionChange, onDeploy, onStartCompare, onLoadVersionInEditor, canEdit }) => {
   const sortedVersions = [...template.versions].sort((a, b) => {
     const [aMajor, aMinor] = a.version.split('.').map(Number);
     const [bMajor, bMinor] = b.version.split('.').map(Number);
@@ -96,8 +91,7 @@ export const VersionManager: React.FC<VersionManagerProps> = ({ template, select
                     canEdit={canEdit}
                     onSelect={() => onVersionChange(v)}
                     onDeploy={() => onDeploy(v.version)}
-                    onRevert={() => onRevert(v)}
-                    onCreateNew={() => onCreateNewVersion(v)}
+                    onLoadVersionInEditor={() => onLoadVersionInEditor(v)}
                 />
             ))}
         </ul>

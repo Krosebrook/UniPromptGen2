@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PromptTemplateVersion } from '../../types.ts';
-import { ArrowUturnLeftIcon, ArrowUturnRightIcon, RocketLaunchIcon, DocumentDuplicateIcon } from '../icons/Icons.tsx';
+import { ArrowUturnLeftIcon, ArrowUturnRightIcon, RocketLaunchIcon, DocumentDuplicateIcon, ChevronDownIcon } from '../icons/Icons.tsx';
 
 interface TemplateHeaderProps {
   version: PromptTemplateVersion;
@@ -16,7 +16,8 @@ interface TemplateHeaderProps {
   onRedo: () => void;
   onSave: () => void;
   onSaveAndDeploy: () => void;
-  onCreateNewVersion: () => void;
+  onSaveAsNewVersion: (bump: 'minor' | 'major') => void;
+  nextVersionNumbers: { minor: string; major: string };
 }
 
 export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
@@ -33,8 +34,24 @@ export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
   onRedo,
   onSave,
   onSaveAndDeploy,
-  onCreateNewVersion,
+  onSaveAsNewVersion,
+  nextVersionNumbers,
 }) => {
+  const [isVersionMenuOpen, setIsVersionMenuOpen] = useState(false);
+  const versionMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (versionMenuRef.current && !versionMenuRef.current.contains(event.target as Node)) {
+            setIsVersionMenuOpen(false);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [versionMenuRef]);
+
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div className="flex-1">
@@ -62,10 +79,38 @@ export const TemplateHeader: React.FC<TemplateHeaderProps> = ({
             <button onClick={onRedo} disabled={!isRedoable} className="p-2 rounded-md bg-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Redo">
               <ArrowUturnRightIcon className="h-5 w-5" />
             </button>
-            <button onClick={onCreateNewVersion} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-secondary rounded-md hover:bg-accent" title="Create a new version from the current one">
-              <DocumentDuplicateIcon className="h-5 w-5" />
-              New Version
-            </button>
+            
+            <div className="relative" ref={versionMenuRef}>
+              <button
+                onClick={() => setIsVersionMenuOpen(prev => !prev)}
+                disabled={!isUndoable}
+                title={!isUndoable ? "Make a change to save as a new version" : "Save current changes as a new version"}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-secondary rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                  <DocumentDuplicateIcon className="h-5 w-5" />
+                  Save as New Version
+                  <ChevronDownIcon className="h-4 w-4" />
+              </button>
+              {isVersionMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-popover rounded-md shadow-lg ring-1 ring-border z-10 py-1">
+                      <button
+                          onClick={() => { onSaveAsNewVersion('minor'); setIsVersionMenuOpen(false); }}
+                          className="w-full text-left flex flex-col px-3 py-2 text-sm text-popover-foreground hover:bg-accent"
+                      >
+                          <span>Save as Minor Version</span>
+                          <span className="text-xs text-muted-foreground">Creates v{nextVersionNumbers.minor}</span>
+                      </button>
+                      <button
+                          onClick={() => { onSaveAsNewVersion('major'); setIsVersionMenuOpen(false); }}
+                          className="w-full text-left flex flex-col px-3 py-2 text-sm text-popover-foreground hover:bg-accent"
+                      >
+                          <span>Save as Major Version</span>
+                          <span className="text-xs text-muted-foreground">Creates v{nextVersionNumbers.major}</span>
+                      </button>
+                  </div>
+              )}
+            </div>
+
             <button
               onClick={onSave}
               disabled={actionInProgress !== 'none' || !isVariablesValid}
