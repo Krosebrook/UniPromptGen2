@@ -121,6 +121,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ templateId }) => {
           switch(value) {
               case 'boolean': draft.variables[index].defaultValue = false; break;
               case 'number': draft.variables[index].defaultValue = 0; break;
+              case 'date': draft.variables[index].defaultValue = ''; break;
+              case 'file': draft.variables[index].defaultValue = ''; break;
               default: draft.variables[index].defaultValue = ''; break;
           }
       }

@@ -6,7 +6,6 @@ import { SpinnerIcon, CheckCircleIcon, XCircleIcon } from '../../icons/Icons.tsx
 interface CustomNodeProps extends NodeProps {
     icon: React.ElementType;
     runStatus?: NodeRunStatus;
-    isSelected: boolean;
 }
 
 const statusStyles: Record<NodeRunStatus, string> = {
@@ -16,18 +15,17 @@ const statusStyles: Record<NodeRunStatus, string> = {
     error: 'border-destructive',
 };
 
-// FIX: Refactored component signature to destructure props in the parameters to resolve typing issues.
 const CustomNode: React.FC<CustomNodeProps> = ({
     data,
     type,
     isConnectable,
+    selected,
     icon: Icon,
     runStatus = 'idle',
-    isSelected,
 }) => {
   const borderClass = statusStyles[runStatus];
   // Separate ring class for selection to coexist with status border
-  const ringClass = isSelected ? 'ring-2 ring-ring ring-offset-card ring-offset-2' : '';
+  const ringClass = selected ? 'ring-2 ring-ring ring-offset-card ring-offset-2' : '';
   
   const StatusIcon = () => {
     switch(runStatus) {

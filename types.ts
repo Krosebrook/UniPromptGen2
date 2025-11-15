@@ -59,7 +59,7 @@ export interface GroundingSource {
 
 export interface PromptVariable {
   name: string;
-  type: 'string' | 'number' | 'boolean';
+  type: 'string' | 'number' | 'boolean' | 'date' | 'file';
   defaultValue?: string | number | boolean;
   description?: string;
 }

@@ -3,19 +3,19 @@ import { ShoppingCartIcon, MagnifyingGlassIcon, SparklesIcon } from '../componen
 import type { Gem } from '../types.ts';
 
 // Import gem data
-import codeAssistPro from '../src/data/gems/code_assist_pro.json';
-import googleDocAi from '../src/data/gems/google_doc_ai.json';
-import promptAuditor from '../src/data/gems/prompt_auditor.json';
-import customerServicePro from '../src/data/gems/customer_service_pro.json';
-import marketingMaestro from '../src/data/gems/marketing_maestro.json';
-import dataAnalystGpt from '../src/data/gems/data_analyst_gpt.json';
-import hrOnboarder from '../src/data/gems/hr_onboarder.json';
-import legalSummarizer from '../src/data/gems/legal_summarizer.json';
-import researchAssistant from '../src/data/gems/research_assistant.json';
-import tripPlanner from '../src/data/gems/trip_planner.json';
-import gameMasterAi from '../src/data/gems/game_master_ai.json';
-import fitnessCoach from '../src/data/gems/fitness_coach.json';
-import recipeGenerator from '../src/data/gems/recipe_generator.json';
+import codeAssistPro from '../src/data/gems/code_assist_pro.json' assert { type: 'json' };
+import googleDocAi from '../src/data/gems/google_doc_ai.json' assert { type: 'json' };
+import promptAuditor from '../src/data/gems/prompt_auditor.json' assert { type: 'json' };
+import customerServicePro from '../src/data/gems/customer_service_pro.json' assert { type: 'json' };
+import marketingMaestro from '../src/data/gems/marketing_maestro.json' assert { type: 'json' };
+import dataAnalystGpt from '../src/data/gems/data_analyst_gpt.json' assert { type: 'json' };
+import hrOnboarder from '../src/data/gems/hr_onboarder.json' assert { type: 'json' };
+import legalSummarizer from '../src/data/gems/legal_summarizer.json' assert { type: 'json' };
+import researchAssistant from '../src/data/gems/research_assistant.json' assert { type: 'json' };
+import tripPlanner from '../src/data/gems/trip_planner.json' assert { type: 'json' };
+import gameMasterAi from '../src/data/gems/game_master_ai.json' assert { type: 'json' };
+import fitnessCoach from '../src/data/gems/fitness_coach.json' assert { type: 'json' };
+import recipeGenerator from '../src/data/gems/recipe_generator.json' assert { type: 'json' };
 
 
 const GemCard: React.FC<{ gem: Gem }> = ({ gem }) => {

@@ -1,7 +1,9 @@
 
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, { ReactFlowProvider } from 'reactflow';
-import 'reactflow/dist/style.css';
+
 import type { Node, Edge, NodeType, NodeRunStatus, LogEntry, Run, ModelNodeData, ToolNodeData, InputNodeData, KnowledgeNodeData, AgentGraph } from '../types.ts';
 import { executeAgent } from '../services/agentExecutorService.ts';
 import { getAgentGraphs, saveAgentGraph } from '../services/apiService.ts';
@@ -155,7 +157,6 @@ const AgenticWorkbench: React.FC = () => {
                             edges={edges} setEdges={setEdges}
                             setSelectedNode={setSelectedNode}
                             runStatus={runStatus}
-                            selectedNodeId={selectedNode?.id || null}
                         />
                         <LogPanel logs={logsForSelectedRun} />
                     </div>

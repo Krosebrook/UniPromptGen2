@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PromptVariable } from '../../types.ts';
 import { PlusIcon, XCircleIcon, Bars3Icon } from '../icons/Icons.tsx';
@@ -95,6 +94,8 @@ export const VariableEditor: React.FC<VariableEditorProps> = ({
                     <option value="string">String</option>
                     <option value="number">Number</option>
                     <option value="boolean">Boolean</option>
+                    <option value="date">Date</option>
+                    <option value="file">File</option>
                   </select>
                   {variableErrors[index]?.type && <p className="text-xs text-destructive mt-1">{variableErrors[index].type}</p>}
                 </div>
@@ -118,6 +119,20 @@ export const VariableEditor: React.FC<VariableEditorProps> = ({
                     <option value="true">True</option>
                     <option value="false">False</option>
                   </select>
+                ) : v.type === 'date' ? (
+                  <input
+                    type="date"
+                    value={v.defaultValue as string}
+                    onChange={(e) => onVariableChange(index, 'defaultValue', e.target.value)}
+                    className="w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                ) : v.type === 'file' ? (
+                  <input
+                    type="text"
+                    disabled
+                    placeholder="Provided at runtime"
+                    className="w-full p-1.5 text-sm bg-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                  />
                 ) : (
                   <input
                     type={v.type === 'number' ? 'number' : 'text'}

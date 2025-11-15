@@ -23,8 +23,16 @@ const TemplatePreviewPanel: React.FC<TemplatePreviewPanelProps> = ({ variables, 
     setVariableValues(initialValues);
   }, [variables]);
 
-  const handleValueChange = (name: string, value: any) => {
-    setVariableValues(prev => ({ ...prev, [name]: value }));
+  const handleValueChange = (name: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const variable = variables.find(v => v.name === name);
+    if (!variable) return;
+
+    if (variable.type === 'file') {
+        const file = e.target.files?.[0];
+        setVariableValues(prev => ({ ...prev, [name]: file || null }));
+    } else {
+        setVariableValues(prev => ({ ...prev, [name]: e.target.value }));
+    }
   };
 
   const handleRunPreview = async () => {
@@ -33,13 +41,35 @@ const TemplatePreviewPanel: React.FC<TemplatePreviewPanelProps> = ({ variables, 
     setError('');
 
     let finalPrompt = content;
-    for (const variable of variables) {
-      const value = variableValues[variable.name];
-      const regex = new RegExp(`{{${variable.name}}}`, 'g');
-      finalPrompt = finalPrompt.replace(regex, String(value));
-    }
+    
+    const readFileContent = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            if (file.type.startsWith('text/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target?.result as string);
+                reader.onerror = (e) => reject(e);
+                reader.readAsText(file);
+            } else {
+                resolve(`[File content for: ${file.name}]`);
+            }
+        });
+    };
 
     try {
+      for (const variable of variables) {
+        const value = variableValues[variable.name];
+        const regex = new RegExp(`{{${variable.name}}}`, 'g');
+        
+        let replacement: string;
+        if (variable.type === 'file' && value instanceof File) {
+          replacement = await readFileContent(value);
+        } else {
+          replacement = String(value ?? '');
+        }
+        
+        finalPrompt = finalPrompt.replace(regex, replacement);
+      }
+
       const result = await generateText(finalPrompt);
       setPreviewOutput(result);
     } catch (e) {
@@ -65,10 +95,10 @@ const TemplatePreviewPanel: React.FC<TemplatePreviewPanelProps> = ({ variables, 
               )}
               <input
                 id={`preview-${variable.name}`}
-                type={variable.type === 'number' ? 'number' : 'text'}
-                value={variableValues[variable.name] || ''}
-                onChange={(e) => handleValueChange(variable.name, e.target.value)}
-                className="w-full p-2 bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+                type={variable.type === 'number' ? 'number' : variable.type === 'date' ? 'date' : variable.type === 'file' ? 'file' : 'text'}
+                value={variable.type !== 'file' ? (variableValues[variable.name] || '') : undefined}
+                onChange={(e) => handleValueChange(variable.name, e)}
+                className="w-full p-2 bg-input rounded-md text-foreground focus:ring-2 focus:ring-ring focus:outline-none file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
               />
             </div>
           ))}

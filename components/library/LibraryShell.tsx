@@ -257,8 +257,8 @@ const LibraryShell = <T extends LibraryItem>({
             />
         ))}
         {sortedData.map(item => (
+          <div key={item.id}>
             <ItemWrapper
-              key={item.id}
               item={item as T}
               favorites={favorites}
               renderItem={renderItem}
@@ -266,6 +266,7 @@ const LibraryShell = <T extends LibraryItem>({
               onContextMenu={(e, contextItem) => handleContextMenu(e, contextItem)}
               onToggleFavorite={toggleFavorite}
             />
+          </div>
         ))}
       </div>
     );

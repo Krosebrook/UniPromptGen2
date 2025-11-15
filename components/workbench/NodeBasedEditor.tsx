@@ -26,12 +26,11 @@ interface NodeBasedEditorProps {
   setEdges: (edges: Edge[] | ((edges: Edge[]) => Edge[])) => void;
   setSelectedNode: (node: Node | null) => void;
   runStatus: Record<string, NodeRunStatus>;
-  selectedNodeId: string | null;
 }
 
 const connectionLineStyle = { stroke: 'hsl(217 91% 60%)', strokeWidth: 3, strokeDasharray: '5 5' };
 
-const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edges, setEdges, setSelectedNode, runStatus, selectedNodeId }) => {
+const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edges, setEdges, setSelectedNode, runStatus }) => {
   const { screenToFlowPosition } = useReactFlow();
   
   const onNodesChange: OnNodesChange = useCallback(
@@ -95,7 +94,6 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
 
       if (!sourceNode || !targetNode) return false;
 
-      // Fix: Refactored knowledge connection logic to resolve TS error and simplify.
       // Rules for knowledge connections
       const isKnowledgeSource = sourceNode.type === 'knowledge';
       const isKnowledgeTarget = connection.targetHandle === 'knowledge_input';
@@ -159,12 +157,12 @@ const NodeBasedEditor: React.FC<NodeBasedEditorProps> = ({ nodes, setNodes, edge
   );
 
   const nodeTypes: NodeTypes = useMemo(() => ({
-    input: (props) => <CustomNode {...props} icon={ArrowRightStartOnRectangleIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
-    output: (props) => <CustomNode {...props} icon={ArrowLeftEndOnRectangleIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
-    model: (props) => <CustomNode {...props} icon={CpuChipIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
-    tool: (props) => <CustomNode {...props} icon={WrenchScrewdriverIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
-    knowledge: (props) => <CustomNode {...props} icon={CollectionIcon} runStatus={runStatus[props.id]} isSelected={props.id === selectedNodeId} />,
-  }), [runStatus, selectedNodeId]);
+    input: (props) => <CustomNode {...props} icon={ArrowRightStartOnRectangleIcon} runStatus={runStatus[props.id]} />,
+    output: (props) => <CustomNode {...props} icon={ArrowLeftEndOnRectangleIcon} runStatus={runStatus[props.id]} />,
+    model: (props) => <CustomNode {...props} icon={CpuChipIcon} runStatus={runStatus[props.id]} />,
+    tool: (props) => <CustomNode {...props} icon={WrenchScrewdriverIcon} runStatus={runStatus[props.id]} />,
+    knowledge: (props) => <CustomNode {...props} icon={CollectionIcon} runStatus={runStatus[props.id]} />,
+  }), [runStatus]);
 
 
   return (
