@@ -222,6 +222,12 @@ export interface Tool {
     updatedAt: string;
     ownerId: string;
     permissions: Permission[];
+    apiKeyLocation?: 'header' | 'query';
+    apiKeyName?: string;
+    oauthClientId?: string;
+    oauthAuthorizationUrl?: string;
+    oauthTokenUrl?: string;
+    oauthScopes?: string;
 }
 
 export interface ToolFormData extends Omit<Tool, 'id' | 'folderId' | 'createdBy' | 'createdAt' | 'updatedAt' | 'ownerId' | 'permissions'> {

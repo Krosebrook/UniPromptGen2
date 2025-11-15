@@ -1,12 +1,33 @@
-
-
-
 import { GoogleGenAI, Chat as ChatSession, Modality, GenerateContentResponse } from "@google/genai";
 import { ChatMessage, GroundingSource } from "../types.ts";
 
 // NOTE: A new GoogleGenAI instance must be created for Veo models right before the API call.
 // This instance is for all other models.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+/**
+ * Helper function to poll for Veo video generation results and return an object URL.
+ * @param operation The initial operation object from the generateVideos call.
+ * @param videoAI The GoogleGenAI instance used for the call.
+ * @returns A promise that resolves to a local object URL for the generated video.
+ */
+async function pollForVideoResult(operation: any, videoAI: GoogleGenAI): Promise<string> {
+    let currentOperation = operation;
+    while (!currentOperation.done) {
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        currentOperation = await videoAI.operations.getVideosOperation({ operation: currentOperation });
+    }
+
+    const downloadLink = currentOperation.response?.generatedVideos?.[0]?.video?.uri;
+    if (!downloadLink) {
+        throw new Error("Video generation failed to produce a download link.");
+    }
+
+    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+    const videoBlob = await response.blob();
+    return URL.createObjectURL(videoBlob);
+}
+
 
 const chatSessions = new Map<string, ChatSession>();
 
@@ -120,7 +141,7 @@ export const editImage = async (prompt: string, imageBase64: string, mimeType: s
 export const generateVideoFromImage = async (prompt: string, imageBase64: string, mimeType: string, aspectRatio: '16:9' | '9:16'): Promise<string> => {
     // Per Veo guidelines, create a new instance right before the call.
     const videoAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    let operation = await videoAI.models.generateVideos({
+    const operation = await videoAI.models.generateVideos({
         model: 'veo-3.1-fast-generate-preview',
         prompt: prompt,
         image: {
@@ -134,24 +155,12 @@ export const generateVideoFromImage = async (prompt: string, imageBase64: string
         }
     });
 
-    while (!operation.done) {
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        operation = await videoAI.operations.getVideosOperation({ operation: operation });
-    }
-
-    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!downloadLink) {
-        throw new Error("Video generation failed to produce a download link.");
-    }
-
-    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-    const videoBlob = await response.blob();
-    return URL.createObjectURL(videoBlob);
+    return pollForVideoResult(operation, videoAI);
 };
 
 export const generateVideoFromText = async (prompt: string, aspectRatio: '16:9' | '9:16'): Promise<string> => {
     const videoAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    let operation = await videoAI.models.generateVideos({
+    const operation = await videoAI.models.generateVideos({
         model: 'veo-3.1-fast-generate-preview',
         prompt: prompt,
         config: {
@@ -160,20 +169,8 @@ export const generateVideoFromText = async (prompt: string, aspectRatio: '16:9' 
             aspectRatio: aspectRatio,
         }
     });
-
-    while (!operation.done) {
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        operation = await videoAI.operations.getVideosOperation({ operation: operation });
-    }
-
-    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!downloadLink) {
-        throw new Error("Video generation failed to produce a download link.");
-    }
-
-    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-    const videoBlob = await response.blob();
-    return URL.createObjectURL(videoBlob);
+    
+    return pollForVideoResult(operation, videoAI);
 };
 
 export const transcribeAudio = async (audioBase64: string, mimeType: string): Promise<string> => {

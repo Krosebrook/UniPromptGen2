@@ -171,6 +171,22 @@ export const getTools = async (workspaceId: string, folderId: string | null, use
     return MOCK_TOOLS.filter(t => t.folderId === folderId && hasPermission(t, userId, userRole));
 };
 
+export const createTool = async (toolData: ToolFormData, workspaceId: string, folderId: string | null): Promise<Tool> => {
+    await delay(300);
+    const newTool: Tool = {
+        id: `tool-${Date.now()}`,
+        folderId,
+        createdBy: MOCK_LOGGED_IN_USER.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ownerId: MOCK_LOGGED_IN_USER.id,
+        permissions: [],
+        ...toolData,
+    };
+    MOCK_TOOLS.push(newTool);
+    return newTool;
+};
+
 export const executeTool = async (toolId: string, data: any): Promise<any> => {
     await delay(700);
     const tool = MOCK_TOOLS.find(t => t.id === toolId);
